@@ -1,0 +1,25 @@
+{
+  "source_commit": "4fe8e4e9e9a0be2446338a45e2215d220da7d7e9",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.1",
+  "version_code": 7,
+  "variant": "debug",
+  "apk_sha256": "e82e18d7c6edb8f2db9a4e000e6fecda8d9f096940ee93752f965dbdb9d16047",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 112,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "regional_codec_on_device": "not tested",
+    "pixel_geometry_decoder_in_tests": "independent JVM ImageIO; Android native Bitmap and Matrix transformations"
+  },
+  "limits": {
+    "encoded_source_max_bytes": 32000000,
+    "preview_max_edge": 1800,
+    "ocr_crop_max_edge": 3600,
+    "unsupported_region_codec": "bounded full-image fallback, notified to user"
+  }
+}
