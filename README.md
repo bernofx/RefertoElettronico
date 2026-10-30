@@ -41,6 +41,8 @@ Non è un'integrazione con eScoreVolley e non invia dati al Comitato. La procedu
 
 ## Sviluppo
 
+Nei sorgenti **0.6.0** è disponibile anche l'apertura da VolleyAlerts tramite collegamento browser/PWA (`refertovolley://import-match`). Richiede il nuovo APK; quelli 0.5.0 e precedenti continuano a usare il file JSON. Il download sopra rimane la versione 0.5.0 finché non viene pubblicato un APK 0.6.0 verificato e firmato con la chiave originale, necessario per aggiornare senza perdere le gare locali.
+
 Android 8.0/API 26 o successivo. Kotlin 2.2.21, Compose, AGP 8.13.2, Gradle 8.13, JDK 21 e SDK 36. Nessuna chiave, servizio remoto o permesso Internet richiesto dall'app.
 
 Nell'ambiente cloud predisposto:

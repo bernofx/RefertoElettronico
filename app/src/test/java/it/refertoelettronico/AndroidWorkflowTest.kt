@@ -31,6 +31,20 @@ class AndroidWorkflowTest {
         org.robolectric.util.ReflectionHelpers.getStaticField<MutableMap<String,Any>>(androidx.core.content.FileProvider::class.java,"sCache").clear()
     }
     @org.junit.After fun restoreScenarioIntentForLifecycleTracking(){compose.runOnUiThread{compose.activity.intent=launchIntent}}
+    @Test fun browserLinkUsesTheSameReviewWithoutSavingOrReplacingExistingMatches() {
+        val json="""{"schema":"it.refertoelettronico.match-setup","version":1,"config":{"matchNumber":"LINK-001","teams":[{"name":"Casa è"},{"name":"Ospiti"}]}}"""
+        val payload=java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(json.toByteArray(Charsets.UTF_8))
+        val activity=compose.activity
+        val store=it.refertoelettronico.storage.MatchStore(File(activity.filesDir,"matches"))
+        val before=store.list().map{it.first to it.second.getOrThrow()}
+        val link=android.content.Intent(android.content.Intent.ACTION_VIEW,android.net.Uri.parse("refertovolley://import-match?data=$payload"))
+            .addCategory(android.content.Intent.CATEGORY_BROWSABLE).setPackage(activity.packageName)
+        assertNotNull(activity.packageManager.resolveActivity(link,android.content.pm.PackageManager.MATCH_DEFAULT_ONLY))
+        compose.runOnUiThread{activity.onNewIntent(link)}
+        compose.waitUntil(10000){compose.onAllNodesWithText("Dati gara ricevuti").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithText("Ignora").performClick()
+        assertEquals(before,store.list().map{it.first to it.second.getOrThrow()})
+    }
     @Test fun incomingVolleyAlertsSetupIsReviewedAndDoesNotOverwriteTheCurrentMatch() {
         compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
         compose.onNodeWithTag("point-button-0").performClick()

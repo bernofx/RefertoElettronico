@@ -14,7 +14,21 @@ VolleyAlerts fornisce i dati della gara e i nomi delle squadre. **Non serve il C
 - Non ci sono accessi al server VolleyAlerts, credenziali condivise o permessi Internet richiesti dall'app destinataria. Il trasporto è locale tramite Android.
 - Non c'è callback, restituzione del risultato o deduplicazione per ID VolleyAlerts. Ogni importazione accettata prepara una nuova gara. Il salvataggio/condivisione del PDF rimane un'azione del refertista.
 
-## Trasporto Android
+## Collegamento da browser/PWA (da versione 0.6.0)
+
+VolleyAlerts può aprire una bozza tramite `ACTION_VIEW` e il link `refertovolley://import-match?data=BASE64URL`, registrato con categoria `BROWSABLE`. `BASE64URL` è il JSON del contratto versione 1 codificato UTF-8 e poi Base64 URL-safe senza padding. Non usare URL di download: i dati viaggiano localmente nel collegamento e Referto Volley continua a non richiedere Internet.
+
+Su Chrome Android usare un collegamento attivato dal tap dell'utente:
+
+```text
+intent://import-match?data=BASE64URL#Intent;scheme=refertovolley;package=it.refertoelettronico;action=android.intent.action.VIEW;S.browser_fallback_url=URL_HTTPS_CODIFICATO;end
+```
+
+La destinazione è vincolata al package. Il payload codificato non può superare **16.000 caratteri**: oltre questo limite usare il file JSON. Sono rifiutati host/percorsi diversi, credenziali, porte, frammenti, parametri aggiuntivi e dati non validi. Il normale parser di schema/versione continua a controllare il contenuto. L'app mostra la stessa revisione della bozza e non salva automaticamente né modifica le gare esistenti. Se l'app compatibile non è installata, Chrome apre la pagina di istruzioni indicata dal chiamante; altri browser possono richiedere una conferma o bloccare l'apertura.
+
+Gli APK precedenti alla 0.6.0 non gestiscono il link. Per aggiornare senza disinstallare occorre firmare l'APK con la stessa chiave della versione installata. Il flusso tramite file descritto sotto resta disponibile dalla 0.3.0.
+
+## Trasporto Android tramite file
 
 Scrivere un **file JSON UTF-8** (massimo **1.000.000 byte**) in un percorso esposto da un `FileProvider` di VolleyAlerts. Passare il suo URI **`content://`**, con permesso temporaneo di lettura. Non usare `file://`, URL HTTP/HTTPS, percorsi assoluti o `Intent.EXTRA_TEXT`.
 
