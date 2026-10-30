@@ -1,0 +1,21 @@
+{
+  "source_commit": "8318006588f6fca88e25df93b8e2fa04437ce256",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.0",
+  "version_code": 6,
+  "variant": "debug",
+  "apk_sha256": "27aaef06d41e6dcd671f20441460b5401e25b85e56d590e15931b27ca2533c74",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "gradle_tasks": [
+      "clean",
+      "assembleDebug",
+      "testDebugUnitTest",
+      "lintDebug"
+    ],
+    "tests_passed": 96,
+    "failures": 0,
+    "skipped": 0
+  }
+}
