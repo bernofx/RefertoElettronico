@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.7.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.1](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.1.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -61,4 +61,4 @@ Il codice del motore è separato dall'interfaccia: `model/MatchEngine.kt` applic
 
 Le gare contengono dati personali: l'app le conserva localmente, esclude il backup automatico e la migrazione del dispositivo, e condivide soltanto su comando dell'utente. Disinstallare l'app elimina gli archivi locali; salvare la copia JSON per conservarli.
 
-La versione **0.7.0** adatta la lettura delle foto al CAMP3 con intestazione **N°**: non richiede la parola MAGLIA per riconoscere la prima colonna. La tabella dello staff, introdotta da Qualifica, resta distinta dalla rosa. Gli indicatori espliciti K/L1/L2 possono essere proposti nella revisione e vanno controllati. Il test del modello usa esclusivamente dati anonimizzati e non incorpora il CAMP3 fornito dall'utente.
+La versione **0.6.1** rilegge la zona selezionata dalla **foto originale** e ridimensiona solo il ritaglio (fino a 3600 pixel), mentre l'anteprima può essere ridotta a 1800 pixel. Questo vale per rilettura automatica/manuale, colonna maglie e staff. Se il formato non consente lettura regionale, l'app usa una lettura alternativa a memoria limitata e segnala la limitazione. Inoltre adatta la lettura delle foto al CAMP3 con intestazione **N°**: non richiede la parola MAGLIA per riconoscere la prima colonna. La tabella dello staff, introdotta da Qualifica, resta distinta dalla rosa. Gli indicatori espliciti K/L1/L2 possono essere proposti nella revisione e vanno controllati. Il test del modello usa esclusivamente dati anonimizzati e non incorpora il CAMP3 fornito dall'utente.

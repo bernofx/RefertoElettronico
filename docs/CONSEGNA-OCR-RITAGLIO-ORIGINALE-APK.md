@@ -6,7 +6,7 @@ Modifica Referto Volley affinché il riconoscimento definitivo della lista gioca
 
 Repository: https://github.com/bernofx/RefertoElettronico
 
-Questo documento è una consegna di lavoro: **la modifica OCR qui descritta non è ancora stata implementata**. Non è una richiesta di modificare VolleyAlerts.
+Questa consegna è stata **implementata nella versione 0.6.1**. La descrizione seguente conserva i requisiti e lo stato iniziale per la verifica. Restano la prova finale del decoder Android sul dispositivo e il confronto dell'accuratezza sulle foto reali; i test in cloud non li sostituiscono. Il codice di VolleyAlerts non è modificato.
 
 ## Stato verificato di partenza
 
@@ -143,3 +143,12 @@ Indica:
 - Una breve prova da fare sul telefono: fotografare il foglio intero, selezionare la tabella, rileggere e confrontare numeri e cognomi con la lettura precedente.
 
 La verifica finale sul telefono riguarda sia la qualità OCR sia l’aggiornamento dell’app conservando le gare già salvate.
+
+## Implementazione consegnata
+
+- `OriginalPhoto.kt`: copia originale privata e limitata, decodifica regionale, fallback controllato, proprietà e rilascio delle risorse.
+- `PhotoGeometry.kt`: coordinate raw/orientate, EXIF/ribaltamenti e rotazioni manuali.
+- `Camp3Ocr.kt`: riconoscimento sulla regione originale, con colonna maglie riportata sul bitmap effettivo.
+- `Camp3ImportDialog.kt`: tutti i percorsi automatici e manuali usano la sorgente originale; anteprima indipendente.
+- `OriginalPhotoTest.kt`: test mirati su risoluzione, geometria, memoria, stream, errori e proprietà. Per il limite di Robolectric sul codec regionale e la verifica sul telefono consultare [VERIFICA.md](VERIFICA.md).
+- APK e provenienza: `downloads/RefertoVolley-0.6.1.apk`, `.sha256` e `.build.json`.

@@ -18,6 +18,7 @@ import it.refertoelettronico.model.Player
 import it.refertoelettronico.ocr.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -31,39 +32,58 @@ fun Camp3ImportDialog(teamName:String,onDismiss:()->Unit,onApply:(List<Player>)-
     var reading by remember{mutableStateOf<Camp3Reading?>(null)}
     var source by remember{mutableStateOf<android.net.Uri?>(null)}
     var rotation by remember{mutableIntStateOf(0)}
+    var originalPhoto by remember{mutableStateOf<OriginalPhoto?>(null)}
     var photoBitmap by remember{mutableStateOf<android.graphics.Bitmap?>(null)}
     var crop by remember{mutableStateOf(PhotoCrop())}
     var column by remember{mutableStateOf<Float?>(null)}
     var needColumn by remember{mutableStateOf(false)}
     var cameraFile by remember{mutableStateOf<File?>(null)}
-    DisposableEffect(Unit){onDispose{cameraFile?.delete()}}
+    DisposableEffect(Unit){onDispose{originalPhoto?.close();photoBitmap?.takeUnless{it.isRecycled}?.recycle();cameraFile?.delete()}}
+    DisposableEffect(photoBitmap){val bitmap=photoBitmap;onDispose{bitmap?.takeUnless{it.isRecycled}?.recycle()}}
     fun load(uri:android.net.Uri,turns:Int=0) {
-        source=uri;rotation=turns;busy=true;error=null;reading=null
+        if(busy)return
+        val reusable=originalPhoto?.takeIf{source==uri}
+        busy=true;error=null;reading=null
         scope.launch {
+            var working=reusable
+            var preview:android.graphics.Bitmap?=null
+            var adopted=false
             try {
-                val prepared=withContext(Dispatchers.IO){Camp3Ocr.decodePhoto(context,uri,turns)}
-                photoBitmap=prepared;crop=PhotoCrop();column=null;needColumn=false
-                val first=withContext(Dispatchers.IO){Camp3Ocr.readPhoto(prepared,section=section)}
+                withContext(Dispatchers.IO) {
+                    val acquisition=kotlin.coroutines.coroutineContext
+                    if(working==null)working=OriginalPhoto.open(context,uri){acquisition.ensureActive()}
+                    preview=working!!.preview(turns)
+                }
+                if(originalPhoto!==working)originalPhoto?.close()
+                originalPhoto=working;photoBitmap=preview;source=uri;rotation=turns;adopted=true
+                crop=PhotoCrop();column=null;needColumn=false
+                val first=withContext(Dispatchers.IO){Camp3Ocr.readOriginal(working!!,section=section,quarterTurns=turns)}
                 val detected=first.detectedCrop
                 if(detected!=null) {
                     crop=detected
-                    val result=withContext(Dispatchers.IO){Camp3Ocr.readPhoto(prepared,detected,section=section)}
+                    val result=withContext(Dispatchers.IO){Camp3Ocr.readOriginal(working!!,detected,section=section,quarterTurns=turns)}
                     if(section==Camp3Section.PLAYERS && result.rows.isNotEmpty() && result.rows.all{it.number==null}) {
                         needColumn=true
                         error="Lista individuata. Non ho riconosciuto la colonna delle maglie: toccala nella foto ingrandita, poi premi Leggi."
                     } else reading=result.copy(notices=listOf("Tabella individuata automaticamente. Se mancano righe, usa Ritaglia e rileggi.")+result.notices)
                 } else error="Non ho individuato con certezza la tabella. Controlla il ritaglio qui sotto e premi Leggi."
             }
-            catch(t:Exception){error=t.message ?: "Foto non leggibile. Scegli una foto più nitida.";photoBitmap=null}
-            finally{busy=false}
+            catch(t:kotlinx.coroutines.CancellationException){throw t}
+            catch(t:Exception){error=t.message ?: "Foto non leggibile. Scegli una foto più nitida."}
+            finally{
+                if(!adopted){preview?.takeUnless{it.isRecycled}?.recycle();if(working!==reusable)working?.close()}
+                busy=false
+            }
         }
     }
     fun scan() {
-        val bitmap=photoBitmap ?: return
+        if(busy)return
+        val original=originalPhoto ?: return
         val selectedCrop=crop;val selectedColumn=column
         busy=true;error=null;reading=null
         scope.launch {
-            try{reading=withContext(Dispatchers.IO){Camp3Ocr.readPhoto(bitmap,selectedCrop,selectedColumn,section)}}
+            try{reading=withContext(Dispatchers.IO){Camp3Ocr.readOriginal(original,selectedCrop,selectedColumn,section,rotation)}}
+            catch(t:kotlinx.coroutines.CancellationException){throw t}
             catch(t:Exception){error=t.message ?: "Lettura non riuscita. Riprova con una foto più vicina."}
             finally{busy=false}
         }
