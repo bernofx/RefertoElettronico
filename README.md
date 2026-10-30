@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.7.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -60,3 +60,5 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`. I test JVM verificano il motor
 Il codice del motore è separato dall'interfaccia: `model/MatchEngine.kt` applica gli eventi senza mutare lo stato precedente; undo/redo usano lo stesso replay. `storage/MatchStore.kt` conserva un file per gara. `pdf/SheetLayout.kt` costruisce le registrazioni e `PdfExporter.kt` le sovrappone al modello senza ricampionare l'immagine originale, incorporando il font nel documento.
 
 Le gare contengono dati personali: l'app le conserva localmente, esclude il backup automatico e la migrazione del dispositivo, e condivide soltanto su comando dell'utente. Disinstallare l'app elimina gli archivi locali; salvare la copia JSON per conservarli.
+
+La versione **0.7.0** adatta la lettura delle foto al CAMP3 con intestazione **N°**: non richiede la parola MAGLIA per riconoscere la prima colonna. La tabella dello staff, introdotta da Qualifica, resta distinta dalla rosa. Gli indicatori espliciti K/L1/L2 possono essere proposti nella revisione e vanno controllati. Il test del modello usa esclusivamente dati anonimizzati e non incorpora il CAMP3 fornito dall'utente.

@@ -10,7 +10,7 @@ object Camp3Table {
         fun norm(w:OcrWord)=w.text.uppercase(Locale.ROOT).filter{it.isLetterOrDigit()}
         fun y(w:OcrWord)=w.cy-skewSlope*w.cx
         val h=words.map{it.height}.sorted()[words.size/2]
-        val staff=words.filter { w->norm(w).let{it in setOf("TECNICI","STAFF","TESSERATI","FIRME") || it.contains("ALLENATORE") || it.startsWith("DIRIGENTE")}}
+        val staff=words.filter { w->norm(w).let{it in setOf("TECNICI","STAFF","TESSERATI","FIRME","QUALIFICA") || it.contains("ALLENATORE") || it.startsWith("DIRIGENTE")}}
         if(section==Camp3Section.STAFF) {
             val first=staff.filter{norm(it)!="FIRME"}.minByOrNull(::y) ?: return null
             val top=(first.top-h*1.2f).coerceAtLeast(0f)/height
@@ -21,7 +21,7 @@ object Camp3Table {
             val band=words.filter{abs(y(it)-y(anchor))<h*1.8f}
             val labels=band.map(::norm)
             val hasName=labels.any{it.contains("COGNOME") || it.contains("NOMINATIVO")}
-            val hasOther=labels.any{it.contains("MAGLIA") || it in setOf("TESSERA","TESSERAMENTO","NASCITA","DATA")}
+            val hasOther=labels.any{it.contains("MAGLIA") || it in setOf("TESSERA","TESSERAMENTO","MATRICOLA","NASCITA","DATA")}
             val score=(if(hasName)2 else 0)+(if(hasOther)2 else 0)+labels.count{it in setOf("NOME","NASCITA","TESSERA")}
             Triple(anchor,band,if(hasName && hasOther)score else 0)
         }

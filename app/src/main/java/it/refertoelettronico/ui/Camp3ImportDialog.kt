@@ -111,7 +111,7 @@ private data class ReviewedPlayer(val player:Player,val selected:Boolean=true)
 
 @Composable
 fun Camp3RosterReview(reading:Camp3Reading,onApply:(List<Player>)->Unit) {
-    var rows by remember(reading){mutableStateOf(reading.rows.map{ReviewedPlayer(Player(it.number ?: 0,it.name))})}
+    var rows by remember(reading){mutableStateOf(reading.rows.map{ReviewedPlayer(Player(it.number ?: 0,it.name,libero=it.libero,captain=it.captain))})}
     var showText by remember{mutableStateOf(false)}
     var expanded by remember{mutableStateOf<Int?>(null)}
     val selected=rows.filter{it.selected}.map{it.player}
@@ -119,7 +119,7 @@ fun Camp3RosterReview(reading:Camp3Reading,onApply:(List<Player>)->Unit) {
     Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("Rivedi la rosa · ${selected.size} selezionate",style=MaterialTheme.typography.titleMedium)
-            Notice("Controlla i numeri di maglia e le righe mancanti. Puoi tornare al ritaglio e indicare la colonna dei numeri. Indica K (capitana) e L (libero).")
+            Notice("Controlla i numeri di maglia e le righe mancanti. Puoi tornare al ritaglio e indicare la colonna dei numeri. Verifica K (capitana) e L (libero), anche quando proposti dalla foto.")
             reading.notices.forEach{Notice(it)}
             if(rows.isEmpty())Text("Non ho identificato righe di atlete. Prova a ritagliare la foto sulla tabella, oppure aggiungi le righe manualmente.")
             rows.forEachIndexed { i,row ->

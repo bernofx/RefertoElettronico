@@ -9,14 +9,14 @@ data class OcrWord(val text:String,val left:Float,val top:Float,val right:Float,
     val cy get()=(top+bottom)/2
     val height get()=(bottom-top).coerceAtLeast(1f)
 }
-data class RosterSuggestion(val name:String,val number:Int?,val source:String,val issues:List<String> = emptyList())
+data class RosterSuggestion(val name:String,val number:Int?,val source:String,val issues:List<String> = emptyList(),val captain:Boolean=false,val libero:Boolean=false)
 data class Camp3Reading(val rows:List<RosterSuggestion>,val text:String,val notices:List<String> = emptyList(),val staff:List<StaffSuggestion> = emptyList(),val detectedCrop:PhotoCrop?=null)
 
 object Camp3Rows {
     private fun norm(text:String)=text.uppercase(Locale.ROOT).filter{it.isLetterOrDigit()}
     private fun header(text:String)=norm(text).replace('1','I').replace('0','O')
     private val stops=setOf("ALLENATORE","ALLENATORI","DIRIGENTE","DIRIGENTI","TECNICI","FIRME","MEDICO","FISIOTERAPISTA")
-    private val columns=setOf("TESSERA","TESSERAMENTO","NASCITA","DATA","NAZIONALITA","NAZIONALITÀ","CITTADINANZA","QUALIFICA","RUOLO","MAGLIA","NUMERO","CODICE")
+    private val columns=setOf("TESSERA","TESSERAMENTO","MATRICOLA","NASCITA","DATA","NAZIONALITA","NAZIONALITÀ","CITTADINANZA","QUALIFICA","RUOLO","MAGLIA","NUMERO","CODICE")
     private val excluded=columns+setOf("COGNOME","NOME","NOMINATIVO","ATLETI","ATLETE","GIOCATORI","GIOCATRICI","ELENCO","SQUADRA","SOCIETA","SOCIETÀ","CAMP3","FEDERAZIONE","PALLAVOLO")
     private val nameWord=Regex("[\\p{L}][\\p{L}'’.-]*")
     private fun nameHeader(w:OcrWord)=header(w.text).let{it.contains("COGNOME") || it.contains("NOMINATIVO")}
@@ -44,7 +44,13 @@ object Camp3Rows {
         // Names may start well before their centred header. Do not cut at the word COGNOME.
         val leftEdge=if(nameLeft!=null)band.filter{it.right<nameLeft && header(it.text) in columns}.maxOfOrNull{it.cx} ?: Float.NEGATIVE_INFINITY else Float.NEGATIVE_INFINITY
         val rightEdge=if(nameRight!=null)band.filter{it.left>nameRight && (header(it.text) in columns || jerseyHeader(it))}.minOfOrNull{it.cx} ?: Float.POSITIVE_INFINITY else Float.POSITIVE_INFINITY
-        val jersey=band.firstOrNull(::jerseyHeader)
+        // CAMP3 often calls the jersey column just N°. Accept it only next to the name
+        // header and with another roster column; never confuse it with the match number.
+        val camp3Columns=band.any{header(it.text) in setOf("MATRICOLA","NASCITA","TESSERA","TESSERAMENTO")}
+        val shortNumberHeader=if(nameLeft!=null && camp3Columns)band.filter {
+            it.right<nameLeft && header(it.text) in setOf("N","NO","NR","NUM","NUMERO")
+        }.maxByOrNull{it.right} else null
+        val jersey=band.firstOrNull(::jerseyHeader) ?: shortNumberHeader
         val numberX=numberColumnX ?: jersey?.cx
         val explicitColumn=numberColumnX!=null
         val columnRadius=if(explicitColumn)height*1.3f else maxOf(height*1.5f,(jersey?.let{it.right-it.left} ?: 0f)*.65f)
@@ -52,6 +58,7 @@ object Camp3Rows {
         for(row in rows) {
             val rowY=median(row.map(::y))
             if(headerY!=null && rowY<=headerY+height*.7f)continue
+            if(row.any{header(it.text)=="QUALIFICA"} && row.any{nameHeader(it) || header(it.text)=="TESSERA"})break
             // Stop at a section heading, not when an athlete happens to be called MEDICO.
             if(row.any{header(it.text) in stops} && (row.size<=2 || row.none{it.text.any(Char::isDigit)}))break
             if(row.any{nameHeader(it) || header(it.text) in setOf("NASCITA","TESSERA","MAGLIA","ATLETI","ATLETE","COGNOME","NOME")})continue
@@ -75,7 +82,14 @@ object Camp3Rows {
             }
             if(value==null)issues+=if(candidates.size>1)"Più numeri possibili nella colonna: inserisci quello corretto." else "Numero di maglia da completare."
             if(raw!=null && raw!!.any{it.isLetter()})issues+="Numero interpretato da «$raw»: controllalo."
-            result+=RosterSuggestion(nameTokens.joinToString(" "){it.text},value,row.joinToString(" "){it.text},issues)
+            val nameEnd=nameTokens.maxOf{it.right}
+            val roleMarkers=if(shortNumberHeader!=null)row.filter {
+                it.left>nameEnd+height*.75f && it.cx<rightEdge && norm(it.text) in setOf("K","L1","L2")
+            }.map{norm(it.text)} else emptyList()
+            val captain="K" in roleMarkers
+            val libero=roleMarkers.any{it=="L1" || it=="L2"}
+            if(captain || libero)issues+="Ruolo ${roleMarkers.joinToString()} letto dalla foto: controllalo."
+            result+=RosterSuggestion(nameTokens.joinToString(" "){it.text},value,row.joinToString(" "){it.text},issues,captain,libero)
             if(result.size>=40)break
         }
         val duplicated=result.mapNotNull{it.number}.groupingBy{it}.eachCount().filterValues{it>1}.keys

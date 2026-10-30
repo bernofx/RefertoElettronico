@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import it.refertoelettronico.ocr.*
 import it.refertoelettronico.ui.Camp3PhotoEditor
 import it.refertoelettronico.ui.Camp3StaffReview
+import it.refertoelettronico.ui.Camp3RosterReview
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -46,4 +47,19 @@ class Camp3EditorTest {
         compose.onNodeWithText("Importa staff selezionato").assertIsEnabled().performClick()
         compose.runOnIdle{assertEquals(mapOf(0 to "Rossi Luca",4 to "Verdi Anna"),applied)}
     }
+    @Test fun proposedCamp3RolesAreShownForReviewAndCanBeImportedWithoutRetyping() {
+        var imported:List<it.refertoelettronico.model.Player>?=null
+        val words=javaClass.getResourceAsStream("/ocr/camp3-como-anonymized.json")!!.bufferedReader().use{
+            com.google.gson.Gson().fromJson(it,Array<OcrWord>::class.java).toList()
+        }
+        val reading=Camp3Reading(Camp3Rows.suggest(words),"Fixture con dati fittizi")
+        compose.setContent{MaterialTheme{Camp3RosterReview(reading){imported=it}}}
+        compose.onNodeWithText("Sostituisci rosa con 14 giocatrici").assertIsEnabled().performClick()
+        compose.runOnIdle{
+            assertEquals(14,imported!!.size)
+            assertEquals(1,imported!!.count{it.captain})
+            assertEquals(2,imported!!.count{it.libero})
+        }
+    }
+
 }
