@@ -122,11 +122,15 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
 
 @Composable
 private fun TeamEditor(team:Team,index:Int,locked:Boolean,onChange:(Team)->Unit) {
+    var importCamp3 by remember(index){mutableStateOf(false)}
+    if(importCamp3)Camp3ImportDialog(team.name,onDismiss={importCamp3=false},onApply={players->onChange(team.copy(players=players));importCamp3=false})
     Field("Denominazione squadra",team.name,{onChange(team.copy(name=it))})
     TeamColorPicker(team,index,onChange)
     Field("Codice società",team.clubCode,{onChange(team.copy(clubCode=it))})
     if(locked)Notice("Numeri e ruoli bloccati: per correggerli annulla gli eventi fino all'inizio. I nomi delle giocatrici, delle squadre e gli altri dati restano modificabili.")
     Text("Distinta · ${team.players.size}/14",style=MaterialTheme.typography.titleLarge)
+    if(!locked)OutlinedButton(onClick={importCamp3=true}){Text("Leggi CAMP3 da foto")}
+    Text("Puoi iniziare con i soli numeri. Per il referto cartaceo FIPAV completa cognome e nome di tutte le giocatrici, anche in seguito.",style=MaterialTheme.typography.bodySmall)
     Text("K = capitana · L = libero. Seleziona una sola capitana e al massimo due liberi.",style=MaterialTheme.typography.bodySmall)
     team.players.forEachIndexed { index,p ->
         OutlinedCard {

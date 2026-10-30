@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import it.refertoelettronico.model.*
+import it.refertoelettronico.integration.IncomingMatch
 import it.refertoelettronico.feedback.ActionFeedback
 import it.refertoelettronico.feedback.Cue
 import it.refertoelettronico.pdf.PdfExporter
@@ -32,16 +33,23 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : ComponentActivity() {
+    private var incoming by mutableStateOf<Intent?>(null)
+    public override fun onNewIntent(intent:Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if(IncomingMatch.accepts(intent))incoming=intent
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if(savedInstanceState==null && IncomingMatch.accepts(intent))incoming=intent
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContent { MaterialTheme(colorScheme = lightColorScheme(primary=Color(0xFF145663),secondary=Color(0xFF9B6326),
-            background=Color(0xFFF6F5F0),surface=Color(0xFFFFFEFA),primaryContainer=Color(0xFFDCEEF0))) { VolleyApp() } }
+            background=Color(0xFFF6F5F0),surface=Color(0xFFFFFEFA),primaryContainer=Color(0xFFDCEEF0))) { VolleyApp(incoming,onIncomingHandled={incoming=null}) } }
     }
 }
 
 @Composable
-fun VolleyApp() {
+fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     val context=LocalContext.current
     val store=remember { MatchStore(File(context.filesDir,"matches")) }
     val feedback=remember { ActionFeedback(context) }
@@ -50,6 +58,8 @@ fun VolleyApp() {
     var journal by remember { mutableStateOf<Journal?>(null) }
     var id by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf(false) }
+    var importedDraft by remember { mutableStateOf<MatchConfig?>(null) }
+    var incomingReview by remember { mutableStateOf<MatchConfig?>(null) }
     var tab by remember { mutableIntStateOf(0) }
     var archiveRevision by remember { mutableIntStateOf(0) }
     var confirmUndo by remember { mutableIntStateOf(0) }
@@ -62,6 +72,13 @@ fun VolleyApp() {
         catch(t:Exception) { failure(t);return false }
     }
     fun event(e: Event) { try { persist(MatchEngine.add(journal!!,e),Cue.forEvent(e)) } catch(t:Exception) { failure(t) } }
+    LaunchedEffect(incoming) {
+        if(incoming!=null) {
+            try { incomingReview=withContext(Dispatchers.IO){IncomingMatch.read(context,incoming)} }
+            catch(t:Exception){failure(IllegalArgumentException("Importazione non riuscita: ${t.message ?: "file non valido"}",t))}
+            finally { onIncomingHandled() }
+        }
+    }
     var pendingBackup by remember { mutableStateOf<String?>(null) }
     val saveBackup=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         val data=pendingBackup;pendingBackup=null
@@ -84,7 +101,7 @@ fun VolleyApp() {
             id=null;persist(restored);tab=0
         } catch(t:Exception){failure(t)} }
     }
-    BackHandler(enabled=editing || journal!=null) { if(editing)editing=false else {journal=null;id=null} }
+    BackHandler(enabled=editing || journal!=null) { if(editing){editing=false;importedDraft=null} else {journal=null;id=null} }
     val state=remember(journal) { journal?.let { MatchEngine.replay(it.config,it.events) } }
     Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
         if(journal!=null && !editing) NavigationBar {
@@ -103,10 +120,10 @@ fun VolleyApp() {
                 SoundToggle(soundEnabled){ enabled ->
                     try {feedback.setEnabled(enabled);soundEnabled=enabled}catch(t:Exception){failure(t)}
                 }
-                if(journal!=null || editing)TextButton(onClick={editing=false;journal=null;id=null}){Text("Gare")}
+                if(journal!=null || editing)TextButton(onClick={editing=false;importedDraft=null;journal=null;id=null}){Text("Gare")}
             }
             HorizontalDivider(color=Color(0xFFE2E5DF))
-            if(editing) MatchEditor(journal?.config,onSave={ config ->
+            if(editing) key(importedDraft) { MatchEditor(importedDraft ?: journal?.config,onSave={ config ->
                 try {
                     MatchEngine.validate(config)
                     val previous=journal
@@ -115,12 +132,12 @@ fun VolleyApp() {
                     }.orEmpty()
                     val next=previous?.copy(config=config,redo=retainedRedo) ?: Journal(config=config)
                     MatchEngine.replay(config,next.events);persist(next)
-                    if(journal==next){editing=false;tab=0}
+                    if(journal==next){editing=false;importedDraft=null;tab=0}
                 } catch(t:Exception){failure(t)}
-            },rosterLocked=journal?.events?.any{it.kind==Kind.START_SET}==true)
+            },rosterLocked=journal?.events?.any{it.kind==Kind.START_SET}==true) }
             else if(journal==null) {
                 val archives=remember(archiveRevision) { store.list() }
-                HomeScreen(archives,onNew={id=null;editing=true},onDemo={id=null;persist(Journal(config=Demo.config(),events=listOf(Demo.start())));tab=0},
+                HomeScreen(archives,onNew={importedDraft=null;id=null;editing=true},onDemo={id=null;persist(Journal(config=Demo.config(),events=listOf(Demo.start())));tab=0},
                     onOpen={key ->try {journal=store.load(key);id=key;tab=0;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}},
                     onImport={importBackup.launch(arrayOf("application/json","text/plain","application/octet-stream"))})
             } else {
@@ -143,6 +160,15 @@ fun VolleyApp() {
             }
         }
     }
+    if(incomingReview!=null)AlertDialog(onDismissRequest={incomingReview=null},title={Text("Dati gara ricevuti")},
+        text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            val config=incomingReview!!
+            Text(config.competition)
+            config.teams.forEach { Text("${it.name.ifBlank{"Squadra da completare"}} · ${it.players.size} giocatrici") }
+            Text("Si aprirà una nuova gara da controllare e completare. Le gare già salvate rimarranno nell'archivio. Nessun dato ricevuto è stato ancora salvato.")
+        }},confirmButton={TextButton(onClick={
+            importedDraft=incomingReview;incomingReview=null;journal=null;id=null;editing=true;tab=0
+        }){Text("Rivedi dati")}},dismissButton={TextButton(onClick={incomingReview=null}){Text("Ignora")}})
     if(confirmUndo>0 && journal!=null) AlertDialog(onDismissRequest={confirmUndo=0},title={Text("Annullare ${confirmUndo} operazioni?")},
         text={Text("Saranno ripristinati anche formazioni, servizio, libero, timeout e rotazioni. Puoi recuperare le operazioni con Ripristina finché non registri un nuovo evento.")},
         confirmButton={TextButton(onClick={try{persist(MatchEngine.undo(journal!!,confirmUndo),Cue.UNDO)}catch(t:Exception){failure(t)};confirmUndo=0}){Text("Annulla operazioni")}},

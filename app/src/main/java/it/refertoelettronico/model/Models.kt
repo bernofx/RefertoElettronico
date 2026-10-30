@@ -76,6 +76,10 @@ fun clock(at: Long): String = DateTimeFormatter.ofPattern("HH:mm").withZone(Zone
 fun scoreLabel(score: List<Int>, team: Int = 0): String = "${score[team]}:${score[1-team]}"
 
 fun MatchConfig.missingMetadata(): List<String> = buildList {
+    teams.forEach { team ->
+        val missing=team.players.filter { it.name.isBlank() }.map { it.number }
+        if(missing.isNotEmpty())add("cognome e nome · ${team.name} · n. ${missing.joinToString()}")
+    }
     if(competition.isBlank())add("campionato")
     if(matchNumber.isBlank())add("numero gara")
     if(date.isBlank())add("data")

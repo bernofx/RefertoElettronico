@@ -2,11 +2,11 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.2.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.2.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.3.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.3.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
-1. **Prepara una nuova gara**: dati gara, distinte (numero, nome, capitana e liberi), panchine e ufficiali. Registra il motivo dell'uso del cartaceo.
+1. **Prepara una nuova gara**: dati gara, distinte (numero, capitana e liberi), panchine e ufficiali. Puoi iniziare con i soli numeri e completare cognome e nome in seguito; il PDF segnala i nominativi mancanti. Registra il motivo dell'uso del cartaceo. Per ciascuna squadra puoi usare **Leggi CAMP3 da foto**, fotografando o caricando il suo documento e revisionando la rosa prima di sostituirla.
 2. Scegli un colore per ciascuna squadra nei suoi dati: pulsanti dei punti e numeri in campo useranno quel colore, anche al cambio campo. La scelta è modificabile durante la gara e inclusa nella copia JSON.
 3. Conferma il sorteggio e le sei posizioni iniziali di ciascuna squadra. La squadra inizialmente a sinistra è A sul referto; l'identità A/B resta invariata durante i cambi campo.
 4. Usa **+1 punto**. Il campo mostra la formazione, ruota la squadra che conquista il servizio ed evidenzia il battitore. Il campo è visto dal tavolo del segnapunti, con rete verticale e formazioni opposte. Il pallone identifica la battitrice e le rotazioni sono animate; Annulla anima lo spostamento inverso.
@@ -23,7 +23,13 @@ La gara dimostrativa nella schermata iniziale usa esclusivamente dati fittizi.
 
 I suoni confermano le operazioni registrate con successo: punto breve, timeout e conferme, annullamento distinto. L'icona dell'altoparlante nella barra superiore li attiva/disattiva; la scelta resta sul dispositivo. L'app rispetta le modalità silenziosa/vibrazione e il volume di sistema. Un'operazione rifiutata non emette il suono di successo. I suoni non richiedono rete né autorizzazioni per il microfono.
 
-La versione **0.2.0** aggiorna la precedente 0.1.0 con colori e audio. Le gare e le copie JSON della versione 0.1.0 restano compatibili; in assenza di colori salvati vengono usati blu e rosso. L'aggiornamento usa lo stesso application ID e la stessa firma di debug; non disinstallare l'app se vuoi conservare gli archivi locali.
+La versione **0.2.0** ha introdotto colori e audio. Le gare e le copie JSON della versione 0.1.0 restano compatibili; in assenza di colori salvati vengono usati blu e rosso. L'aggiornamento usa lo stesso application ID e la stessa firma di debug; non disinstallare l'app se vuoi conservare gli archivi locali.
+
+La versione **0.3.0** fa seguire ai pulsanti dei punti e al riepilogo dei set i lati del campo, anche nel quinto set e con Annulla/Ripristina. Accetta dati pre-gara da VolleyAlerts tramite un JSON condiviso da Android: [specifica di integrazione e codice Kotlin](docs/INTEGRAZIONE-VOLLEYALERTS.md). VolleyAlerts può omettere le rose; si completano nell'app.
+
+L'OCR usa un modello latino incluso nell'APK e funziona senza connessione. Ogni squadra ha la propria acquisizione CAMP3. I risultati devono essere revisionati: verificare numeri di maglia, correggere i nomi, escludere righe estranee e indicare capitana e liberi. La colonna numerica viene usata automaticamente solo se identificata dall'intestazione MAGLIA; altrimenti i numeri restano da inserire. La foto acquisita dalla fotocamera viene eliminata dalla cache alla chiusura dell'importazione; le immagini scelte dall'archivio non vengono modificate o copiate permanentemente. Le bozze OCR e il testo integrale non vengono salvati nella gara: solo le giocatrici confermate. Vedi [uso e limiti OCR](docs/OCR-CAMP3.md).
+
+Gli allineamenti e le sovrapposizioni del PDF finale sono un problema aperto da correggere: [piano degli interventi](docs/PIANO.md).
 
 ## Regole e documenti
 

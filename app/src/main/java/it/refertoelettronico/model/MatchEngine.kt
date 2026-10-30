@@ -11,7 +11,7 @@ object MatchEngine {
         config.teams.forEach { team ->
             rule(team.name.isNotBlank(), "Inserisci il nome di entrambe le squadre.")
             rule(team.players.size in 6..14, "${team.name}: inserisci da 6 a 14 giocatrici.")
-            rule(team.players.all { it.number in 1..99 && it.name.isNotBlank() }, "${team.name}: numero (1-99) e nome sono obbligatori.")
+            rule(team.players.all { it.number in 1..99 }, "${team.name}: il numero di maglia deve essere compreso tra 1 e 99.")
             rule(team.players.distinctBy { it.number }.size == team.players.size, "${team.name}: numeri di maglia duplicati.")
             rule(team.players.count { it.libero } <= 2, "Sono consentiti al massimo due liberi.")
             rule(team.players.count { !it.libero } >= 6, "${team.name}: servono almeno sei giocatrici non libero.")

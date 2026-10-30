@@ -25,6 +25,53 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class AndroidWorkflowTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
+    private var launchIntent:android.content.Intent?=null
+    @org.junit.Before fun retainScenarioLaunchIntent(){
+        launchIntent=compose.activity.intent
+        org.robolectric.util.ReflectionHelpers.getStaticField<MutableMap<String,Any>>(androidx.core.content.FileProvider::class.java,"sCache").clear()
+    }
+    @org.junit.After fun restoreScenarioIntentForLifecycleTracking(){compose.runOnUiThread{compose.activity.intent=launchIntent}}
+    @Test fun incomingVolleyAlertsSetupIsReviewedAndDoesNotOverwriteTheCurrentMatch() {
+        compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        compose.onNodeWithTag("point-button-0").performClick()
+        val activity=compose.activity
+        val store=it.refertoelettronico.storage.MatchStore(File(activity.filesDir,"matches"))
+        val before=store.list().map{it.first to it.second.getOrThrow()}
+        val json="""{"schema":"it.refertoelettronico.match-setup","version":1,"config":{"matchNumber":"VA-123","teams":[{"name":"VolleyAlerts Casa"},{"name":"VolleyAlerts Ospite"}]}}"""
+        val file=File(activity.filesDir,"exports/setup-volleyalerts.json").apply{parentFile!!.mkdirs();writeText(json)}
+        val uri=androidx.core.content.FileProvider.getUriForFile(activity,"${activity.packageName}.files",file)
+        val intent=android.content.Intent(it.refertoelettronico.integration.MatchSetupImport.ACTION)
+            .setDataAndType(uri,it.refertoelettronico.integration.MatchSetupImport.MIME)
+            .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        compose.runOnUiThread{activity.onNewIntent(intent)}
+        compose.waitUntil(10000){compose.onAllNodesWithText("Dati gara ricevuti").fetchSemanticsNodes().isNotEmpty()}
+        assertEquals(before,store.list().map{it.first to it.second.getOrThrow()})
+        compose.onNodeWithText("Rivedi dati").performClick()
+        compose.onNodeWithText("VA-123").assertExists()
+        compose.onNodeWithText("Squadra di casa").performClick()
+        compose.onNodeWithText("VolleyAlerts Casa").assertExists()
+        compose.onNodeWithText("Distinta · 0/14").assertExists()
+        compose.onNodeWithText("Salva modifiche").performClick()
+        compose.onNodeWithText("Controlla l'operazione").assertExists()
+        assertEquals(before,store.list().map{it.first to it.second.getOrThrow()})
+    }
+    @Test fun sharedJsonIsAcceptedButWebAndPrivateFilePathsAreRejected() {
+        val activity=compose.activity
+        val json="""{"schema":"it.refertoelettronico.match-setup","version":1,"config":{"teams":[{"name":"Casa"},{"name":"Ospite"}]}}"""
+        val file=File(activity.filesDir,"exports/shared-setup.json").apply{parentFile!!.mkdirs();writeText(json)}
+        val uri=androidx.core.content.FileProvider.getUriForFile(activity,"${activity.packageName}.files",file)
+        val share=android.content.Intent(android.content.Intent.ACTION_SEND).setType("application/json")
+            .putExtra(android.content.Intent.EXTRA_STREAM,uri)
+        assertEquals("Casa",it.refertoelettronico.integration.IncomingMatch.read(activity,share).teams[0].name)
+        listOf("https://example.com/setup.json","file:///data/private.json").forEach { address ->
+            val intent=android.content.Intent(android.content.Intent.ACTION_VIEW,android.net.Uri.parse(address))
+            assertThrows(IllegalArgumentException::class.java){it.refertoelettronico.integration.IncomingMatch.read(activity,intent)}
+        }
+        file.writeText("not JSON")
+        compose.runOnUiThread{activity.onNewIntent(share)}
+        compose.waitUntil(10000){compose.onAllNodesWithText("Controlla l'operazione").fetchSemanticsNodes().isNotEmpty()}
+        assertFalse(File(activity.filesDir,"matches").listFiles().orEmpty().any{it.extension=="json"})
+    }
     @Test fun scoreUndoAndResumePersistedMatchThroughTheActualScreens() {
         compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
         compose.onNodeWithTag("score-0").assertTextEquals("0")

@@ -24,17 +24,18 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
     var operation by remember { mutableStateOf<String?>(null) }
     var team by remember { mutableIntStateOf(0) }
     val set=state.current
+    val leftTeam=set?.let{CourtGeometry.leftTeam(it)} ?: 0
     val playing=set!=null && set.endedAt==null && !state.finished(config)
     val problem=if(playing)MatchEngine.rallyProblem(state) else null
     Column(Modifier.fillMaxSize().padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             Column {Text("SET ${set?.number ?: 1}",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
-                Text("Set vinti: ${state.wins(0)} — ${state.wins(1)}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)}
+                Text("Set vinti: ${state.wins(leftTeam)} — ${state.wins(1-leftTeam)}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)}
             Row {OutlinedButton(onClick=onUndo,enabled=canUndo){Text("↶ Annulla")};Spacer(Modifier.width(6.dp));TextButton(onClick=onRedo,enabled=canRedo){Text("Ripristina")}}
         }
         if(lastEvent!=null)Text("Ultima: ${lastEvent.description(config)}",style=MaterialTheme.typography.bodySmall)
         if(playing && set!=null) Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            for(t in 0..1) Surface(modifier=Modifier.weight(1f),shape=RoundedCornerShape(16.dp),color=config.teams[t].displayColor(t).copy(alpha=.12f),border=BorderStroke(2.dp,config.teams[t].displayColor(t))) {
+            for(t in listOf(leftTeam,1-leftTeam)) key(t) { Surface(modifier=Modifier.weight(1f).testTag("point-card-$t"),shape=RoundedCornerShape(16.dp),color=config.teams[t].displayColor(t).copy(alpha=.12f),border=BorderStroke(2.dp,config.teams[t].displayColor(t))) {
                 Column(Modifier.padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment=Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -43,11 +44,11 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
                         }
                         Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=30.sp,fontWeight=FontWeight.Bold)
                     }
-                    Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,colors=ButtonDefaults.buttonColors(containerColor=config.teams[t].displayColor(t),contentColor=teamInk(config.teams[t].displayColor(t))),modifier=Modifier.fillMaxWidth().height(48.dp)) {
+                    Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,colors=ButtonDefaults.buttonColors(containerColor=config.teams[t].displayColor(t),contentColor=teamInk(config.teams[t].displayColor(t))),modifier=Modifier.fillMaxWidth().height(48.dp).testTag("point-button-$t")) {
                         Text("+1 punto",fontSize=18.sp,fontWeight=FontWeight.Bold)
                     }
                 }
-            }
+            } }
         }
         if(problem!=null)Notice(problem)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
