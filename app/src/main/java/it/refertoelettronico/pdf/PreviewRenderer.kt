@@ -21,14 +21,20 @@ object PreviewRenderer {
             paint.style=Paint.Style.FILL;paint.color=Color.BLACK;paint.strokeWidth=.65f
             when(m.type) {
                 "text" -> {
-                    paint.textSize=m.size
-                    val measured=paint.measureText(m.text)
-                    paint.textScaleX=if(m.width>0 && measured>m.width)m.width/measured else 1f
-                    canvas.drawText(m.text,m.x,m.y,paint);paint.textScaleX=1f
+                    val box=m.cell
+                    if(box==null){paint.textSize=m.size;canvas.drawText(m.text,m.x,m.y,paint)}
+                    else {
+                        paint.textSize=1000f
+                        val metrics=paint.fontMetrics
+                        val fitted=TextFit.fit(m.text,box,m.size,-metrics.ascent/1000,-metrics.descent/1000){paint.measureText(it)/1000}
+                        paint.textSize=fitted.size
+                        canvas.save();canvas.clipRect(box.left,box.top,box.right,box.bottom)
+                        canvas.drawText(fitted.text,fitted.x,fitted.baseline,paint);canvas.restore()
+                    }
                 }
                 "line" ->canvas.drawLine(m.x,m.y,m.x2,m.y2,paint)
                 "circle" ->{paint.style=Paint.Style.STROKE;canvas.drawCircle(m.x,m.y,m.size,paint)}
-                "white" ->{paint.color=Color.WHITE;canvas.drawRect(m.x,m.y,m.x+m.x2,m.y+m.y2,paint)}
+                "white", "fill" ->{paint.color=if(m.type=="white")Color.WHITE else m.color;canvas.drawRect(m.x,m.y,m.x+m.x2,m.y+m.y2,paint)}
             }
         }
         canvas.restore();paint.style=Paint.Style.FILL;paint.color=Color.BLACK;paint.textSize=8f

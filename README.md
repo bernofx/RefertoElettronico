@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.3.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.3.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.4.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.4.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -29,7 +29,7 @@ La versione **0.3.0** fa seguire ai pulsanti dei punti e al riepilogo dei set i 
 
 L'OCR usa un modello latino incluso nell'APK e funziona senza connessione. Ogni squadra ha la propria acquisizione CAMP3. I risultati devono essere revisionati: verificare numeri di maglia, correggere i nomi, escludere righe estranee e indicare capitana e liberi. La colonna numerica viene usata automaticamente solo se identificata dall'intestazione MAGLIA; altrimenti i numeri restano da inserire. La foto acquisita dalla fotocamera viene eliminata dalla cache alla chiusura dell'importazione; le immagini scelte dall'archivio non vengono modificate o copiate permanentemente. Le bozze OCR e il testo integrale non vengono salvati nella gara: solo le giocatrici confermate. Vedi [uso e limiti OCR](docs/OCR-CAMP3.md).
 
-Gli allineamenti e le sovrapposizioni del PDF finale sono un problema aperto da correggere: [piano degli interventi](docs/PIANO.md).
+La versione **0.4.0** corregge il posizionamento dei campi del PDF: nomi e città degli ufficiali, giudici di linea, orari, durate, formazioni, punteggi e rose. Ogni testo ha un'area di scrittura delimitata; se un valore è troppo lungo viene abbreviato con puntini di sospensione, mantenendolo completo negli allegati. Le lettere A/B già stampate nei set 1–4 non vengono riscritte. Intestazione e distinte mantengono l'ordine casa/ospite anche quando il sorteggio assegna il lato destro alla squadra di casa. Il modello originale rimane alla sua risoluzione di stampa. [Esempio PDF di una gara dimostrativa completa](downloads/Esempio-referto-0.4.0.pdf). Stato delle verifiche nel [piano](docs/PIANO.md).
 
 ## Regole e documenti
 

@@ -1,6 +1,6 @@
 # Verifica prima dell'uso
 
-La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 67 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
+La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 74 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
 
 Per la prova su telefono:
 
@@ -19,4 +19,6 @@ Verifiche aggiunte nella 0.3.0: pulsanti dei punti coerenti con i lati nel secon
 
 La fotocamera, il riconoscitore ML Kit effettivo su foto reali e i permessi fra VolleyAlerts e Referto Volley richiedono la verifica su telefono. I test OCR del parser usano parole e coordinate sintetiche; non misurano l'accuratezza del riconoscitore su CAMP3 reali.
 
-Il problema degli allineamenti del PDF è aperto e registrato nel [piano](PIANO.md). I test attuali verificano produzione e contenuto del PDF; non garantiscono l'assenza di sovrapposizioni grafiche con il modello.
+Verifiche aggiunte nella **0.4.0**: misurazione dei testi con il font PDF effettivo e controllo che restino nelle aree assegnate; confronto dei pixel delle etichette sensibili del modello (ufficiali, firme, parentesi, unità di misura, intestazioni e lettere prestampate) prima e dopo la compilazione. I casi comprendono nomi lunghi, panchine e ufficiali completi, dodici atlete più due liberi per squadra, sanzioni, sostituzione con rientro, sequenza libero-libero-rientro, quinto set ai vantaggi e un set a 54:52. Verificati anche ordine casa/ospite dopo il sorteggio e riquadro decisivo nella formula al meglio di tre set.
+
+Esempi generati: `referto-gara-completa.pdf` per la gara dimostrativa e `referto-allineamenti.pdf` per i dati lunghi, con le relative immagini PNG e l'anteprima Android. Le immagini sono state ispezionate. Le verifiche coprono i casi descritti e i campi misurati; resta la prova fisica A3 indicata nel [piano](PIANO.md).

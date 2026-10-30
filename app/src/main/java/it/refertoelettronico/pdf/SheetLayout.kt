@@ -5,25 +5,33 @@ import kotlin.math.max
 
 /** Coordinates refer to the unchanged official blank (1190 x 730). Independent of Android. */
 data class Mark(val type: String, val x: Float, val y: Float, val text: String = "", val size: Float = 7f,
-    val x2: Float = 0f, val y2: Float = 0f, val width: Float = 0f)
+    val x2: Float = 0f, val y2: Float = 0f, val width: Float = 0f, val cell: TextCell? = null, val color: Int = -1)
 data class SheetPage(val template: Boolean, val title: String, val marks: List<Mark>)
 object SheetLayout {
     fun build(journal: Journal): List<SheetPage> {
         val config = journal.config
         val state = MatchEngine.replay(config, journal.events)
         val marks = mutableListOf<Mark>()
-        fun text(x: Number,y: Number,s: Any?,size: Float=7f,width: Float=0f) { marks += Mark("text",x.toFloat(),y.toFloat(),s?.toString() ?: "",size,width=width) }
+        fun cell(x:Number,y:Number,w:Number,h:Number,value:Any?,size:Float=6f,center:Boolean=false) {
+            val box=TextCell(x.toFloat(),y.toFloat(),x.toFloat()+w.toFloat(),y.toFloat()+h.toFloat(),if(center)CellAlign.CENTER else CellAlign.LEFT)
+            marks+=Mark("text",box.left,box.bottom-2,value?.toString().orEmpty(),size,width=box.width,cell=box)
+        }
+        fun score(x:Float,y:Float,w:Float,h:Float,values:List<Int>,team:Int) {
+            cell(x+1,y+1,w/2-3,h-2,values[team],5.5f,true)
+            cell(x+w/2+2,y+1,w/2-3,h-2,values[1-team],5.5f,true)
+        }
         fun line(x: Float,y: Float,x2: Float,y2: Float) { marks += Mark("line",x,y,x2=x2,y2=y2) }
         fun circle(x: Float,y: Float,r: Float) { marks += Mark("circle",x,y,size=r) }
         fun wipe(x: Float,y: Float,w: Float,h: Float) { marks += Mark("white",x,y,x2=w,y2=h) }
-        text(123,13,config.competition,7f,84f);text(264,13,config.matchNumber,7f,55f)
-        text(413,13,"${config.season} ${config.phase}",7f,205f);text(200,27,"X")
-        text(53,41,config.location,7f,157f);text(255,41,config.venue,7f,150f)
-        text(456,41,config.date,7f,70f);text(562,41,config.scheduledTime,7f,50f)
+        cell(110,6,99,10,config.competition,7f);cell(264,6,49,10,config.matchNumber,7f)
+        cell(413,6,202,10,config.season,7f);cell(264,20,351,10,config.phase,7f)
+        cell(197,20,7,8,"X",6f,true)
+        cell(56,33,153,10,config.location,7f);cell(264,33,144,10,config.venue,7f)
+        cell(456,33,70,10,config.date,7f);cell(560,33,55,10,config.scheduledTime,7f)
         val teamA = state.sets.firstOrNull()?.initialLeft ?: 0
         val teamB = 1-teamA
-        text(47,57,config.teams[teamA].name,8f,235f);text(345,57,config.teams[teamB].name,8f,244f)
-        text(25,58,"A");text(597,58,"B")
+        cell(43,47,239,10,config.teams[0].name,8f);cell(345,47,243,10,config.teams[1].name,8f)
+        cell(23,48,10,12,state.letter(0),7f,true);cell(594,48,10,12,state.letter(1),7f,true)
         val overflow = mutableListOf<String>()
         val changeSnapshots=mutableMapOf<Int,SetState>()
         var replayed=MatchEngine.initial(config)
@@ -41,29 +49,39 @@ object SheetLayout {
             val initialPanel=deciding && x==93f
             val shown=if(initialPanel && checkpoint!=null)checkpoint else set
             val rightHeader=duplicate || x==359f || x==920f
-            text(x+(if(rightHeader)55 else 80),83+dy,config.teams[team].name,6f,if(rightHeader)60f else 66f)
-            for(slot in 0..5)text(x+11+slot*29.4f,113+dy,set.initial[team][slot],8f)
-            text(x+(if(rightHeader)8 else 156),83+dy,state.letter(team),7f)
+            val nameLeft=x+if(duplicate)44 else if(rightHeader)45 else 73
+            val nameRight=x+if(duplicate)118 else if(rightHeader)116 else 146
+            cell(nameLeft,73+dy,nameRight-nameLeft,14,config.teams[team].name,6f)
+            for(slot in 0..5)cell(x+slot*29.5f+2,105+dy,25.5f,10,set.initial[team][slot],8f,true)
+            val letterX=x+if(duplicate || rightHeader)20 else 158
+            // Sets 1–4 already contain the correct A/B letters on the printed sheet.
+            if(deciding)cell(letterX-6,73+dy,12,14,state.letter(team),8f,true)
             val first=team==set.firstServer
-            if(!duplicate)text(x+(if(rightHeader)23 else 169),if(first)78+dy else 86+dy,"X",5f)
+            if(!duplicate) {
+                val flagX=x+if(rightHeader)5 else 172
+                val flagY=(if(first)75 else 85)+dy
+                line(flagX-2,flagY-2,flagX+2,flagY+2);line(flagX-2,flagY+2,flagX+2,flagY-2)
+            }
             shown.changes.filter{it.team==team && !it.exceptional}.groupBy{it.slot}.forEach { (slot,changes) ->
                 changes.firstOrNull()?.let { sub ->
-                    text(x+8+slot*29.4f,126+dy,sub.incoming,7f)
-                    text(x+2+slot*29.4f,139+dy,scoreLabel(sub.score,team),5.5f,27f)
+                    cell(x+slot*29.5f+2,119+dy,25.5f,10,sub.incoming,7f,true)
+                    score(x+slot*29.5f,131+dy,29.5f,12f,sub.score,team)
                     changes.getOrNull(1)?.let { back ->
-                        text(x+2+slot*29.4f,152+dy,scoreLabel(back.score,team),5.5f,27f)
-                        circle(x+11+slot*29.4f,123+dy,5f)
+                        score(x+slot*29.5f,144+dy,29.5f,12f,back.score,team)
+                        circle(x+14.75f+slot*29.5f,124+dy,5f)
                     }
                 }
             }
             val counts=IntArray(6)
-            if(!first){if(!duplicate)text(x+8,166+dy,"X",6f);counts[0]=1}
+            if(!first){if(!duplicate){line(x+3,162+dy,x+9,168+dy);line(x+3,168+dy,x+9,162+dy)};counts[0]=1}
             val completedBeforeChange=if(duplicate)checkpoint?.turns?.get(team)?.count{it.endScore!=null}?:0 else 0
             shown.turns[team].forEachIndexed { index,turn ->
                 val round=counts[turn.slot]++
                 if(!duplicate || index>=completedBeforeChange) {
-                    val cx=x+turn.slot*29.4f+(if(round<4)6 else 21)
-                    val cy=166+dy+(round%4)*13.2f
+                    val halfLeft=x+turn.slot*29.5f+(if(round<4)0f else 14.75f)
+                    val cx=halfLeft+7.375f
+                    val rowTop=157+dy+(round%4)*13.2f
+                    val cy=rowTop+8.5f
                     if(round<8) {
                         val markHere=when {
                             checkpoint==null -> true
@@ -71,19 +89,19 @@ object SheetLayout {
                             duplicate -> turn.startAtTotal >= checkpoint.score.sum()
                             else -> true
                         }
-                        if(turn.served && markHere)line(cx+6,cy-10,cx+10,cy-6)
+                        if(turn.served && markHere)line(halfLeft+11,rowTop+1,halfLeft+14,rowTop+4)
                         if(turn.endScore!=null) {
-                            text(cx-3,cy,turn.endScore,6f)
-                            if(shown.endedAt!=null && index==shown.turns[team].lastIndex)circle(cx,cy-2,5f)
+                            cell(halfLeft+1,rowTop+4,12.75f,8,turn.endScore,5.8f,true)
+                            if(shown.endedAt!=null && index==shown.turns[team].lastIndex)circle(cx,cy,4.5f)
                         }
                     } else if(!duplicate)overflow+="Set ${set.number} sq. ${state.letter(team)} turno ${round+1}, ordine ${turn.slot+1}, n. ${turn.player}: ${turn.endScore?:"in corso"}"
                 }
             }
-            val scoreX=272f+dx
+            val scoreX=(if(initialPanel)279.5f else 272f)+dx
             val finalScore=shown.score[team]
             val priorPoints=if(duplicate)checkpoint?.score?.get(team)?:0 else 0
             val rows=if(initialPanel)8 else 12
-            val scoreBase=if(initialPanel)399f else 96f+dy
+            val scoreBase=if(initialPanel)400f else 96f+dy
             val step=6.65f
             val capacity=if(initialPanel)13 else 48
             for(p in 1..minOf(finalScore,capacity)) {
@@ -106,14 +124,14 @@ object SheetLayout {
                     line(cx,scoreBase-3+((firstUnused-1)%rows)*step,cx,scoreBase-3+((last-1)%rows)*step)
                 }
             }
-            shown.timeouts.filter{it.team==team}.forEachIndexed { i,t ->text(scoreX,193+dy+i*13.2f,scoreLabel(t.score,team),6f,25f) }
+            shown.timeouts.filter{it.team==team}.forEachIndexed { i,t ->score(270f+dx,184+dy+i*13.2f,29f,12f,t.score,team) }
             val logs=shown.liberoLog.filter{it.team==team}
             val firstLog=if(duplicate)checkpoint?.liberoLog?.count{it.team==team && it.exited}?:0 else 0
             logs.drop(firstLog).forEachIndexed { i,l ->
-                val cx=302f+dx+(i/9)*27f;val cy=100f+dy+(i%9)*13.2f
+                val cx=301f+dx+(i/9)*29.7f;val rowTop=91f+dy+(i%9)*13.2f
                 val value=if(config.teams[team].players.count{it.libero}>1 || l.chain.size>1)
                     "${l.chain.first()}-${l.replaced}"+l.chain.drop(1).joinToString(""){"-$it"} else l.replaced.toString()
-                if(i<18){text(cx,cy,value,6f,25f);if(l.exited)line(cx,cy-1,cx+22,cy-5)}
+                if(i<18){cell(cx,rowTop,25.7f,11,value,6f,true);if(l.exited)line(cx,rowTop+9,cx+25,rowTop+2)}
                 else if(!duplicate)overflow+="Set ${set.number} sq. ${state.letter(team)} libero $value al ${scoreLabel(l.score,team)}${if(l.exited)", rientrata" else""}"
             }
         }
@@ -127,85 +145,102 @@ object SheetLayout {
             teamBlock(set,left,leftX,top);teamBlock(set,right,rightX,top)
             val dy=top-71
             val startTime=clock(set.startedAt).split(':')
-            text(leftX+31,83+dy,startTime[0],6f);text(leftX+48,83+dy,startTime[1],6f)
+            cell(leftX+26,73+dy,12,14,startTime[0],6f,true);cell(leftX+44,73+dy,13,14,startTime[1],6f,true)
             set.endedAt?.let{clock(it).split(':')}?.let { time ->
-                text(rightX+141,83+dy,time[0],6f);text(rightX+158,83+dy,time[1],6f)
+                cell(rightX+141,73+dy,13,14,time[0],6f,true);cell(rightX+161,73+dy,13,14,time[1],6f,true)
             }
-            if(deciding && set.changedEndsAt!=null){teamBlock(set,left,654f,362f,true);text(811,377,set.changedEndsAt[left],7f)}
-            if(deciding && set.number!=5){wipe(72f,400f,19f,37f);text(77,423,set.number,12f)}
+            if(deciding && set.changedEndsAt!=null){teamBlock(set,left,654f,362f,true);cell(806,366,12,12,set.changedEndsAt[left],7f,true)}
+            if(deciding && set.number!=5){
+                marks+=Mark("fill",75f,461f,x2=13f,y2=19f,color=0xFF21B1D1.toInt())
+                cell(76,463,11,14,set.number,12f,true)
+            }
         }
-        listOf(teamA,teamB).forEachIndexed { side,team ->
+        listOf(0,1).forEachIndexed { side,team ->
             val x=if(side==0)928f else 1058f
             val regular=config.teams[team].players.filter { !it.libero }.sortedBy { it.number }
-            text(if(side==0)x+6 else 1173f,376,state.letter(team),7f)
+            cell(if(side==0)932 else 1168,365,12,13,state.letter(team),7f,true)
             regular.take(12).forEachIndexed { i,p ->
-                val y=403f+i*13.15f
-                text(x+6,y,p.number,6f);if(p.captain) circle(x+9,y-2,5f)
-                text(x+27,y,p.name,6f,101f)
+                val y=396f+i*13.15f
+                cell(x+2,y,18,10,p.number,6f,true);if(p.captain) circle(x+11,y+5,5f)
+                cell(x+25,y,101,10,p.name,6f)
             }
             regular.drop(12).forEach { overflow += "ELENCO AGGIUNTIVO Sq. ${state.letter(team)} n. ${it.number} ${it.name}${if(it.captain) " (K)" else ""}" }
             config.teams[team].players.filter { it.libero }.forEachIndexed { i,p ->
-                text(x+6,578f+i*13f,p.number,6f);text(x+27,578f+i*13f,p.name,6f,101f)
+                cell(x+2,568f+i*13f,18,11,p.number,6f,true);cell(x+25,568f+i*13f,101,11,p.name,6f)
             }
-            config.teams[team].staff.take(5).forEachIndexed { i,name -> text(x+7,616f+i*13.15f,name,6f,109f) }
+            config.teams[team].staff.take(5).forEachIndexed { i,name ->cell(x+7,608f+i*13.15f,if(side==0)107 else 112,10,name,6f) }
         }
-        // Final summary has A on the left independently of physical ends during each set.
-        text(699,540,config.teams[teamA].name,6f,71f);text(839,540,config.teams[teamB].name,6f,90f)
+        // The summary stays in A:B order; printed parentheses and h/min labels remain visible.
+        cell(685,530,88,14,config.teams[teamA].name,6f);cell(820,530,96,14,config.teams[teamB].name,6f)
+        val summaryColumns=listOf(669f,691f,713f,735f,830f,852f,875f,897f)
+        fun summaryRow(top:Float,values:List<Int>) {
+            summaryColumns.forEachIndexed { index,x->cell(x+2,top+2,17,15,values[index],6f,true) }
+        }
         state.sets.forEachIndexed { i,set ->
-            val y=580f+i*20.0f
-            text(672,y,set.timeouts.count{it.team==teamA},6f);text(696,y,set.changes.count{it.team==teamA},6f)
-            text(718,y,if(set.winner==teamA)"1" else "0",6f);text(741,y,set.score[teamA],6f)
-            text(839,y,set.score[teamB],6f);text(861,y,if(set.winner==teamB)"1" else "0",6f)
-            text(884,y,set.changes.count{it.team==teamB},6f);text(906,y,set.timeouts.count{it.team==teamB},6f)
-            text(794,y,set.endedAt?.let { (it/60000-set.startedAt/60000).coerceAtLeast(0) } ?: "",6f)
+            val top=567f+i*20f
+            summaryRow(top,listOf(set.timeouts.count{it.team==teamA},set.changes.count{it.team==teamA},
+                if(set.winner==teamA)1 else 0,set.score[teamA],set.score[teamB],if(set.winner==teamB)1 else 0,
+                set.changes.count{it.team==teamB},set.timeouts.count{it.team==teamB}))
+            cell(803,top+3,17,13,set.endedAt?.let{(it/60000-set.startedAt/60000).coerceAtLeast(0)} ?: "",6f,true)
         }
         if(state.finished(config)) {
-            val totalsA=listOf(state.sets.sumOf{set->set.timeouts.count{it.team==teamA}},state.sets.sumOf{set->set.changes.count{it.team==teamA}},state.wins(teamA),state.sets.sumOf{it.score[teamA]})
-            val totalsB=listOf(state.sets.sumOf{it.score[teamB]},state.wins(teamB),state.sets.sumOf{set->set.changes.count{it.team==teamB}},state.sets.sumOf{set->set.timeouts.count{it.team==teamB}})
-            listOf(672f,696f,718f,741f).forEachIndexed{i,x->text(x,680,totalsA[i],6f)}
-            listOf(839f,861f,884f,906f).forEachIndexed{i,x->text(x,680,totalsB[i],6f)}
-            text(790,680,state.sets.sumOf{set->set.endedAt?.let{it/60000-set.startedAt/60000}?:0},6f)
+            summaryRow(667f,listOf(state.sets.sumOf{set->set.timeouts.count{it.team==teamA}},state.sets.sumOf{set->set.changes.count{it.team==teamA}},
+                state.wins(teamA),state.sets.sumOf{it.score[teamA]},state.sets.sumOf{it.score[teamB]},state.wins(teamB),
+                state.sets.sumOf{set->set.changes.count{it.team==teamB}},state.sets.sumOf{set->set.timeouts.count{it.team==teamB}}))
+            cell(780,675,22,8,state.sets.sumOf{set->set.endedAt?.let{it/60000-set.startedAt/60000}?:0},6f,true)
         }
-        state.sets.firstOrNull()?.let { set ->clock(set.startedAt).split(':').let{ text(696,702,it[0],6f);text(727,702,it[1],6f) } }
+        state.sets.firstOrNull()?.let { set ->clock(set.startedAt).split(':').let{
+            cell(692,695,14,8,it[0],6f,true);cell(714,695,15,8,it[1],6f,true)
+        } }
         state.sets.lastOrNull()?.endedAt?.let { at ->
-            clock(at).split(':').let{text(775,702,it[0],6f);text(811,702,it[1],6f)}
+            clock(at).split(':').let{cell(773,695,15,8,it[0],6f,true);cell(795,695,15,8,it[1],6f,true)}
             val minutes=(at/60000-state.sets.first().startedAt/60000).coerceAtLeast(0)
-            text(865,702,minutes/60,6f);text(902,702,minutes%60,6f)
+            cell(849,695,12,8,minutes/60,6f,true);cell(869,695,15,8,minutes%60,6f,true)
         }
         if(state.finished(config) && !state.endedEarly) {
             val winner=if(state.wins(0)>state.wins(1))0 else 1
-            text(716,718,config.teams[winner].name,7f,163f)
-            if(config.format!=Format.BEST_OF_FIVE){wipe(884f,707f,15f,17f);text(885,718,"${state.wins(winner)}:",7f)}
-            text(903,718,state.wins(1-winner),7f)
+            cell(714,709,168,13,config.teams[winner].name,7f)
+            if(config.format!=Format.BEST_OF_FIVE){wipe(885f,708f,13f,16f);cell(886,709,11,13,state.wins(winner),10f,true)}
+            cell(902,709,13,13,state.wins(1-winner),10f,true)
         }
         state.sanctions.filter { it.card != Card.IMPROPER }.take(13).forEachIndexed { i,san ->
-            val x=when(san.card) {Card.WARNING,Card.DELAY_WARNING->8f;Card.PENALTY,Card.DELAY_PENALTY->29f;Card.EXPULSION->52f;else->73f}
-            val y=551f+i*13f
-            text(x,y,if(san.card==Card.DELAY_WARNING || san.card==Card.DELAY_PENALTY)"R" else san.recipient,6f,19f)
-            text(95,y,state.letter(san.team),6f);text(116,y,san.set,6f);text(139,y,scoreLabel(san.score,san.team),6f,39f)
+            val x=when(san.card) {Card.WARNING,Card.DELAY_WARNING->6f;Card.PENALTY,Card.DELAY_PENALTY->28f;Card.EXPULSION->50f;else->72f}
+            val y=548f+i*13.1f
+            cell(x+2,y,17,10,if(san.card==Card.DELAY_WARNING || san.card==Card.DELAY_PENALTY)"R" else san.recipient,6f,true)
+            cell(96,y,17,10,state.letter(san.team),6f,true);cell(117,y,17,10,san.set,6f,true)
+            cell(138,y,40,10,scoreLabel(san.score,san.team),6f,true)
         }
-        state.sanctions.filter { it.card == Card.IMPROPER }.forEach { circle(if(state.letter(it.team)=="A")134f else 178f,521f,5f) }
-        state.sanctions.drop(13).forEach { overflow += "SANZIONE Set ${it.set} ${scoreLabel(it.score,it.team)} Sq. ${state.letter(it.team)} ${it.card.label}: ${it.recipient}" }
+        state.sanctions.filter { it.card == Card.IMPROPER }.forEach { circle(if(state.letter(it.team)=="A")131f else 175f,521f,5f) }
+        state.sanctions.filter {it.card!=Card.IMPROPER}.drop(13).forEach { overflow += "SANZIONE Set ${it.set} ${scoreLabel(it.score,it.team)} Sq. ${state.letter(it.team)} ${it.card.label}: ${it.recipient}" }
         val observations=mutableListOf<String>()
         if(config.initialObservations.isNotBlank()) observations+=config.initialObservations
         if(config.fallbackReason.isNotBlank()) observations+="Referto cartaceo: ${config.fallbackReason}"
         observations+=state.notes.map { "${clock(it.at)} ${if(it.set>0) "${it.set}° set ${scoreLabel(it.score,teamA)} " else ""}${it.text}" }
         if(overflow.isNotEmpty())observations+="Vedi allegato per registrazioni oltre gli spazi del modello."
         val observationLines=observations.flatMap { wrap(it,102) }
-        observationLines.take(7).forEachIndexed { i,s -> text(192,531f+i*13f,s,6.5f,460f) }
+        (observationLines.take(6)+"Dati completi e registrazioni negli allegati.").forEachIndexed { i,s->cell(192,523f+i*13.15f,465,10,s,6.5f) }
         config.officials.take(3).forEachIndexed { i,name ->
-            text(221,651f+i*13f,name,6f,228f);text(456,651f+i*13f,config.officialCities.getOrElse(i){""},6f,90f)
+            cell(221,649f+i*13.15f,186,10,name,6f)
+            cell(413,649f+i*13.15f,98,10,config.officialCities.getOrElse(i){""},6f)
         }
-        config.officials.drop(3).take(4).forEachIndexed { i,name -> text(if(i<2)222f else 444f,701f+(i%2)*13f,name,6f,165f) }
+        config.officials.drop(3).take(4).forEachIndexed { i,name ->
+            // Printed line-judge order is 1/3 in the left column and 2/4 on the right.
+            cell(if(i%2==0)192 else 449,688f+(i/2)*13.15f,210,10,name,6f)
+        }
         // Date/identifiers remain human-readable even if an unusually long value was fitted in the form.
         val status=if(state.finished(config) && !state.endedEarly) "GARA CONCLUSA" else if(state.endedEarly) "GARA TERMINATA ANTICIPATAMENTE" else "PROVVISORIO - GARA IN CORSO"
         val pages=mutableListOf(SheetPage(true,status+if(config.missingMetadata().isNotEmpty())" · DATI DA COMPLETARE" else "",marks))
         val appendix=mutableListOf<String>()
         appendix += "${config.competition} · stagione ${config.season} · gara ${config.matchNumber}"
         appendix += "${config.teams[teamA].name} (A) - ${config.teams[teamB].name} (B) · ${config.date} · ${config.location}"
+        appendix += "DATI COMPLETI DELLA GARA"
+        appendix += "Fase/girone: ${config.phase} · campo: ${config.venue} · ora prevista: ${config.scheduledTime}"
+        appendix += "Formula: ${config.format.label} · limite sostituzioni: ${config.maxSubstitutions}"
+        config.officials.forEachIndexed { i,name->appendix+="${listOf("1° arbitro","2° arbitro","Segnapunti","Giudice linea 1","Giudice linea 2","Giudice linea 3","Giudice linea 4").getOrElse(i){"Ufficiale"}}: $name · città: ${config.officialCities.getOrElse(i){""}}" }
         appendix += "ELENCHI COMPLETI (numeri, capitana K, liberi L)"
         listOf(teamA,teamB).forEach { t ->
             appendix += "Squadra ${state.letter(t)}: ${config.teams[t].name} · codice società ${config.teams[t].clubCode}"
+            config.teams[t].staff.forEachIndexed{i,name->appendix+="${listOf("Allenatore","Vice allenatore","Fisioterapista","Medico","Dirigente").getOrElse(i){"Panchina"}}: $name"}
             appendix += config.teams[t].players.sortedBy { it.number }.joinToString("; ") { "${it.number} ${it.name}${if(it.captain) " K" else ""}${if(it.libero) " L" else ""}" }
         }
         appendix += "OSSERVAZIONI COMPLETE";appendix+=observations
@@ -221,7 +256,7 @@ object SheetLayout {
         appendix += "Firme da apporre sul cartaceo. Il registro allegato è di supporto; il foglio principale riproduce la figura 82 del Manuale FIPAV del segnapunti 2025/26."
         val lines=appendix.flatMap { wrap(it,150) }
         lines.chunked(47).forEachIndexed { i,chunk ->
-            pages += SheetPage(false,"ALLEGATO ${i+1} - REGISTRO DI SUPPORTO",chunk.mapIndexed { n,s -> Mark("text",24f,20f+n*14.5f,s,9f,width=1140f) })
+            pages += SheetPage(false,"ALLEGATO ${i+1} - REGISTRO DI SUPPORTO",chunk.mapIndexed { n,s -> Mark("text",24f,20f+n*14.5f,s,9f,width=1140f,cell=TextCell(24f,10f+n*14.5f,1164f,23f+n*14.5f)) })
         }
         return pages
     }

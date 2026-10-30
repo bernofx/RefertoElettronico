@@ -28,12 +28,10 @@ object PdfExporter {
                 SheetLayout.build(journal).forEachIndexed { i,layout ->
                     val page=PDPage(PDRectangle(1190f,842f));doc.addPage(page)
                     PDPageContentStream(doc,page).use { c ->
-                        fun text(x:Float,y:Float,value:String,size:Float,width:Float=0f) {
+                        fun text(x:Float,y:Float,value:String,size:Float) {
                             if(value.isEmpty())return
                             val cleaned=value.replace(Regex("[\\p{Cc}]")," ")
                             c.beginText();c.setFont(font,size)
-                            val measured=font.getStringWidth(cleaned)/1000*size
-                            c.setHorizontalScaling(if(width>0 && measured>width)width/measured*100 else 100f)
                             c.newLineAtOffset(x,y);c.showText(cleaned);c.endText()
                         }
                         c.setNonStrokingColor(0f,0f,0f);c.setStrokingColor(0f,0f,0f);c.setLineWidth(.65f)
@@ -44,7 +42,17 @@ object PdfExporter {
                         layout.marks.forEach { m ->
                             val y=794f-m.y
                             when(m.type) {
-                                "text" ->text(m.x,y,m.text,m.size,m.width)
+                                "text" -> {
+                                    val box=m.cell
+                                    if(box==null)text(m.x,y,m.text,m.size)
+                                    else {
+                                        val fitted=TextFit.fit(m.text,box,m.size,font.fontDescriptor.ascent/1000,font.fontDescriptor.descent/1000){font.getStringWidth(it)/1000}
+                                        c.saveGraphicsState()
+                                        c.addRect(box.left,794f-box.bottom,box.width,box.height);c.clip()
+                                        text(fitted.x,794f-fitted.baseline,fitted.text,fitted.size)
+                                        c.restoreGraphicsState()
+                                    }
+                                }
                                 "line" ->{c.moveTo(m.x,y);c.lineTo(m.x2,794f-m.y2);c.stroke()}
                                 "circle" -> {
                                     val r=m.size;val k=r*.55228475f;val x=m.x
@@ -52,7 +60,11 @@ object PdfExporter {
                                     c.curveTo(x-k,y+r,x-r,y+k,x-r,y);c.curveTo(x-r,y-k,x-k,y-r,x,y-r)
                                     c.curveTo(x+k,y-r,x+r,y-k,x+r,y);c.closePath();c.stroke()
                                 }
-                                "white" -> {c.setNonStrokingColor(1f,1f,1f);c.addRect(m.x,y-m.y2,m.x2,m.y2);c.fill();c.setNonStrokingColor(0f,0f,0f)}
+                                "white", "fill" -> {
+                                    val color=if(m.type=="white")-1 else m.color
+                                    c.setNonStrokingColor(((color shr 16) and 255)/255f,((color shr 8) and 255)/255f,(color and 255)/255f)
+                                    c.addRect(m.x,y-m.y2,m.x2,m.y2);c.fill();c.setNonStrokingColor(0f,0f,0f)
+                                }
                             }
                         }
                         text(18f,27f,"Referto cartaceo di supporto · Firme sul documento stampato · Pagina ${i+1}",8f)

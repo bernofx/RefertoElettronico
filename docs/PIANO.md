@@ -1,15 +1,16 @@
 # Piano dei prossimi interventi
 
-## PDF finale: allineamenti e sovrapposizioni (da fare)
+## PDF finale: correzioni implementate nella 0.4.0
 
-Segnalazione dell'utente: testi generalmente disallineati e alcuni campi che coprono le scritte del template. La generazione attuale richiede una correzione prima di considerare il layout definitivo.
+- Ricalibrate le aree di scrittura di intestazione, formazioni, sostituzioni, turni di servizio, liberi, timeout, rose, panchine, sanzioni, osservazioni, ufficiali e riepilogo.
+- Nomi e città degli ufficiali restano nelle rispettive colonne, senza invadere le firme. I giudici di linea seguono l'ordine prestampato 1/3 a sinistra e 2/4 a destra.
+- Durate dei set all'interno delle parentesi stampate; ore e minuti negli spazi prima delle unità di misura.
+- Le lettere A/B prestampate nei set 1–4 non vengono riscritte; quelle del set decisivo sono inserite nei cerchi vuoti. Intestazione e distinte restano casa/ospite, con la lettera assegnata al sorteggio.
+- Testo con dimensione proporzionata e area di ritaglio per campo: nessuna compressione orizzontale. I valori troppo lunghi sono abbreviati sul foglio principale, conservati integralmente negli allegati insieme a panchine e ufficiali.
+- Test automatici sulle aree di scrittura e confronto dei pixel del PDF effettivo con le etichette del modello originale; casi con cinque set, nomi lunghi, punteggi oltre 48, molte registrazioni, cambio campo del quinto e formula su tre set.
+- Ispezionate le anteprime generate per una gara completa e per i dati lunghi. Modello e risoluzione originali conservati.
 
-- Rivedere coordinate, baseline, margini e aree scrivibili rispetto al modulo cartaceo FIPAV incorporato.
-- Correggere intestazione, dati delle squadre, formazioni, turni di servizio, sostituzioni, liberi, sanzioni, osservazioni, ufficiali e risultato finale.
-- Fare in modo che il testo non invada etichette, linee e campi adiacenti del modello; adattare dimensione e disposizione dei testi lunghi, mantenendo le eccedenze negli allegati.
-- Verificare separatamente tutti e cinque i set, il cambio campo del quinto set, nomi lunghi e registrazioni numerose.
-- Confrontare il PDF generato e un'anteprima raster con il modello ad alta risoluzione; controllare anche una stampa A3 orizzontale.
-- Criterio di completamento: valori leggibili nei rispettivi spazi, senza sovrapposizioni al testo prestampato, su una gara simulata completa con casi limite.
+**Verifica ancora da eseguire:** stampa fisica A3 orizzontale, controllo della leggibilità e confronto sul documento stampato. L'ambiente cloud non dispone di una stampante.
 
 ## Verifiche sul dispositivo
 
