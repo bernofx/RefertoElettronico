@@ -14,5 +14,5 @@
 
 ## Verifiche sul dispositivo
 
-- Due fotografie CAMP3 distinte: una per casa e una per ospite, con revisione separata delle rose. Verificare qualità OCR su un campione dei moduli effettivamente usati a Como.
+- Verificare l’OCR 0.5.0 su CAMP3 reali di Como: una foto ravvicinata della lista per squadra e, se utile, una foto separata dello staff. Controllare ritaglio automatico, selezione delle maglie, nomi parziali e numero di atlete riconosciute. Serve un campione reale: i test sintetici non misurano l’accuratezza del riconoscitore sul documento fotografato.
 - Passaggio da VolleyAlerts con il suo FileProvider e i permessi Android reali, seguendo [la specifica](INTEGRAZIONE-VOLLEYALERTS.md).

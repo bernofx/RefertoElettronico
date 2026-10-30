@@ -1,29 +1,47 @@
-# Lettura dei due CAMP3 da foto
+# Foto della lista giocatrici e dello staff
 
-Disponibile dalla versione 0.3.0. Ogni squadra viene acquisita separatamente: **due documenti, due rose da revisionare**.
+Dalla versione **0.5.0** l'acquisizione cerca automaticamente la tabella, mantiene più dettagli della fotografia e può usare una colonna di maglie indicata dal refertista. Le due squadre restano indipendenti.
 
-## Uso
+## Fotografie consigliate
 
-1. Aprire **Dati → Modifica i dati della gara → Squadra di casa** (oppure ospite).
-2. Prima dell'inizio della gara, premere **Leggi CAMP3 da foto**.
-3. **Fotografa** apre la fotocamera Android; **Carica foto** seleziona un'immagine già disponibile. Inquadrare la tabella completa delle atlete, con il foglio disteso e luce uniforme. Sono accettate fotografie/immagini, non file PDF.
-4. Se necessario, usare **Ruota di 90° e rileggi**. Se la lettura è scadente, scegliere un'altra foto o ritagliarla con l'editor del telefono sulla sola tabella delle atlete.
-5. Controllare le righe suggerite. Correggere nome e numero, escludere le righe estranee, aggiungere eventuali atlete non riconosciute. Selezionare **K** per la capitana e **L** per i liberi. I ruoli non vengono dedotti automaticamente.
-6. Confermare **Sostituisci rosa** solo dopo i controlli. L'operazione riguarda esclusivamente la squadra indicata nel titolo, non cambia i dati dell'altra squadra e non importa dati gara o ufficiali. Non viene dedotto automaticamente da quale squadra provenga la foto.
-7. Ripetere nella scheda dell'altra squadra con il suo CAMP3. Salvare le modifiche della gara per conservarle sul dispositivo.
+Per **ogni squadra**:
 
-Chiudere senza importare mantiene la rosa precedente. Dopo l'inizio del primo set la funzione è disabilitata come le altre modifiche a numeri e ruoli: occorre annullare fino all'inizio per cambiarli. Le modifiche al modulo si salvano con **Salva modifiche**, non premendo il solo comando OCR.
+1. Una foto ravvicinata alla **lista delle giocatrici**, comprendendo tutte le righe e la colonna dei numeri di maglia. Includere possibilmente le intestazioni **Cognome e Nome** e **N° maglia**. Non occorre fotografare tutto il CAMP3.
+2. Una seconda foto **facoltativa** allo **staff**, comprendendo le etichette dei ruoli e i relativi nominativi. Non serve se i dati della panchina sono già disponibili o si preferisce inserirli a mano.
 
-## Riconoscimento e limiti
+Le foto devono essere ferme, a fuoco, ben illuminate e con il foglio disteso. Se il documento intero rende i caratteri piccoli, avvicinare la fotocamera alla sola tabella: un ritaglio successivo non può ricostruire dettagli già sfocati o mancanti.
 
-- Il riconoscitore è Google ML Kit Text Recognition per caratteri latini, con modello incluso nell'APK; la lettura e l'analisi avvengono sul dispositivo. L'app non ha il permesso Internet.
-- L'app gestisce l'orientamento EXIF e riduce le immagini molto grandi per contenere la memoria. Foto poco nitide, prospettiva, righe inclinate o testo piccolo possono ridurre il riconoscimento.
-- Le parole vengono raggruppate per riga e, quando leggibili, vengono usate le intestazioni COGNOME/NOMINATIVO e MAGLIA per proporre nomi e numeri. Numeri di tessera, progressivi e date di nascita non devono essere considerati numeri di maglia.
-- Senza un'intestazione MAGLIA identificabile, i numeri restano vuoti e vanno inseriti. È intenzionale: un progressivo o una parte della data non è un numero di maglia verificato.
-- Il parser è una prima implementazione con euristiche, non un riconoscimento certificato di tutti i modelli CAMP3. Può perdere righe, includere testi estranei o associare erroneamente un valore. La revisione è sempre necessaria, anche per numeri proposti automaticamente.
-- Per confermare servono 6–14 atlete, numeri unici tra 1 e 99, una capitana, almeno sei non liberi e al massimo due liberi. Con oltre 12 atlete serve almeno un libero. Si importano soltanto le righe selezionate.
-- I campioni di test sono sintetici. L'accuratezza sul CAMP3 effettivamente utilizzato a Como e la fotocamera devono ancora essere verificate su un telefono reale.
+**Intestazioni:** sono consigliate per la lista, perché distinguono i numeri di maglia dai progressivi, dalle tessere e dalle date. Senza intestazione MAGLIA si può indicare la colonna manualmente. Per lo staff i nomi dei ruoli permettono l'associazione automatica; se non vengono letti, i nomi si completano nella revisione.
 
-## Dati e foto
+## Lista giocatrici
 
-La foto acquisita viene conservata temporaneamente nella cache privata dell'app e rimossa alla chiusura dell'importazione. Se Android termina il processo durante l'acquisizione può restare un file di cache, eliminabile dal sistema. Le immagini già presenti sul dispositivo restano nella posizione originale. Nessuna foto viene allegata alla gara o al PDF. Il testo OCR completo serve solo durante la revisione e non viene salvato; il salvataggio della gara conserva soltanto i nominativi, i numeri e i ruoli confermati.
+1. Prima dell'inizio della gara aprire **Dati → Modifica i dati della gara → Squadra di casa/ospite → Foto lista giocatrici**.
+2. Usare **Fotografa** oppure **Carica foto**. Il formato è un'immagine, non un PDF.
+3. L'app cerca le intestazioni e la sezione successiva, propone il ritaglio della tabella e rilegge quella zona. Il limite inferiore non coincide con l'ultima atleta riconosciuta: usa la sezione successiva, quando identificabile, o il bordo della foto, per non escludere le righe che l'OCR ha mancato.
+4. Quando non individua la tabella con sufficiente evidenza, mostra la foto: trascinare per selezionare il rettangolo oppure spostarne gli angoli. Usare **Leggi lista giocatrici**. Il ritaglio automatico è un'euristica e va corretto se esclude righe o colonne.
+5. Se non legge nessuna maglia, l'app propone direttamente **Colonna maglie**, con la zona selezionata ingrandita. Toccare il centro della colonna dei numeri effettivi; non il progressivo o la tessera. Premere Leggi. È possibile tornare a **Ritaglia**, **Foto intera** e **Colonna automatica**.
+6. Controllare tutte le atlete: nome, numero, righe mancanti o estranee. I numeri duplicati, incerti e i nomi parziali sono segnalati. **Mostra riga originale** aiuta a confrontare il risultato con il testo letto. Non vengono inventati nomi o numeri mancanti.
+7. Selezionare **K** per la capitana e **L** per i liberi; i ruoli delle atlete non vengono dedotti automaticamente. Aggiungere manualmente eventuali righe mancanti o scegliere una foto più vicina con **Ritaglia e rileggi**.
+8. Confermare **Sostituisci rosa** e poi **Salva modifiche** nella gara. L'importazione riguarda soltanto la squadra indicata nel titolo.
+
+Per confermare la rosa servono 6–14 giocatrici, numeri unici tra 1 e 99, una capitana, almeno sei non liberi e al massimo due liberi. Con più di 12 giocatrici serve almeno un libero. Chiudere senza importare mantiene la rosa precedente. Dopo l'inizio del primo set i numeri e i ruoli sono bloccati: per cambiare la rosa occorre annullare fino all'inizio.
+
+## Staff facoltativo
+
+Nella stessa scheda squadra premere **Foto staff (facoltativa)** e fotografare solo questa sezione. L'app propone i nominativi quando riconosce esplicitamente allenatore, vice/secondo allenatore, fisioterapista/massaggiatore, medico e dirigente. Il riconoscimento di codici abbreviati o modelli diversi non è garantito.
+
+Rivedere i nomi e selezionare i ruoli da importare. Se più nominativi corrispondono allo stesso ruolo, non ne viene scelto uno arbitrariamente: si deve completare il campo. Confermare **Importa staff selezionato**, poi salvare la gara. I ruoli non selezionati restano invariati; la lista delle giocatrici e l'altra squadra non vengono modificate. Lo staff può essere corretto anche dopo l'inizio della gara.
+
+## Miglioramenti e limiti del riconoscimento
+
+- Modello latino ML Kit incluso nell'APK; analisi locale, senza permesso Internet.
+- Fotografie decodificate fino a 3600 pixel sul lato lungo, senza il precedente dimezzamento indiscriminato (una foto da 3200 pixel prima poteva scendere a 1600). Su Android 8 la decodifica limita anche la memoria delle foto molto grandi. Su Android 9 e successivi la dimensione viene impostata durante la decodifica; i file codificati oltre 32 MB sono rifiutati.
+- Gestione orientamento EXIF e rotazione manuale di 90°. Le righe sono raggruppate considerando l'inclinazione stimata dal testo; non è una correzione completa della prospettiva del foglio.
+- Intestazioni su più righe e intestazioni dei nomi centrate non devono tagliare i cognomi che iniziano più a sinistra. Le righe con un solo frammento di nome vengono proposte da controllare quando c'è evidenza della tabella.
+- Il numero viene cercato soltanto nella colonna MAGLIA riconosciuta o in quella indicata dall'utente. Valori ambigui non vengono assegnati arbitrariamente. Alcuni errori come `O8`/`l2` sono interpretati come 08/12 solo dentro quella colonna e segnalati esplicitamente per la revisione.
+- Il ritaglio automatico non è garantito per tutti i modelli CAMP3, fogli inclinati o intestazioni illeggibili. L'immagine resta correggibile; non si salva nessuna rosa senza conferma.
+- I test usano immagini e coordinate sintetiche per controllare geometria, righe, numeri, ritaglio, staff e interfaccia. Non sono una misura dell'accuratezza del riconoscitore ML Kit sui CAMP3 reali. Per tarare il riconoscimento sul modulo usato a Como serve un campione fotografico rappresentativo e una prova sul telefono.
+
+## Conservazione dei dati
+
+La foto della fotocamera resta temporaneamente nella cache privata ed è eliminata alla chiusura del dialogo; se il processo viene terminato, può restare un file di cache eliminabile dal sistema. Le immagini scelte dall'archivio non vengono modificate. Non si allegano immagini alla gara o al PDF. Il testo OCR integrale serve solo alla revisione e non viene salvato: la gara conserva soltanto atlete e ruoli dello staff confermati dall'utente.
