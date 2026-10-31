@@ -1,0 +1,25 @@
+{
+  "source_commit": "a4f7acb5221a853247d9da8fffbb11e3fd2a59f0",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.7",
+  "version_code": 13,
+  "variant": "debug",
+  "apk_sha256": "c5922bf0717da4cd6efdb2c9e759a86845fa0adf4b68579884776d63a994bc5f",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 147,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested"
+  },
+  "changes": [
+    "Pre-match correction button and Android back navigation to the same match editor",
+    "Preserve toss and valid lineup positions while editing; clear unavailable numbers only",
+    "Draft warning before returning without applying edits",
+    "Contrast ink for white and pale lineup colours, with outlined player badges",
+    "Home match badges grouped by date and sorted by time, with category, score, status and confirmed deletion"
+  ]
+}
