@@ -1,0 +1,25 @@
+{
+  "source_commit": "ca64afe81c60b48c5a80a84561fb72e3e165e9dc",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.4",
+  "version_code": 10,
+  "variant": "debug",
+  "apk_sha256": "0dfc788f8f6888841796a08615ced2d76f1bcd0c600525db522c7e78eafae5c7",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 128,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested",
+    "screenshots": "Compose screens and lineup component rendered with Robolectric native graphics; demo data"
+  },
+  "changes": [
+    "Coach sheet layout 4-3-2 / 5-6-1, drag/drop and accessible tap assignment with swaps",
+    "Explicit first-service and scorer-left choices at first and fifth set",
+    "Compact fixed live header and scores; scroll area exceeds 60 percent on tested phone size",
+    "Home match deletion with named confirmation, preserving other matches and roster library"
+  ]
+}
