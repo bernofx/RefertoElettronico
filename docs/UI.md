@@ -31,3 +31,10 @@ Le candidate cumulative sono tutte inizialmente non presenti. La ricerca per nom
 Lo staff ha sezioni separate per panchina, servizi e ruoli da verificare. La scheda Ufficiali riunisce le proposte per i servizi dell’intera gara; sono richieste selezioni esplicite. Le persone selezionate compilano i campi corrispondenti, da correggere sulla proposta. I codici ricevuti restano conservati anche quando si mappa un incarico manualmente.
 
 ![Candidate dopo il ripristino](ui/candidate-0.6.5.png)
+
+
+## Squadre con nomi simili · 0.6.6
+
+Sorteggio e scelta della formazione mostrano i nomi completi su più righe, con Casa/Ospiti sempre visibili. La squadra selezionata usa come sfondo il proprio colore, con testo a contrasto, spunta e bordo: anche il bianco resta riconoscibile. La scelta non dipende soltanto dal colore o dall’inizio del nome. I conteggi delle formazioni sono separati dal testo del nome e i nomi nel modello dei dati e nel PDF restano invariati.
+
+![Selezione con nomi simili e colori giallo/bianco](ui/nomi-squadre-0.6.6.png)

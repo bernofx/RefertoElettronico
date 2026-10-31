@@ -1,6 +1,6 @@
 # Verifica prima dell'uso
 
-La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 142 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
+La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 143 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
 
 Per la prova su telefono:
 
@@ -46,3 +46,6 @@ Verifiche **0.6.5** (142 test totali): import completo di 21 e 60 candidate, rif
 La prova UI ricrea due volte l’Activity: prima con la revisione ricevuta ancora aperta, poi dopo correzione del nome, selezione di un’atleta e conferma di una proposta staff. Controlla gli stessi UUID e dati dal file privato e verifica che la gara precedentemente avviata rimanga identica. Una prova separata ricostruisce il DraftStore dal file per verificare la persistenza senza dipendere dallo stato in memoria. Non viene simulata un’uccisione reale del processo Android: resta da verificare sul telefono, insieme al passaggio tra i due distinti package. Le modifiche sono scritte nel callback di modifica e sostituite atomicamente, senza attendere il frame successivo.
 
 I dati dei test sono fittizi. L’app destinataria non importa direttamente `tesserati` da eScoreVolley: recupero, unione cronologica e disponibilità dello staff in VolleyAlerts rimangono una dipendenza del produttore. Gli APK precedenti alla 0.6.5 rifiutano il nuovo array di oggetti `staff`; non se ne dichiara la compatibilità.
+
+
+Verifica **0.6.6**: regression test UI a 360×800 dp e caratteri al 130%, con due squadre che iniziano per POLISPORTIVA. Per tutte le sei scelte (servizio, lato e formazione, due squadre ciascuna) verifica che il testo completo sia renderizzato su più righe senza overflow né ellissi, e che la selezione della formazione non cambi il sorteggio. La suite totale contiene 143 test. Identità Casa/Ospiti e colori restano associati all’indice della squadra, indipendentemente da A/B e cambio campo.

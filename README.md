@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.5](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.5.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.6](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.6.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -78,3 +78,6 @@ La barra superiore e le schede punteggio sono compatte, con ultima azione e avvi
 
 
 La versione **0.6.5** adatta l’importazione alle rose cumulative VolleyAlerts: fino a 60 candidate per squadra, mai troncate né fuse, tutte inizialmente non presenti. Ricerca per nome/numero, errori accanto alle voci e controlli sulle sole selezionate. Supporta inoltre le proposte staff strutturate con revisione di panchina, incarichi di servizio e ruoli sconosciuti; il segnapunti è unico per gara. La preparazione viene salvata separatamente e può essere ripresa senza perdere chiavi, selezioni o modifiche. File JSON e link usano lo stesso parser e mantengono le soglie precedenti. Lo staff richiede anche l’esportazione corrispondente in VolleyAlerts, dipendenza ancora da verificare. [Contratto aggiornato e limiti](docs/INTEGRAZIONE-VOLLEYALERTS.md).
+
+
+La versione **0.6.6** evita selettori indistinguibili quando le squadre condividono l’inizio del nome: sorteggio e scelta della formazione mostrano il nome completo su più righe, Casa/Ospiti, il colore e la selezione esplicita. La scelta selezionata usa come sfondo il colore assegnato alla squadra, con testo a contrasto, spunta e bordo per distinguere anche il bianco. Il conteggio della formazione è separato dal nome. Nelle schede punteggio compatte Casa/Ospiti precede il nome, così l’identità resta leggibile anche quando il nome deve essere abbreviato. I nomi originali nel JSON e nel PDF restano invariati.

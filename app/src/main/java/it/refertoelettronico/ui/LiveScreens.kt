@@ -39,7 +39,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
                 val accent=config.teams[t].displayColor(t)
                 Surface(modifier=Modifier.weight(1f).testTag("point-card-$t"),shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface) {
                     Column(Modifier.padding(horizontal=8.dp,vertical=6.dp),verticalArrangement=Arrangement.spacedBy(2.dp)) {
-                        Text(config.teams[t].name,style=MaterialTheme.typography.labelMedium,maxLines=1,overflow=TextOverflow.Ellipsis)
+                        Text("${if(t==0)"Casa"else"Ospiti"} · ${config.teams[t].name}",style=MaterialTheme.typography.labelMedium,maxLines=1,overflow=TextOverflow.Ellipsis)
                         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                             Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.Bold)
                             Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,

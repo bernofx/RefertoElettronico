@@ -59,13 +59,7 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit) {
         } else Text("Servizio: ${config.teams[server].name} · A sinistra del tavolo: ${config.teams[left].name}. Scelte alternate dal set precedente.",style=MaterialTheme.typography.bodySmall)
         if(eligible.any{it.size<6})Notice("Meno di sei giocatrici disponibili: registra la decisione dell’arbitro nelle altre operazioni.")
         else {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                config.teams.forEachIndexed { t,item->
-                    SegmentedButton(selected=team==t,onClick={team=t},icon={},modifier=Modifier.testTag("lineup-team-$t"),shape=SegmentedButtonDefaults.itemShape(t,2)) {
-                        Text("${item.name} · ${lineups[t].count{it>0}}/6",maxLines=1,overflow=TextOverflow.Ellipsis)
-                    }
-                }
-            }
+            TeamChoiceRow(config,team,"lineup-team",lineups.map{"${it.count{number->number>0}}/6 in formazione"}){team=it}
             key(n,team) {
                 LineupBoard(team,config.teams[team],eligible[team],lineups[team],onAssign={zone,number->
                     lineups=lineups.with(team,assignLineup(lineups[team],zone,number))
@@ -84,10 +78,7 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit) {
 @Composable
 private fun TossChoice(label:String,tag:String,selected:Int,config:MatchConfig,onSelect:(Int)->Unit) {
     Text(label,style=MaterialTheme.typography.labelLarge)
-    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-        config.teams.forEachIndexed { t,team->FilterChip(selected=selected==t,onClick={onSelect(t)},modifier=Modifier.weight(1f).testTag("toss-$tag-$t"),
-            label={Text(team.name,maxLines=1,overflow=TextOverflow.Ellipsis)}) }
-    }
+    TeamChoiceRow(config,selected,"toss-$tag",onSelect=onSelect)
 }
 
 @OptIn(ExperimentalLayoutApi::class)
