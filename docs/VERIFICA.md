@@ -1,6 +1,6 @@
 # Verifica prima dell'uso
 
-La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 121 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
+La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 128 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
 
 Per la prova su telefono:
 
@@ -36,3 +36,6 @@ Verifiche **0.6.2**: salvataggio e aggiornamento di una rosa completa con oltre 
 
 
 UI **0.6.3**: la stessa suite di 121 test viene eseguita con il nuovo tema nell’app e nell’editor rosa. Le prove esistenti verificano punteggio e annullamento, rotazioni e cambio campo, colori, audio, caricamento/salvataggio rosa e selezione delle presenti, blocco del ritaglio e pulsante di lettura. Le schermate iniziale, gara e distinta sono renderizzate dall’interfaccia Compose con dati dimostrativi. Le anteprime vengono ispezionate per allineamenti, leggibilità e comandi. Nessuna modifica al motore, al formato dei dati o al PDF.
+
+
+Verifiche **0.6.4**: ordine geometrico del tagliando 4–3–2 / 5–6–1 indipendente dal lato scelto; zone inizialmente vuote; trascinamento dopo pressione prolungata verso una zona e rilascio fuori dai bersagli; inserimento a tocchi, scambio senza duplicati, esclusione dei liberi; entrambe le formazioni e le scelte del sorteggio richieste prima dell’avvio; corretta conversione in evento con ordine interno zone 1–6 e replay del motore. Verificati alternanza nel secondo set e nuovo sorteggio nel quinto. La schermata gara a 411×891 dp riserva oltre il 60% del display al contenuto scorrevole. Cancellazione: annullare la conferma conserva entrambe le gare; confermare elimina soltanto quella scelta, mantenendo l’altra e la rosa riutilizzabile; identificativi con percorsi sono rifiutati. Totale: 128 test. Da verificare sul dispositivo: sensazione del trascinamento e scorrimento con il dito, oltre alla normale prova a bordo campo.

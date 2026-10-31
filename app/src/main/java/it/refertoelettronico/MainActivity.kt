@@ -111,13 +111,14 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+            val compactHeader=journal!=null && !editing && tab==0
+            Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=if(compactHeader)0.dp else 10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 Surface(shape=MaterialTheme.shapes.small,color=MaterialTheme.colorScheme.primaryContainer) {
-                    Box(Modifier.size(38.dp),contentAlignment=Alignment.Center){UiGlyph(UiSymbol.COURT,color=MaterialTheme.colorScheme.primary)}
+                    Box(Modifier.size(if(compactHeader)28.dp else 38.dp),contentAlignment=Alignment.Center){UiGlyph(UiSymbol.COURT,color=MaterialTheme.colorScheme.primary)}
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("REFERTO VOLLEY",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
-                    Text(if(editing) "Prepara la gara" else if(journal==null) "A bordo campo" else journal!!.config.competition,
+                    Text("REFERTO VOLLEY",style=if(compactHeader)MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
+                    if(!compactHeader)Text(if(editing) "Prepara la gara" else if(journal==null) "A bordo campo" else journal!!.config.competition,
                         style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold,maxLines=2)
                 }
                 SoundToggle(soundEnabled){ enabled ->
@@ -142,7 +143,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                 val archives=remember(archiveRevision) { store.list() }
                 HomeScreen(archives,onNew={importedDraft=null;id=null;editing=true},onDemo={id=null;persist(Journal(config=Demo.config(),events=listOf(Demo.start())));tab=0},
                     onOpen={key ->try {journal=store.load(key);id=key;tab=0;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}},
-                    onImport={importBackup.launch(arrayOf("application/json","text/plain","application/octet-stream"))})
+                    onImport={importBackup.launch(arrayOf("application/json","text/plain","application/octet-stream"))},
+                    onDelete={key->try{store.delete(key);archiveRevision++;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}})
             } else {
                 val j=journal!!;val s=state!!
                 when(tab) {

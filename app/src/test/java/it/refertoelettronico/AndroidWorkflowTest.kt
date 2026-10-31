@@ -283,6 +283,40 @@ class AndroidWorkflowTest {
         assertEquals(count,org.robolectric.shadows.ShadowToneGenerator.getPlayedTones().size)
     }
 
+
+    @Test fun matchDeletionRequiresConfirmationAndPreservesOtherMatchesAndSavedRosters() {
+        compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        compose.onNodeWithText("Gare",useUnmergedTree=true).performClick()
+        compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        compose.onNodeWithText("Gare",useUnmergedTree=true).performClick()
+        val store=it.refertoelettronico.storage.MatchStore(File(compose.activity.filesDir,"matches"))
+        val originals=store.list().associate{it.first to it.second.getOrThrow()}
+        assertEquals(2,originals.size)
+        val library=it.refertoelettronico.storage.RosterStore(File(compose.activity.filesDir,"rosters"))
+        library.save("Rosa conservata",originals.values.first().config.teams[0])
+        val target=originals.keys.first()
+        compose.onNodeWithTag("delete-match-$target").performScrollTo().performClick()
+        compose.onNodeWithText("Annulla",substring=false).performClick()
+        assertEquals(originals.keys,store.list().map{it.first}.toSet())
+        compose.onNodeWithTag("delete-match-$target").performScrollTo().performClick()
+        compose.onNodeWithTag("confirm-delete-match").performClick()
+        compose.onNodeWithTag("delete-match-$target").assertDoesNotExist()
+        val survivor=originals.keys.single{it!=target}
+        assertEquals(originals[survivor],store.load(survivor))
+        assertEquals(1,store.list().size);assertEquals(1,library.list().size)
+        assertThrows(IllegalArgumentException::class.java){store.delete("../other")}
+    }
+
+    @Test fun compactLiveHeaderLeavesMostOfTheScreenForScrollableCourtAndActions() {
+        compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        val root=compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val scroll=compose.onNodeWithTag("live-scroll-region").fetchSemanticsNode().boundsInRoot
+        assertTrue("Almeno il 60% dello schermo deve rimanere alla gara scorrevole",scroll.height>root.height*.60f)
+        compose.onNodeWithTag("point-button-0").assertIsDisplayed()
+        compose.onNodeWithTag("point-button-1").assertIsDisplayed()
+        captureUi("ui-gara-0.6.4.png")
+    }
+
     private fun captureUi(name:String) {
         val outputs=File("build/outputs/verification").apply{mkdirs()}
         compose.runOnIdle {

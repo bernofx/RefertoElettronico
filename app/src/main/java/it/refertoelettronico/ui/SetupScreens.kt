@@ -9,6 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
@@ -50,7 +53,9 @@ fun <T> Picker(label:String,selected:T,choices:List<T>,name:(T)->String,onChange
 }
 
 @Composable
-fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo:()->Unit,onOpen:(String)->Unit,onImport:()->Unit) {
+fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo:()->Unit,onOpen:(String)->Unit,onImport:()->Unit,onDelete:(String)->Unit) {
+    var deleting by remember{mutableStateOf<Pair<String,String>?>(null)}
+    if(deleting!=null)AlertDialog(onDismissRequest={deleting=null},title={Text("Eliminare questa gara?")},text={Text("${deleting!!.second}\n\nLa gara e la sua cronologia verranno eliminate da questo dispositivo. Le copie JSON già esportate e le rose salvate restano disponibili.")},confirmButton={TextButton(modifier=Modifier.testTag("confirm-delete-match"),onClick={val key=deleting!!.first;deleting=null;onDelete(key)}){Text("Elimina gara",color=MaterialTheme.colorScheme.error)}},dismissButton={TextButton(onClick={deleting=null}){Text("Annulla")}})
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF103E34),Color(0xFF1A6552))),RoundedCornerShape(28.dp))) {
             Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -87,10 +92,14 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
                             Text("${j.config.date} · ${if(state.finished(j.config))"Terminata" else "Da riprendere"}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text("${state.wins(0)}:${state.wins(1)}",style=MaterialTheme.typography.titleLarge)
-                        UiGlyph(UiSymbol.CHEVRON,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        IconButton(onClick={deleting=key to "${j.config.teams[0].name} — ${j.config.teams[1].name} · ${j.config.date}"},
+                            modifier=Modifier.testTag("delete-match-$key").semantics{contentDescription="Elimina gara ${j.config.teams[0].name} — ${j.config.teams[1].name}"}){UiGlyph(UiSymbol.DELETE,color=MaterialTheme.colorScheme.onSurfaceVariant)}
                     }
                 }
-            } else Notice("Archivio $key non leggibile: è stato conservato. Puoi recuperare una copia JSON valida.")
+            } else Column {
+                Notice("Archivio $key non leggibile: è stato conservato. Puoi recuperare una copia JSON valida.")
+                TextButton(onClick={deleting=key to "Archivio non leggibile: $key"},modifier=Modifier.testTag("delete-match-$key")){Text("Elimina archivio non leggibile")}
+            }
         }
         TextButton(onClick=onImport,modifier=Modifier.fillMaxWidth()){ActionLabel("Importa una copia della gara (JSON)",UiSymbol.UPLOAD)}
         Text("Le gare restano su questo dispositivo. Salva una copia dal menu Referto per trasferirle o conservarle altrove.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)

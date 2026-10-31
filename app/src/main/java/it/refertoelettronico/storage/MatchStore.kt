@@ -35,6 +35,10 @@ class MatchStore(private val directory: File) {
         try { Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE) }
         catch (_: java.nio.file.AtomicMoveNotSupportedException) { Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING) }
     }
+    fun delete(id:String) {
+        require(id.matches(Regex("[a-zA-Z0-9-]+"))){"Identificativo gara non valido."}
+        Files.deleteIfExists(File(directory,"$id.json").toPath())
+    }
     fun load(id: String): Journal = decode(File(directory, "$id.json").readText())
     fun list(): List<Pair<String, Result<Journal>>> = directory.listFiles().orEmpty()
         .filter { it.extension == "json" }.sortedByDescending { it.lastModified() }.map { it.nameWithoutExtension to runCatching { load(it.nameWithoutExtension) } }

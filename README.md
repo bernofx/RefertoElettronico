@@ -2,13 +2,13 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.3](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.3.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.4](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.4.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
 1. **Prepara una nuova gara**: dati gara, distinte (numero, capitana e liberi), panchine e ufficiali. Puoi iniziare con i soli numeri e completare cognome e nome in seguito; il PDF segnala i nominativi mancanti. Registra il motivo dell'uso del cartaceo. Per ciascuna squadra puoi usare **Foto lista giocatrici**, fotografando da vicino la tabella e revisionando la rosa prima di sostituirla. Lo staff può essere letto con una seconda foto facoltativa.
 2. Scegli un colore per ciascuna squadra nei suoi dati: pulsanti dei punti e numeri in campo useranno quel colore, anche al cambio campo. La scelta è modificabile durante la gara e inclusa nella copia JSON.
-3. Conferma il sorteggio e le sei posizioni iniziali di ciascuna squadra. La squadra inizialmente a sinistra è A sul referto; l'identità A/B resta invariata durante i cambi campo.
+3. Scegli l’esito del sorteggio: **Chi serve per primo?** e **Chi è a sinistra del tavolo?**. Per ciascuna squadra riporta il tagliando visto dal fondo verso la rete: **4–3–2 / 5–6–1**. Tieni premuto un numero e trascinalo nella zona, oppure tocca numero e zona. Compila entrambe le formazioni e conferma l’inizio del set. La squadra inizialmente a sinistra è A sul referto; l'identità A/B resta invariata durante i cambi campo.
 4. Usa **+1 punto**. Il campo mostra la formazione, ruota la squadra che conquista il servizio ed evidenzia il battitore. Il campo è visto dal tavolo del segnapunti, con rete verticale e formazioni opposte. Il pallone identifica la battitrice e le rotazioni sono animate; Annulla anima lo spostamento inverso.
 5. Registra timeout, sostituzioni e ingressi/uscite del libero. I rimpiazzi del libero non consumano sostituzioni. Un messaggio segnala quando il libero deve uscire prima della prossima azione.
 6. **Annulla** ripristina immediatamente l'ultima operazione. Dal **Registro**, “Annulla da qui” permette di tornare indietro di più eventi, anche oltre la fine di un set. **Ripristina** recupera gli eventi; registrare un nuovo evento scarta il ramo annullato.
@@ -70,3 +70,8 @@ Le vecchie gare mantengono tutte le giocatrici come presenti. La copia JSON di u
 
 
 La versione **0.6.3** aggiorna la UI con un tema Material 3 coerente: palette verde/avorio, tipografia più leggibile, schede punteggio con numeri grandi e colori squadra, selettori tonali, icone vettoriali e dettagli della rosa accessibili dalla matita. La schermata iniziale separa nuova gara, dimostrazione e archivio. La foto usa un controllo a segmenti per blocco, ritaglio e maglie. [Anteprime dell’interfaccia](docs/UI.md).
+
+
+La versione **0.6.4** introduce il tagliando formazioni con trascinamento e alternativa a tocchi. Le zone partono vuote; una giocatrice già assegnata scambia posto con quella nella zona di destinazione. Solo le presenti non libero e disponibili sono proposte. Nei set successivi puoi copiare esplicitamente la formazione del set precedente e correggerla secondo il nuovo tagliando. Primo servizio e lato del campo si scelgono in testa al primo e al quinto set; negli altri si alternano automaticamente. Il campo durante la gara resta visto dal tavolo del segnapunti.
+
+La barra superiore e le schede punteggio sono compatte, con ultima azione e avvisi nella parte scorrevole. In **Le tue gare**, il cestino apre una conferma con squadre e data: **Elimina gara** rimuove soltanto la gara scelta e la sua cronologia dal dispositivo. Le rose salvate separatamente e i file JSON già esportati rimangono disponibili; una copia JSON permette di importare nuovamente una gara eliminata. Si possono eliminare anche gli archivi non leggibili.

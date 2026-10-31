@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.unit.dp
 
-enum class UiSymbol { COURT, HISTORY, DOCUMENT, SETTINGS, ADD, CHEVRON, PEOPLE, CAMERA, UPLOAD, SAVE, EDIT, CHECK, COLOR, SWAP, CLOCK }
+enum class UiSymbol { COURT, HISTORY, DOCUMENT, SETTINGS, ADD, CHEVRON, PEOPLE, CAMERA, UPLOAD, SAVE, EDIT, CHECK, COLOR, SWAP, CLOCK, DELETE }
 
 /** Decorative vector icons; the adjacent label supplies the accessible name. */
 @Composable
@@ -40,6 +40,7 @@ fun UiGlyph(symbol:UiSymbol,modifier:Modifier=Modifier,color:Color=LocalContentC
                 UiSymbol.CHECK->{line(5f,12f,10f,17f);line(10f,17f,20f,6f)}
                 UiSymbol.COLOR->{drawCircle(color,8f,Offset(12f,12f),style=Stroke(1.7f));drawCircle(color,2f,Offset(9f,9f));drawCircle(color,2f,Offset(16f,11f));drawCircle(color,2f,Offset(10f,16f))}
                 UiSymbol.SWAP->{line(3f,8f,20f,8f);line(16f,4f,20f,8f);line(20f,8f,16f,12f);line(21f,17f,4f,17f);line(8f,13f,4f,17f);line(4f,17f,8f,21f)}
+                UiSymbol.DELETE->{box(6f,6f,12f,15f);line(3f,5f,21f,5f);line(9f,2f,15f,2f);line(10f,10f,10f,17f);line(14f,10f,14f,17f)}
                 UiSymbol.CLOCK->{drawCircle(color,9f,Offset(12f,12f),style=Stroke(1.7f));line(12f,6f,12f,12f);line(12f,12f,16f,14f)}
             }
         }

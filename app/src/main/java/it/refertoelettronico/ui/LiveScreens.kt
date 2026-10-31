@@ -29,37 +29,32 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
     val leftTeam=set?.let{CourtGeometry.leftTeam(it)} ?: 0
     val playing=set!=null && set.endedAt==null && !state.finished(config)
     val problem=if(playing)MatchEngine.rallyProblem(state) else null
-    Column(Modifier.fillMaxSize().padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+    Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=4.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
-            Column {Text("SET ${set?.number ?: 1}",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
-                Text("Set vinti: ${state.wins(leftTeam)} — ${state.wins(1-leftTeam)}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)}
-            Row {FilledTonalButton(onClick=onUndo,enabled=canUndo){Text("↶ Annulla")};Spacer(Modifier.width(6.dp));TextButton(onClick=onRedo,enabled=canRedo){Text("Ripristina")}}
+            Text("Set ${set?.number ?: 1} · ${state.wins(leftTeam)}–${state.wins(1-leftTeam)} set",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
+            Row {TextButton(onClick=onUndo,enabled=canUndo,contentPadding=PaddingValues(horizontal=8.dp)){Text("↶ Annulla")};TextButton(onClick=onRedo,enabled=canRedo,contentPadding=PaddingValues(horizontal=8.dp)){Text("Ripristina")}}
         }
-        if(lastEvent!=null)Text("Ultima: ${lastEvent.description(config)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
         if(playing && set!=null) Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             for(t in listOf(leftTeam,1-leftTeam)) key(t) {
                 val accent=config.teams[t].displayColor(t)
                 Surface(modifier=Modifier.weight(1f).testTag("point-card-$t"),shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface) {
-                    Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(4.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-                        Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                            Box(Modifier.size(8.dp).background(accent,CircleShape))
-                            Text(config.teams[t].name,color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.labelLarge,maxLines=1,overflow=TextOverflow.Ellipsis)
-                        }
-                        Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=44.sp,lineHeight=48.sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
-                        Text(if(set.server==t && set.liberos[t]?.replaced==set.court[t][0])"Uscita libero richiesta" else if(set.server==t)"Serve n. ${set.visible(t)[0]}" else "Riceve",
-                            style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1)
-                        Spacer(Modifier.height(4.dp))
-                        Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,
-                            colors=ButtonDefaults.buttonColors(containerColor=accent,contentColor=teamInk(accent)),
-                            modifier=Modifier.fillMaxWidth().height(48.dp).testTag("point-button-$t"),shape=MaterialTheme.shapes.medium) {
-                            Text("+1 punto",fontSize=18.sp,fontWeight=FontWeight.Bold)
+                    Column(Modifier.padding(horizontal=8.dp,vertical=6.dp),verticalArrangement=Arrangement.spacedBy(2.dp)) {
+                        Text(config.teams[t].name,style=MaterialTheme.typography.labelMedium,maxLines=1,overflow=TextOverflow.Ellipsis)
+                        Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                            Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.Bold)
+                            Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,
+                                colors=ButtonDefaults.buttonColors(containerColor=accent,contentColor=teamInk(accent)),
+                                contentPadding=PaddingValues(horizontal=8.dp),modifier=Modifier.weight(1f).height(48.dp).testTag("point-button-$t"),shape=MaterialTheme.shapes.small) {
+                                Text("+1 punto",fontSize=14.sp,fontWeight=FontWeight.Bold,maxLines=1)
+                            }
                         }
                     }
                 }
             }
         }
+        Column(Modifier.weight(1f).testTag("live-scroll-region").verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+        if(lastEvent!=null)Text("Ultima: ${lastEvent.description(config)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
         if(problem!=null)Notice(problem)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         if(state.finished(config)) {
             Notice(if(state.endedEarly)"Gara terminata anticipatamente. Le decisioni sono nelle osservazioni." else "Gara conclusa · ${config.teams[if(state.wins(0)>state.wins(1))0 else 1].name} vince ${maxOf(state.wins(0),state.wins(1))}:${minOf(state.wins(0),state.wins(1))}. Puoi generare il referto.")
         } else if(!playing && !state.interrupted) {
@@ -138,42 +133,6 @@ private fun TeamActions(config:MatchConfig,state:MatchState,team:Int,onAction:(S
                 }
             } else Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){controls()}
 
-        }
-    }
-}
-
-@Composable
-private fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit) {
-    val n=state.sets.size+1
-    val deciding=MatchEngine.isDeciding(config,n)
-    val eligible=config.teams.mapIndexed { t,team ->team.players.filter{it.number !in state.designatedLiberos[t] && it.number !in state.retired[t] && it.number !in state.disqualified[t]}.map{it.number} }
-    var lineups by remember(n,state.designatedLiberos,state.retired,state.disqualified) { mutableStateOf(eligible.mapIndexed { t,ns ->
-        val prior=state.current?.initial?.get(t)?.filter{it in ns}.orEmpty();(prior+ns.filter{it !in prior}).take(6)
-    }) }
-    var server by remember(n) { mutableIntStateOf(if(state.current!=null && !deciding)1-state.current!!.firstServer else 0) }
-    var left by remember(n) { mutableIntStateOf(if(state.current!=null && !deciding)1-state.current!!.initialLeft else 0) }
-    OutlinedCard {
-        Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            Text("Formazioni · set $n",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
-            Text("Inserisci le zone 1–6 del tagliando. La disposizione è vista dal tavolo del segnapunti: le due formazioni sono opposte.",style=MaterialTheme.typography.bodySmall)
-            if(eligible.any{it.size<6})Notice("Meno di sei giocatrici disponibili: registra la decisione dell'arbitro nelle altre operazioni.")
-            else {
-                for(t in 0..1) {
-                    Text(config.teams[t].name,fontWeight=FontWeight.Bold)
-                    CourtGeometry.rows(if(t==left)CourtEnd.LEFT else CourtEnd.RIGHT).forEach { row ->
-                        Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {row.forEach {zone ->
-                            val pos=zone-1
-                            Picker("Zona ${pos+1}",lineups[t][pos],eligible[t],{num ->"$num"},{num ->lineups=lineups.with(t,lineups[t].with(pos,num))},Modifier.weight(1f))
-                        }}
-                    }
-                }
-                if(n==1 || deciding) {
-                    Picker("Primo servizio · sorteggio",server,listOf(0,1),{config.teams[it].name},{server=it})
-                    Picker("Squadra a sinistra · sorteggio",left,listOf(0,1),{config.teams[it].name},{left=it})
-                    if(n==1)Text("La squadra inizialmente a sinistra sarà A sul referto, l'altra B.",style=MaterialTheme.typography.bodySmall)
-                } else Text("Primo servizio: ${config.teams[server].name}. Cambio dei lati automatico.")
-                Button(onClick={onEvent(Event(Kind.START_SET,lineups=lineups,server=server,left=left))},modifier=Modifier.fillMaxWidth()) {Text("Conferma e inizia il set $n")}
-            }
         }
     }
 }
