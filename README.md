@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.2](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.2.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.3](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.3.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -67,3 +67,6 @@ La versione **0.6.1** rilegge la zona selezionata dalla **foto originale** e rid
 La versione **0.6.2** rende compatta la distinta: ogni giocatrice occupa una riga, con spunta **Presente** e dettagli sotto **Modifica**. Solo le presenti sono disponibili nelle formazioni e nel referto; la rosa completa può superare le 14 giocatrici, mentre la distinta della gara mantiene i vincoli del regolamento. **Salva rosa** conserva una copia riutilizzabile sul dispositivo, comprese le assenti; **Carica rosa** permette di recuperarla oppure partire da una gara precedente. Il caricamento sostituisce i dati della squadra e lascia tutte le presenze da selezionare. Per aggiornare una rosa salvata usa lo stesso nome e conferma **Aggiorna rosa**. Le partite precedenti rimangono invariate.
 
 Le vecchie gare mantengono tutte le giocatrici come presenti. La copia JSON di una gara include rosa completa e presenze; l’archivio separato delle rose è locale e viene eliminato disinstallando l’app. Dopo l’inizio della gara le presenze sono bloccate come numeri e ruoli. Nell’editor foto il ritaglio parte bloccato: attiva **Ritaglia** solo per modificarlo, oppure **Maglie** per indicare la colonna. Il pulsante **Leggi** rimane visibile sotto la foto senza dover scorrere. Colore e panchina sono espandibili per lasciare più spazio alla lista.
+
+
+La versione **0.6.3** aggiorna la UI con un tema Material 3 coerente: palette verde/avorio, tipografia più leggibile, schede punteggio con numeri grandi e colori squadra, selettori tonali, icone vettoriali e dettagli della rosa accessibili dalla matita. La schermata iniziale separa nuova gara, dimostrazione e archivio. La foto usa un controllo a segmenti per blocco, ritaglio e maglie. [Anteprime dell’interfaccia](docs/UI.md).

@@ -8,6 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -19,10 +22,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun Notice(message: String) { Surface(color=MaterialTheme.colorScheme.primaryContainer,shape=RoundedCornerShape(12.dp)) {Text(message,Modifier.padding(14.dp),style=MaterialTheme.typography.bodyMedium)} }
+fun Notice(message: String) { Surface(color=MaterialTheme.colorScheme.primaryContainer,shape=RoundedCornerShape(12.dp)) {Text(message,Modifier.padding(horizontal=14.dp,vertical=10.dp),style=MaterialTheme.typography.bodyMedium)} }
 @Composable
 fun Field(label:String,value:String,onChange:(String)->Unit,modifier:Modifier=Modifier,numeric:Boolean=false,enabled:Boolean=true) {
     OutlinedTextField(value=value,onValueChange=onChange,label={Text(label)},modifier=modifier.fillMaxWidth(),singleLine=true,enabled=enabled,
+        shape=MaterialTheme.shapes.medium,
+        colors=OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor=MaterialTheme.colorScheme.surface,
+            focusedContainerColor=MaterialTheme.colorScheme.surface,
+            unfocusedBorderColor=MaterialTheme.colorScheme.outlineVariant),
         keyboardOptions=KeyboardOptions(keyboardType=if(numeric)KeyboardType.Number else KeyboardType.Text))
 }
 @Composable
@@ -30,7 +38,10 @@ fun <T> Picker(label:String,selected:T,choices:List<T>,name:(T)->String,onChange
     var expanded by remember { mutableStateOf(false) }
     Column(modifier) {
         Text(label,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary)
-        Box { OutlinedButton(onClick={expanded=true},modifier=Modifier.fillMaxWidth()) {Text(name(selected),maxLines=2)}
+        Box { FilledTonalButton(onClick={expanded=true},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp),shape=MaterialTheme.shapes.small,
+            contentPadding=PaddingValues(horizontal=12.dp,vertical=10.dp)) {
+            Text(name(selected),Modifier.weight(1f),maxLines=2);UiGlyph(UiSymbol.CHEVRON)
+        }
             DropdownMenu(expanded=expanded,onDismissRequest={expanded=false}) {
                 choices.forEach { item ->DropdownMenuItem(text={Text(name(item))},onClick={onChange(item);expanded=false}) }
             }
@@ -40,30 +51,49 @@ fun <T> Picker(label:String,selected:T,choices:List<T>,name:(T)->String,onChange
 
 @Composable
 fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo:()->Unit,onOpen:(String)->Unit,onImport:()->Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(22.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        Surface(color=Color(0xFF153E49),shape=RoundedCornerShape(24.dp)) {
-            Column(Modifier.padding(25.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                Text("Ogni punto.\nTutto sotto controllo.",style=MaterialTheme.typography.headlineLarge,color=Color.White,fontWeight=FontWeight.Bold)
-                Text("U14 femminile · FIPAV Como\nPunti, rotazioni e referto cartaceo, anche senza rete.",color=Color(0xFFD6E4E7))
-                Button(onClick=onNew,colors=ButtonDefaults.buttonColors(containerColor=Color(0xFFF3CA74),contentColor=Color(0xFF163A44))) {Text("Prepara una nuova gara")}
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF103E34),Color(0xFF1A6552))),RoundedCornerShape(28.dp))) {
+            Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+                    Surface(color=Color.White.copy(alpha=.12f),shape=RoundedCornerShape(50)) {
+                        Text("U14 FEMMINILE · COMO",Modifier.padding(horizontal=10.dp,vertical=6.dp),style=MaterialTheme.typography.labelSmall,color=Color(0xFFD7F2E7))
+                    }
+                    UiGlyph(UiSymbol.COURT,Modifier.size(32.dp),Color(0xFFA5CFB9))
+                }
+                Text("La tua prossima\ngara, punto per punto.",style=MaterialTheme.typography.headlineLarge,color=Color.White)
+                Text("Formazioni, rotazioni e referto.\nTutto a portata di mano, anche offline.",style=MaterialTheme.typography.bodyMedium,color=Color(0xFFD1E5D8))
+                Button(onClick=onNew,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp),
+                    colors=ButtonDefaults.buttonColors(containerColor=Color(0xFFF4CE7B),contentColor=Color(0xFF33280E))) {
+                    ActionLabel("Prepara una nuova gara",UiSymbol.ADD)
+                }
             }
         }
-        OutlinedButton(onClick=onDemo,modifier=Modifier.fillMaxWidth()){Text("Prova con una gara dimostrativa")}
-        if(archives.isNotEmpty())Text("Le tue gare",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
+        FilledTonalButton(onClick=onDemo,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) {ActionLabel("Prova con una gara dimostrativa",UiSymbol.COURT)}
+        if(archives.isNotEmpty())Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+            Text("Le tue gare",style=MaterialTheme.typography.titleLarge)
+            Text("${archives.count{it.second.isSuccess}} salvate",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         archives.forEach { (key,result) ->
             val j=result.getOrNull()
             if(j!=null) {
-                val s=remember(j){MatchEngine.replay(j.config,j.events)}
-                OutlinedCard(onClick={onOpen(key)},modifier=Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                        Text("${j.config.teams[0].name} — ${j.config.teams[1].name}",fontWeight=FontWeight.Bold)
-                        Text("${j.config.date} · set ${s.wins(0)}:${s.wins(1)} · ${if(s.finished(j.config))"Terminata" else "Da riprendere"}")
+                val state=remember(j){MatchEngine.replay(j.config,j.events)}
+                Card(onClick={onOpen(key)},modifier=Modifier.fillMaxWidth(),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
+                    Row(Modifier.padding(16.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Surface(shape=RoundedCornerShape(14.dp),color=MaterialTheme.colorScheme.surfaceVariant) {
+                            Box(Modifier.size(44.dp),contentAlignment=Alignment.Center){UiGlyph(UiSymbol.COURT,color=MaterialTheme.colorScheme.primary)}
+                        }
+                        Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                            Text("${j.config.teams[0].name} — ${j.config.teams[1].name}",style=MaterialTheme.typography.titleSmall,maxLines=2,overflow=TextOverflow.Ellipsis)
+                            Text("${j.config.date} · ${if(state.finished(j.config))"Terminata" else "Da riprendere"}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text("${state.wins(0)}:${state.wins(1)}",style=MaterialTheme.typography.titleLarge)
+                        UiGlyph(UiSymbol.CHEVRON,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             } else Notice("Archivio $key non leggibile: è stato conservato. Puoi recuperare una copia JSON valida.")
         }
-        TextButton(onClick=onImport){Text("Importa una copia della gara (JSON)")}
-        Text("Le gare restano su questo dispositivo. Salva una copia dal menu Referto per trasferirle o conservarle altrove.",style=MaterialTheme.typography.bodySmall)
+        TextButton(onClick=onImport,modifier=Modifier.fillMaxWidth()){ActionLabel("Importa una copia della gara (JSON)",UiSymbol.UPLOAD)}
+        Text("Le gare restano su questo dispositivo. Salva una copia dal menu Referto per trasferirle o conservarle altrove.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

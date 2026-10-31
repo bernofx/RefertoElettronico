@@ -33,3 +33,6 @@ Ritaglio originale 0.6.1: dieci test aggiuntivi verificano la risoluzione effett
 
 
 Verifiche **0.6.2**: salvataggio e aggiornamento di una rosa completa con oltre 14 giocatrici, caricamento senza riutilizzare automaticamente le presenze, identificatori stabili durante la modifica, blocco dopo l’inizio, compatibilità JSON e conservazione delle vecchie gare. Le assenti non sono selezionabili nelle formazioni o nei cambi e non compaiono nel PDF principale o negli allegati. Verificati dati incoerenti, file corrotti e dimensione massima della rosa. Le prove Compose coprono anche il gesto sulla foto bloccata e la visibilità del pulsante di lettura in verticale e orizzontale. Da provare su telefono: caricamento/fotocamera, gesti con il documento reale e tastiera con i pannelli compatti.
+
+
+UI **0.6.3**: la stessa suite di 121 test viene eseguita con il nuovo tema nell’app e nell’editor rosa. Le prove esistenti verificano punteggio e annullamento, rotazioni e cambio campo, colori, audio, caricamento/salvataggio rosa e selezione delle presenti, blocco del ritaglio e pulsante di lettura. Le schermate iniziale, gara e distinta sono renderizzate dall’interfaccia Compose con dati dimostrativi. Le anteprime vengono ispezionate per allineamenti, leggibilità e comandi. Nessuna modifica al motore, al formato dei dati o al PDF.

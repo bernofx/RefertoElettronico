@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -43,8 +44,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         if(savedInstanceState==null && IncomingMatch.accepts(intent))incoming=intent
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        setContent { MaterialTheme(colorScheme = lightColorScheme(primary=Color(0xFF145663),secondary=Color(0xFF9B6326),
-            background=Color(0xFFF6F5F0),surface=Color(0xFFFFFEFA),primaryContainer=Color(0xFFDCEEF0))) { VolleyApp(incoming,onIncomingHandled={incoming=null}) } }
+        setContent { VolleyTheme { VolleyApp(incoming,onIncomingHandled={incoming=null}) } }
     }
 }
 
@@ -104,16 +104,19 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     BackHandler(enabled=editing || journal!=null) { if(editing){editing=false;importedDraft=null} else {journal=null;id=null} }
     val state=remember(journal) { journal?.let { MatchEngine.replay(it.config,it.events) } }
     Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
-        if(journal!=null && !editing) NavigationBar {
+        if(journal!=null && !editing) NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp) {
             listOf("Gara","Registro","Referto","Dati").forEachIndexed { index,label ->
-                NavigationBarItem(selected=tab==index,onClick={tab=index},icon={Text(listOf("◉","≡","▤","⚙")[index])},label={Text(label)})
+                NavigationBarItem(selected=tab==index,onClick={tab=index},icon={UiGlyph(listOf(UiSymbol.COURT,UiSymbol.HISTORY,UiSymbol.DOCUMENT,UiSymbol.SETTINGS)[index])},label={Text(label)})
             }
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp),horizontalArrangement=Arrangement.SpaceBetween) {
+            Row(Modifier.fillMaxWidth().padding(horizontal=18.dp,vertical=10.dp),horizontalArrangement=Arrangement.spacedBy(10.dp),verticalAlignment=Alignment.CenterVertically) {
+                Surface(shape=MaterialTheme.shapes.small,color=MaterialTheme.colorScheme.primaryContainer) {
+                    Box(Modifier.size(38.dp),contentAlignment=Alignment.Center){UiGlyph(UiSymbol.COURT,color=MaterialTheme.colorScheme.primary)}
+                }
                 Column(Modifier.weight(1f)) {
-                    Text("REFERTO VOLLEY",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
+                    Text("REFERTO VOLLEY",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
                     Text(if(editing) "Prepara la gara" else if(journal==null) "A bordo campo" else journal!!.config.competition,
                         style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold,maxLines=2)
                 }
@@ -122,7 +125,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                 }
                 if(journal!=null || editing)TextButton(onClick={editing=false;importedDraft=null;journal=null;id=null}){Text("Gare")}
             }
-            HorizontalDivider(color=Color(0xFFE2E5DF))
+            HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant.copy(alpha=.6f))
             if(editing) key(importedDraft) { MatchEditor(importedDraft ?: journal?.config,onSave={ config ->
                 try {
                     MatchEngine.validate(config)
@@ -199,7 +202,7 @@ private fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:(
             busy=true
             try { val result=withContext(Dispatchers.IO) { val f=PdfExporter.export(context,journal);f to PdfExporter.preview(context,journal) };file=result.first;bitmap?.recycle();bitmap=result.second;onComplete() }
             catch(t:Exception){onError(t)} finally{busy=false}
-        }}){Text(if(busy)"Preparazione PDF…" else "Genera referto PDF")}
+        }}){ActionLabel(if(busy)"Preparazione PDF…" else "Genera referto PDF",UiSymbol.DOCUMENT)}
         if(bitmap!=null) {
             Image(bitmap!!.asImageBitmap(),contentDescription="Anteprima prima pagina del referto compilato",modifier=Modifier.fillMaxWidth().border(1.dp,Color.LightGray))
             Text("Prima pagina. Il PDF include anche il registro completo e le eventuali eccedenze.",style=MaterialTheme.typography.bodySmall)

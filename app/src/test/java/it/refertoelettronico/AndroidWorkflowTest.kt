@@ -87,7 +87,9 @@ class AndroidWorkflowTest {
         assertFalse(File(activity.filesDir,"matches").listFiles().orEmpty().any{it.extension=="json"})
     }
     @Test fun scoreUndoAndResumePersistedMatchThroughTheActualScreens() {
+        captureUi("ui-home-0.6.3.png")
         compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        captureUi("ui-gara-0.6.3.png")
         compose.onNodeWithTag("score-0").assertTextEquals("0")
         compose.onAllNodesWithText("+1 punto")[0].performClick()
         compose.onNodeWithTag("score-0").assertTextEquals("1")
@@ -235,7 +237,8 @@ class AndroidWorkflowTest {
         compose.onNodeWithText("Dati").performClick()
         compose.onNodeWithText("Modifica i dati della gara").performClick()
         compose.onNodeWithText("Squadra di casa").performClick()
-        compose.onNodeWithText("Colore",substring=false).performClick()
+        captureUi("ui-rosa-0.6.3.png")
+        compose.onNodeWithContentDescription("Colore").performClick()
         compose.onNodeWithTag("team-color-GREEN").performScrollTo().performClick().assertIsSelected()
         compose.onNodeWithText("Salva modifiche").performClick()
         compose.onNodeWithTag("score-0").assertTextEquals("0")
@@ -278,6 +281,16 @@ class AndroidWorkflowTest {
         compose.onNodeWithText("Registra").performClick()
         compose.onNodeWithText("Entrambi i timeout sono già stati utilizzati.").assertExists()
         assertEquals(count,org.robolectric.shadows.ShadowToneGenerator.getPlayedTones().size)
+    }
+
+    private fun captureUi(name:String) {
+        val outputs=File("build/outputs/verification").apply{mkdirs()}
+        compose.runOnIdle {
+            val view=compose.activity.window.decorView
+            val bitmap=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
+            view.draw(android.graphics.Canvas(bitmap))
+            File(outputs,name).outputStream().use{bitmap.compress(Bitmap.CompressFormat.PNG,100,it)}
+        }
     }
 
 }

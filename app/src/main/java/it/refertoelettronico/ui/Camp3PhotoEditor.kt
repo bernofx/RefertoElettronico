@@ -35,9 +35,13 @@ fun Camp3PhotoEditor(bitmap:Bitmap,crop:PhotoCrop,onCrop:(PhotoCrop)->Unit,colum
     val compact=maxHeight<400.dp
     Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.spacedBy(6.dp)) {
         Row(horizontalArrangement=Arrangement.spacedBy(4.dp)) {
-            FilterChip(selected=mode==0,onClick={mode=0},label={Text("Blocca")})
-            FilterChip(selected=mode==1,onClick={mode=1},label={Text("Ritaglia")})
-            if(playerList)FilterChip(selected=mode==2,onClick={mode=2},label={Text("Maglie")})
+            SingleChoiceSegmentedButtonRow(Modifier.weight(1f)) {
+                val labels=if(playerList)listOf("Blocca","Ritaglia","Maglie")else listOf("Blocca","Ritaglia")
+                labels.forEachIndexed { index,label->
+                    SegmentedButton(selected=mode==index,onClick={mode=index},icon={},
+                        shape=SegmentedButtonDefaults.itemShape(index,labels.size)){Text(label,style=MaterialTheme.typography.labelMedium)}
+                }
+            }
             Box {
                 TextButton(onClick={menu=true}){Text("Altro")}
                 DropdownMenu(expanded=menu,onDismissRequest={menu=false}) {

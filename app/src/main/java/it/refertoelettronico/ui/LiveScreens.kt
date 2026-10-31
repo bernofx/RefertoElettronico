@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.refertoelettronico.model.*
@@ -31,24 +33,30 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             Column {Text("SET ${set?.number ?: 1}",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
                 Text("Set vinti: ${state.wins(leftTeam)} — ${state.wins(1-leftTeam)}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)}
-            Row {OutlinedButton(onClick=onUndo,enabled=canUndo){Text("↶ Annulla")};Spacer(Modifier.width(6.dp));TextButton(onClick=onRedo,enabled=canRedo){Text("Ripristina")}}
+            Row {FilledTonalButton(onClick=onUndo,enabled=canUndo){Text("↶ Annulla")};Spacer(Modifier.width(6.dp));TextButton(onClick=onRedo,enabled=canRedo){Text("Ripristina")}}
         }
-        if(lastEvent!=null)Text("Ultima: ${lastEvent.description(config)}",style=MaterialTheme.typography.bodySmall)
+        if(lastEvent!=null)Text("Ultima: ${lastEvent.description(config)}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1,overflow=TextOverflow.Ellipsis)
         if(playing && set!=null) Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            for(t in listOf(leftTeam,1-leftTeam)) key(t) { Surface(modifier=Modifier.weight(1f).testTag("point-card-$t"),shape=RoundedCornerShape(16.dp),color=config.teams[t].displayColor(t).copy(alpha=.12f),border=BorderStroke(2.dp,config.teams[t].displayColor(t))) {
-                Column(Modifier.padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                    Row(verticalAlignment=Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(config.teams[t].name,color=Color(0xFF183E48),fontSize=13.sp,fontWeight=FontWeight.Bold,maxLines=2)
-                            Text(if(set.server==t && set.liberos[t]?.replaced==set.court[t][0])"Uscita libero richiesta" else if(set.server==t)"Serve n. ${set.visible(t)[0]}" else "Riceve",fontSize=11.sp)
+            for(t in listOf(leftTeam,1-leftTeam)) key(t) {
+                val accent=config.teams[t].displayColor(t)
+                Surface(modifier=Modifier.weight(1f).testTag("point-card-$t"),shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface) {
+                    Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(4.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+                        Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                            Box(Modifier.size(8.dp).background(accent,CircleShape))
+                            Text(config.teams[t].name,color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.labelLarge,maxLines=1,overflow=TextOverflow.Ellipsis)
                         }
-                        Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=30.sp,fontWeight=FontWeight.Bold)
-                    }
-                    Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,colors=ButtonDefaults.buttonColors(containerColor=config.teams[t].displayColor(t),contentColor=teamInk(config.teams[t].displayColor(t))),modifier=Modifier.fillMaxWidth().height(48.dp).testTag("point-button-$t")) {
-                        Text("+1 punto",fontSize=18.sp,fontWeight=FontWeight.Bold)
+                        Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=44.sp,lineHeight=48.sp,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
+                        Text(if(set.server==t && set.liberos[t]?.replaced==set.court[t][0])"Uscita libero richiesta" else if(set.server==t)"Serve n. ${set.visible(t)[0]}" else "Riceve",
+                            style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1)
+                        Spacer(Modifier.height(4.dp))
+                        Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,
+                            colors=ButtonDefaults.buttonColors(containerColor=accent,contentColor=teamInk(accent)),
+                            modifier=Modifier.fillMaxWidth().height(48.dp).testTag("point-button-$t"),shape=MaterialTheme.shapes.medium) {
+                            Text("+1 punto",fontSize=18.sp,fontWeight=FontWeight.Bold)
+                        }
                     }
                 }
-            } }
+            }
         }
         if(problem!=null)Notice(problem)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -105,7 +113,7 @@ private fun TimeoutClock(event:Event?,config:MatchConfig) {
 private fun TeamActions(config:MatchConfig,state:MatchState,team:Int,onAction:(String)->Unit,modifier:Modifier,compact:Boolean) {
     val set=state.current!!
     val serves=set.server==team
-    Card(modifier=modifier,border=BorderStroke(if(serves)2.dp else 1.dp,if(serves)Color(0xFFDCA849) else config.teams[team].displayColor(team)),colors=CardDefaults.cardColors(containerColor=Color(0xFFFFFEFA))) {
+    Card(modifier=modifier,shape=MaterialTheme.shapes.large,colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(if(compact)8.dp else 14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -114,11 +122,21 @@ private fun TeamActions(config:MatchConfig,state:MatchState,team:Int,onAction:(S
                 }
             }
             @Composable fun controls() {
-                OutlinedButton(onClick={onAction("timeout")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Timeout ${set.timeouts.count{it.team==team}}/2",fontSize=12.sp)}
-                OutlinedButton(onClick={onAction("sub")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Cambi ${set.countSubs(team)}/${config.maxSubstitutions}",fontSize=12.sp)}
-                OutlinedButton(onClick={onAction("libero")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Libero",fontSize=12.sp)}
+                FilledTonalButton(onClick={onAction("timeout")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Timeout ${set.timeouts.count{it.team==team}}/2",fontSize=12.sp)}
+                FilledTonalButton(onClick={onAction("sub")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Cambi ${set.countSubs(team)}/${config.maxSubstitutions}",fontSize=12.sp)}
+                FilledTonalButton(onClick={onAction("libero")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Libero",fontSize=12.sp)}
             }
-            if(compact)Column{controls()} else Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){controls()}
+            if(compact)Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
+                FilledTonalButton(onClick={onAction("timeout")},modifier=Modifier.fillMaxWidth(),contentPadding=PaddingValues(horizontal=8.dp,vertical=6.dp)) {
+                    UiGlyph(UiSymbol.CLOCK,Modifier.size(16.dp));Spacer(Modifier.width(6.dp));Text("Timeout ${set.timeouts.count{it.team==team}}/2",fontSize=12.sp)
+                }
+                Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                    FilledTonalButton(onClick={onAction("sub")},modifier=Modifier.weight(1.15f),contentPadding=PaddingValues(horizontal=4.dp,vertical=6.dp)) {
+                        Text("Cambi ${set.countSubs(team)}/${config.maxSubstitutions}",fontSize=12.sp,maxLines=1)
+                    }
+                    FilledTonalButton(onClick={onAction("libero")},modifier=Modifier.weight(1f),contentPadding=PaddingValues(horizontal=4.dp,vertical=6.dp)){Text("Libero",fontSize=12.sp)}
+                }
+            } else Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){controls()}
 
         }
     }

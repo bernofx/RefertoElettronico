@@ -13,6 +13,7 @@ import androidx.test.core.app.ApplicationProvider
 import it.refertoelettronico.model.*
 import it.refertoelettronico.storage.RosterStore
 import it.refertoelettronico.ui.TeamEditor
+import it.refertoelettronico.ui.VolleyTheme
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -33,7 +34,7 @@ class RosterEditorTest {
         val context=ApplicationProvider.getApplicationContext<android.content.Context>()
         val store=RosterStore(File(context.filesDir,"rosters"))
         var rootView:android.view.View?=null
-        compose.setContent{rootView=LocalView.current.rootView;MaterialTheme{Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())){TeamEditor(team,0,"2026/27",false,{team=it})}}}
+        compose.setContent{rootView=LocalView.current.rootView;VolleyTheme{Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())){TeamEditor(team,0,"2026/27",false,{team=it})}}}
         compose.onNodeWithText("Salva rosa",substring=false).performScrollTo().performClick()
         compose.waitUntil(10000){
             compose.onAllNodesWithTag("save-roster-confirm").fetchSemanticsNodes().any { !it.config.contains(androidx.compose.ui.semantics.SemanticsProperties.Disabled) }
@@ -64,7 +65,7 @@ class RosterEditorTest {
     }
     @Test fun attendanceIsLockedAfterStartWhileLibrarySaveRemainsAvailable() {
         val team=Rosters.withMembers(Demo.config().teams[0],Rosters.members(Demo.config().teams[0]))
-        compose.setContent{MaterialTheme{Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())){TeamEditor(team,0,"2026/27",true,{error("Dati bloccati")})}}}
+        compose.setContent{VolleyTheme{Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())){TeamEditor(team,0,"2026/27",true,{error("Dati bloccati")})}}}
         compose.onNodeWithText("Carica rosa").assertIsNotEnabled()
         compose.onNodeWithTag("presence-${team.roster!!.first().id}").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithText("Salva rosa").performScrollTo().assertIsEnabled()
