@@ -1,0 +1,24 @@
+{
+  "source_commit": "9ef078d48472939eee796329cda8e12664811278",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.6",
+  "version_code": 12,
+  "variant": "debug",
+  "apk_sha256": "b699eaea4fce89ad92c698fd4873957a6ac65d8acb79a087abd9c111fec36111",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 143,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "team_choice_regression": "360x800 dp; font scale 1.3; shared name prefix; yellow and white teams; no rendered name overflow; independent choices",
+    "physical_device": "not tested"
+  },
+  "changes": [
+    "Full multiline team names in toss and lineup choices",
+    "Home-away identity, selected team colour background, contrast text, checkmark and border",
+    "Stable home-away prefixes in compact score headers"
+  ]
+}
