@@ -1,0 +1,25 @@
+{
+  "source_commit": "b517a5a370c3bc4139af8661215fa7addbea4f75",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.3",
+  "version_code": 9,
+  "variant": "debug",
+  "apk_sha256": "be897e25f3c79d6fa2c99434a1237a4c47e160f51acdc71ddf77ff657fa47c56",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 121,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested",
+    "screenshots": "actual Compose screens rendered with Robolectric native graphics; demo data"
+  },
+  "changes": [
+    "Consistent Material 3 theme with green and ivory palette and vector icons",
+    "Large team score cards and compact two-row team controls",
+    "Compact roster edit icons and tonal selectors",
+    "Segmented photo editor modes"
+  ]
+}
