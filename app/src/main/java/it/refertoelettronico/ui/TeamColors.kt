@@ -24,6 +24,13 @@ import it.refertoelettronico.model.TeamColor
 fun Team.displayColor(index: Int): Color = Color(TeamColor.of(this,index).argb)
 fun teamInk(background: Color): Color = if(background.luminance()>.179f)Color.Black else Color.White
 
+/** Keep pale team colours on badges; use a legible ink for lines and text on light surfaces. */
+fun teamDetailInk(accent:Color,background:Color):Color {
+    val a=accent.luminance();val b=background.luminance()
+    val contrast=(maxOf(a,b)+.05f)/(minOf(a,b)+.05f)
+    return if(contrast>=4.5f)accent else teamInk(background)
+}
+
 @Composable
 fun TeamColorPicker(team: Team, index: Int, onChange: (Team)->Unit) {
     val current=TeamColor.of(team,index)

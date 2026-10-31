@@ -22,7 +22,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Event)->Unit,onUndo:()->Unit,onRedo:()->Unit,
-               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit) {
+               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit,onEditSetup:(()->Unit)?=null) {
     var operation by remember { mutableStateOf<String?>(null) }
     var team by remember { mutableIntStateOf(0) }
     val set=state.current
@@ -58,6 +58,9 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
         if(state.finished(config)) {
             Notice(if(state.endedEarly)"Gara terminata anticipatamente. Le decisioni sono nelle osservazioni." else "Gara conclusa · ${config.teams[if(state.wins(0)>state.wins(1))0 else 1].name} vince ${maxOf(state.wins(0),state.wins(1))}:${minOf(state.wins(0),state.wins(1))}. Puoi generare il referto.")
         } else if(!playing && !state.interrupted) {
+            if(state.sets.isEmpty() && onEditSetup!=null)FilledTonalButton(onClick=onEditSetup,modifier=Modifier.fillMaxWidth().testTag("edit-pre-match")) {
+                Text("← Correggi dati e rose")
+            }
             if(set!=null)Notice("Set ${set.number} concluso: ${set.score[0]} — ${set.score[1]}. Conferma le formazioni per il prossimo set.")
             StartSetPanel(config,state,onEvent)
         }

@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.6](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.6.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.7](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.7.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -81,3 +81,9 @@ La versione **0.6.5** adatta l’importazione alle rose cumulative VolleyAlerts:
 
 
 La versione **0.6.6** evita selettori indistinguibili quando le squadre condividono l’inizio del nome: sorteggio e scelta della formazione mostrano il nome completo su più righe, Casa/Ospiti, il colore e la selezione esplicita. La scelta selezionata usa come sfondo il colore assegnato alla squadra, con testo a contrasto, spunta e bordo per distinguere anche il bianco. Il conteggio della formazione è separato dal nome. Nelle schede punteggio compatte Casa/Ospiti precede il nome, così l’identità resta leggibile anche quando il nome deve essere abbreviato. I nomi originali nel JSON e nel PDF restano invariati.
+
+
+La versione **0.6.7** aggiunge **Correggi dati e rose** nella preparazione del primo set. Anche Indietro di Android torna alla compilazione prima dell’inizio; nell’editor è presente un tasto Indietro visibile. **Salva modifiche** applica le correzioni alla stessa gara e ritorna alle formazioni, mantenendo sorteggio e posizioni ancora valide. Le zone con numeri non più disponibili vengono svuotate. Uscire dall’editor con modifiche non applicate richiede una scelta esplicita: la bozza rimane recuperabile. Dopo l’inizio restano i vincoli già previsti su numeri, ruoli e presenze.
+
+
+Nella **0.6.7** la preparazione delle formazioni mantiene leggibili rete, zone e numeri anche per squadre bianche o con colori chiari: i colori restano quelli scelti, mentre testo e tratti usano un contrasto adeguato e i numeri trascinabili hanno un bordo. La pagina iniziale mostra le gare come schede con fascia colorata, raggruppate per data e ordinate per ora: campo, squadre su righe separate, categoria, numero gara e stato. In corso vengono mostrati punti e numero del set, a gara terminata i set vinti. Il cestino mantiene la conferma. La categoria è un’etichetta descrittiva e non modifica il regolamento.

@@ -96,7 +96,7 @@ class AndroidWorkflowTest {
         compose.onNodeWithText("↶ Annulla").performClick()
         compose.onNodeWithTag("score-0").assertTextEquals("0")
         compose.onNodeWithText("Gare",useUnmergedTree=true).performClick()
-        compose.onNodeWithText("Lago Volley — Stella Como").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Lago Volley — Stella Como").performScrollTo().performClick()
         compose.onNodeWithTag("score-0").assertTextEquals("0")
         compose.onNodeWithText("Ripristina",substring=false).performClick()
         compose.onNodeWithTag("score-0").assertTextEquals("1")
@@ -359,6 +359,68 @@ class AndroidWorkflowTest {
         captureUi("ui-candidate-0.6.5.png")
         compose.onNodeWithTag("staff-presence-$staffId").performScrollTo().assertIsOn()
         captureUi("ui-staff-0.6.5.png")
+    }
+
+
+    @Test fun preMatchCorrectionAndAndroidBackKeepTheSameGameAndFormationDraft() {
+        compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        compose.onNodeWithText("↶ Annulla").performClick()
+        compose.onNode(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.Dismiss))
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.Dismiss){it()}
+        val store=it.refertoelettronico.storage.MatchStore(File(compose.activity.filesDir,"matches"))
+        val id=store.list().single().first
+        compose.onNodeWithTag("toss-serve-1").performScrollTo().performClick()
+        compose.onNodeWithTag("toss-left-0").performScrollTo().performClick()
+        compose.onNodeWithTag("lineup-player-0-1").performScrollTo().performClick()
+        compose.onNodeWithTag("lineup-slot-0-4").performScrollTo().performClick().assertContentDescriptionEquals("Zona 4, numero 1")
+        compose.onNodeWithTag("edit-pre-match").performScrollTo().performClick()
+        compose.onNodeWithText("Numero gara").performScrollTo().performTextReplacement("CORRETTA-01")
+        compose.onNodeWithText("Squadra di casa").performClick()
+        compose.onNodeWithTag("attendance-count").assertExists()
+        compose.onNodeWithContentDescription("Modifica giocatrice 1").performScrollTo().performClick()
+        compose.onNodeWithText("Cognome e nome").performScrollTo().performTextReplacement("Nome corretto prima del set")
+        compose.onNodeWithText("Salva modifiche").performClick()
+        compose.onNodeWithTag("lineup-slot-0-4").assertContentDescriptionEquals("Zona 4, numero 1")
+        compose.onNodeWithTag("toss-serve-1").assertIsSelected()
+        compose.onNodeWithTag("toss-left-0").assertIsSelected()
+        assertEquals("CORRETTA-01",store.load(id).config.matchNumber)
+        assertEquals("Nome corretto prima del set",store.load(id).config.teams[0].players.first().name)
+        assertEquals(1,store.list().size);assertTrue(store.load(id).events.isEmpty())
+        compose.runOnUiThread{compose.activity.onBackPressedDispatcher.onBackPressed()}
+        compose.onNodeWithText("Numero gara").assertExists()
+        compose.onNodeWithText("Indietro",substring=false).performClick()
+        compose.onNodeWithTag("lineup-slot-0-4").assertContentDescriptionEquals("Zona 4, numero 1")
+        compose.onNodeWithTag("edit-pre-match").performScrollTo().assertIsDisplayed()
+        captureUi("ui-ritorno-dati-0.6.7.png")
+    }
+
+    @Test fun unappliedCorrectionsRemainInDraftAndRemovingAnAthleteClearsOnlyHerPosition() {
+        compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        compose.onNodeWithText("↶ Annulla").performClick()
+        compose.onNode(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.Dismiss))
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.Dismiss){it()}
+        val store=it.refertoelettronico.storage.MatchStore(File(compose.activity.filesDir,"matches"))
+        val id=store.list().single().first
+        for(number in 1..2) {
+            compose.onNodeWithTag("lineup-player-0-$number").performScrollTo().performClick()
+            compose.onNodeWithTag("lineup-slot-0-$number").performScrollTo().performClick()
+        }
+        compose.onNodeWithTag("edit-pre-match").performScrollTo().performClick()
+        compose.onNodeWithText("Numero gara").performScrollTo().performTextReplacement("BOZZA-CORRETTA")
+        compose.onNodeWithText("Indietro",substring=false).performClick()
+        compose.onNodeWithText("Modifiche non applicate").assertExists()
+        compose.onNodeWithText("Torna senza applicare").performClick()
+        assertNotEquals("BOZZA-CORRETTA",store.load(id).config.matchNumber)
+        compose.onNodeWithTag("edit-pre-match").performScrollTo().performClick()
+        compose.onNodeWithText("BOZZA-CORRETTA").assertExists()
+        compose.onNodeWithText("Squadra di casa").performClick()
+        compose.onNodeWithContentDescription("Modifica giocatrice 2").performScrollTo().performClick()
+        compose.onNodeWithText("N°",substring=false).performScrollTo().performTextReplacement("22")
+        compose.onNodeWithText("Salva modifiche").performClick()
+        compose.onNodeWithTag("lineup-slot-0-1").assertContentDescriptionEquals("Zona 1, numero 1")
+        compose.onNodeWithTag("lineup-slot-0-2").assertContentDescriptionEquals("Zona 2, vuota")
+        assertEquals("BOZZA-CORRETTA",store.load(id).config.matchNumber)
+        assertEquals(1,store.list().size);assertTrue(store.load(id).events.isEmpty())
     }
 
     private fun captureUi(name:String) {

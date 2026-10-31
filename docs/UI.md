@@ -38,3 +38,21 @@ Lo staff ha sezioni separate per panchina, servizi e ruoli da verificare. La sch
 Sorteggio e scelta della formazione mostrano i nomi completi su più righe, con Casa/Ospiti sempre visibili. La squadra selezionata usa come sfondo il proprio colore, con testo a contrasto, spunta e bordo: anche il bianco resta riconoscibile. La scelta non dipende soltanto dal colore o dall’inizio del nome. I conteggi delle formazioni sono separati dal testo del nome e i nomi nel modello dei dati e nel PDF restano invariati.
 
 ![Selezione con nomi simili e colori giallo/bianco](ui/nomi-squadre-0.6.6.png)
+
+
+## Tornare ai dati prima del set · 0.6.7
+
+Sopra il primo tagliando, **Correggi dati e rose** riapre la compilazione della stessa gara. Il tasto Indietro di Android segue lo stesso percorso prima dell’inizio del primo set. Nell’editor, **Salva modifiche** applica le correzioni e torna alle formazioni; **Indietro** permette di tornare senza applicarle, con un messaggio se la bozza è stata modificata. Le modifiche non applicate restano nella bozza e vengono riproposte riaprendo i dati della stessa gara.
+
+Sorteggio e posizioni valide vengono mantenuti durante il passaggio fra formazioni e dati. Se una correzione della rosa rende un numero non disponibile, la relativa zona torna vuota e va completata prima dell’avvio. I vincoli regolamentari dopo l’inizio della gara restano invariati.
+
+
+## Formazioni chiare e schede iniziali · 0.6.7
+
+Per le squadre bianche e con colori chiari, il tagliando usa numeri e rete scuri, mantenendo il colore della squadra sui numeri trascinabili. I bordi rendono visibili anche i dischi bianchi e la loro anteprima durante il trascinamento.
+
+La pagina iniziale riprende la struttura dei badge dell’esempio: raggruppamento per data, ora/campo a sinistra, nomi separati delle squadre e metadati al centro, risultato/stato e cestino a destra. La fascia laterale e l’etichetta categoria usano un accento coerente. Nessuno stato di validazione esterno è inventato: si mostrano solo Da iniziare, In corso, Tra i set, Interrotta o Terminata secondo la cronologia effettiva. Se esistono gare, l’azione Nuova gara è compatta per lasciare spazio all’elenco.
+
+| Tagliando bianco leggibile | Schede gara |
+| --- | --- |
+| ![Tagliando bianco](ui/formazione-bianco-0.6.7.png) | ![Schede gara](ui/badge-gare-0.6.7.png) |

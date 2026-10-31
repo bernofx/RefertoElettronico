@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -41,10 +43,13 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit) {
     val eligible=config.teams.mapIndexed { t,team->team.players.filter {
         it.number !in state.designatedLiberos[t] && it.number !in state.retired[t] && it.number !in state.disqualified[t]
     }.map{it.number} }
-    var lineups by remember(n,eligible){mutableStateOf(List(2){List(6){0}})}
-    var server by remember(n){mutableIntStateOf(if(n>1 && !deciding)1-state.current!!.firstServer else -1)}
-    var left by remember(n){mutableIntStateOf(if(n>1 && !deciding)1-state.current!!.initialLeft else -1)}
-    var team by remember(n){mutableIntStateOf(0)}
+    val lineupSaver=listSaver<List<List<Int>>,Int>(save={it.flatten()},restore={it.chunked(6)})
+    var lineups by rememberSaveable(n,stateSaver=lineupSaver){mutableStateOf(List(2){List(6){0}})}
+    // Editing a roster may remove a number: retain valid positions and clear only those no longer available.
+    LaunchedEffect(eligible){lineups=lineups.mapIndexed{t,slots->slots.map{if(it in eligible[t])it else 0}}}
+    var server by rememberSaveable(n){mutableIntStateOf(if(n>1 && !deciding)1-state.current!!.firstServer else -1)}
+    var left by rememberSaveable(n){mutableIntStateOf(if(n>1 && !deciding)1-state.current!!.initialLeft else -1)}
+    var team by rememberSaveable(n){mutableIntStateOf(0)}
     val complete=lineups.all{it.all{number->number>0} && it.distinct().size==6}
     Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text("Formazioni · set $n",style=MaterialTheme.typography.titleLarge)
@@ -91,6 +96,7 @@ private fun LineupBoard(teamIndex:Int,team:Team,eligible:List<Int>,lineup:List<I
     var origin by remember{mutableStateOf(Offset.Zero)}
     val targets=remember{mutableStateMapOf<Int,Rect>()}
     val accent=team.displayColor(teamIndex)
+    val netInk=teamDetailInk(accent,MaterialTheme.colorScheme.surfaceVariant)
     val hovered=if(dragging==null)null else targets.entries.firstOrNull{it.value.contains(position)}?.key
     @Composable fun dragModifier(number:Int):Modifier {
         var coords by remember{mutableStateOf<LayoutCoordinates?>(null)}
@@ -112,16 +118,18 @@ private fun LineupBoard(teamIndex:Int,team:Team,eligible:List<Int>,lineup:List<I
             Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceVariant) {
                 Column(Modifier.padding(10.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                     Text("RETE",Modifier.align(Alignment.CenterHorizontally),style=MaterialTheme.typography.labelSmall)
-                    Canvas(Modifier.fillMaxWidth().height(8.dp)) {
-                        drawLine(accent,Offset(0f,0f),Offset(size.width,0f),2.dp.toPx())
-                        drawLine(accent,Offset(0f,size.height),Offset(size.width,size.height),1.dp.toPx())
-                        var x=0f;while(x<=size.width){drawLine(accent,Offset(x,0f),Offset(x,size.height),1.dp.toPx());x+=8.dp.toPx()}
+                    Canvas(Modifier.fillMaxWidth().height(8.dp).testTag("lineup-net-$teamIndex")) {
+                        drawLine(netInk,Offset(0f,0f),Offset(size.width,0f),2.dp.toPx())
+                        drawLine(netInk,Offset(0f,size.height),Offset(size.width,size.height),1.dp.toPx())
+                        var x=0f;while(x<=size.width){drawLine(netInk,Offset(x,0f),Offset(x,size.height),1.dp.toPx());x+=8.dp.toPx()}
                     }
                     listOf(listOf(4,3,2),listOf(5,6,1)).forEach { row->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                         row.forEach { zone->
                             val number=lineup[zone-1]
-                            Surface(shape=MaterialTheme.shapes.small,color=if(hovered==zone)MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                                border=BorderStroke(if(hovered==zone)2.dp else 1.dp,if(hovered==zone)accent else MaterialTheme.colorScheme.outlineVariant),
+                            val background=if(hovered==zone)MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                            val ink=teamDetailInk(accent,background)
+                            Surface(shape=MaterialTheme.shapes.small,color=background,
+                                border=BorderStroke(if(hovered==zone)2.dp else 1.dp,if(hovered==zone)ink else MaterialTheme.colorScheme.outlineVariant),
                                 modifier=Modifier.weight(1f).heightIn(min=68.dp).testTag("lineup-slot-$teamIndex-$zone")
                                     .onGloballyPositioned{targets[zone]=it.boundsInRoot()}.then(dragModifier(number))
                                     .semantics{contentDescription="Zona $zone, ${if(number>0)"numero $number" else "vuota"}"}
@@ -131,7 +139,7 @@ private fun LineupBoard(teamIndex:Int,team:Team,eligible:List<Int>,lineup:List<I
                                     }) {
                                 Column(Modifier.padding(6.dp),horizontalAlignment=Alignment.CenterHorizontally) {
                                     Text("ZONA $zone",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(if(number>0)"$number" else "+",fontSize=25.sp,fontWeight=FontWeight.Bold,color=accent)
+                                    Text(if(number>0)"$number" else "+",fontSize=25.sp,fontWeight=FontWeight.Bold,color=ink,modifier=Modifier.testTag("lineup-slot-number-$teamIndex-$zone"))
                                 }
                             }
                         }
@@ -147,7 +155,7 @@ private fun LineupBoard(teamIndex:Int,team:Team,eligible:List<Int>,lineup:List<I
                     val assigned=number in lineup
                     Surface(shape=CircleShape,color=if(selected==number || !assigned)accent else MaterialTheme.colorScheme.surfaceVariant,
                         contentColor=if(selected==number || !assigned)teamInk(accent)else MaterialTheme.colorScheme.onSurfaceVariant,
-                        border=if(selected==number)BorderStroke(3.dp,MaterialTheme.colorScheme.onSurface)else null,
+                        border=BorderStroke(if(selected==number)3.dp else 1.dp,if(selected==number)MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline),
                         modifier=Modifier.size(48.dp).testTag("lineup-player-$teamIndex-$number").then(dragModifier(number))
                             .semantics{contentDescription="Numero $number${if(assigned)", già in formazione" else ""}"}.clickable{selected=if(selected==number)null else number}) {
                         Box(contentAlignment=Alignment.Center){Text("$number",fontWeight=FontWeight.Bold,fontSize=18.sp)}
@@ -156,7 +164,7 @@ private fun LineupBoard(teamIndex:Int,team:Team,eligible:List<Int>,lineup:List<I
             }
             Text("Solo le presenti, esclusi i liberi e le giocatrici non disponibili.",style=MaterialTheme.typography.bodySmall)
         }
-        if(dragging!=null)Surface(shape=CircleShape,color=accent,contentColor=teamInk(accent),shadowElevation=8.dp,
+        if(dragging!=null)Surface(shape=CircleShape,color=accent,contentColor=teamInk(accent),shadowElevation=8.dp,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline),
             modifier=Modifier.offset{IntOffset((position.x-origin.x).roundToInt()-24.dp.roundToPx(),(position.y-origin.y).roundToInt()-24.dp.roundToPx())}.size(48.dp).zIndex(10f)) {
             Box(contentAlignment=Alignment.Center){Text("$dragging",fontSize=20.sp,fontWeight=FontWeight.Bold)}
         }

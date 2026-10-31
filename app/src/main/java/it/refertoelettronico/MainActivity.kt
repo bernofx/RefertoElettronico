@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -70,6 +71,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     var incomingReview by remember { mutableStateOf(runCatching{pendingStore.load()?.config}.getOrNull()) }
     var tab by remember { mutableIntStateOf(0) }
     var archiveRevision by remember { mutableIntStateOf(0) }
+    val liveScreens=rememberSaveableStateHolder()
+    var confirmLeaveEdit by remember{mutableStateOf(false)}
     var confirmUndo by remember { mutableIntStateOf(0) }
     var error by remember { mutableStateOf(restored.exceptionOrNull()?.let{"Bozza non leggibile: il file è stato conservato. ${it.message}"}) }
     val snackbar=remember { SnackbarHostState() }
@@ -82,6 +85,17 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     fun clearDraft(){draftStore.clear();savedDraft=null}
     fun resumeDraft(){val draft=savedDraft ?: return;val previous=draft.matchId?.let{runCatching{store.load(it)}.getOrNull()};journal=previous;id=if(previous!=null)draft.matchId else null;importedDraft=draft.config;editing=true}
     fun beginNew(){journal=null;id=null;importedDraft=null;editing=true}
+    fun editCurrentMatch(){snackbar.currentSnackbarData?.dismiss();importedDraft=savedDraft?.takeIf{it.matchId==id}?.config;editing=true}
+    fun leaveEditor(){editing=false;importedDraft=null}
+    fun navigateBack(){
+        val current=journal
+        if(editing) {
+            val changed=current!=null && savedDraft?.takeIf{it.matchId==id}?.config?.let{it!=StaffReview.prepare(current.config)}==true
+            if(changed)confirmLeaveEdit=true else leaveEditor()
+        } else if(current!=null && tab==0 && current.events.none{it.kind==Kind.START_SET})editCurrentMatch()
+        else if(current!=null && tab!=0)tab=0
+        else {journal=null;id=null}
+    }
     fun event(e: Event) { try { persist(MatchEngine.add(journal!!,e),Cue.forEvent(e)) } catch(t:Exception) { failure(t) } }
     LaunchedEffect(incoming) {
         if(incoming!=null) {
@@ -112,7 +126,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
             id=null;persist(restored);tab=0
         } catch(t:Exception){failure(t)} }
     }
-    BackHandler(enabled=editing || journal!=null) { if(editing){editing=false;importedDraft=null} else {journal=null;id=null} }
+    BackHandler(enabled=editing || journal!=null,onBack=::navigateBack)
     val state=remember(journal) { journal?.let { MatchEngine.replay(it.config,it.events) } }
     Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
         if(journal!=null && !editing) NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp) {
@@ -124,7 +138,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
         Column(Modifier.fillMaxSize().padding(padding)) {
             val compactHeader=journal!=null && !editing && tab==0
             Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=if(compactHeader)0.dp else 10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
-                Surface(shape=MaterialTheme.shapes.small,color=MaterialTheme.colorScheme.primaryContainer) {
+                if(editing)TextButton(onClick=::navigateBack,contentPadding=PaddingValues(horizontal=8.dp)){Text("Indietro")}
+                else Surface(shape=MaterialTheme.shapes.small,color=MaterialTheme.colorScheme.primaryContainer) {
                     Box(Modifier.size(if(compactHeader)28.dp else 38.dp),contentAlignment=Alignment.Center){UiGlyph(UiSymbol.COURT,color=MaterialTheme.colorScheme.primary)}
                 }
                 Column(Modifier.weight(1f)) {
@@ -162,15 +177,15 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
             } else {
                 val j=journal!!;val s=state!!
                 when(tab) {
-                    0 -> LiveScreen(j.config,s,j.events.lastOrNull(),onEvent=::event,
+                    0 -> liveScreens.SaveableStateProvider(id ?: "current") { LiveScreen(j.config,s,j.events.lastOrNull(),onEvent=::event,
                         onUndo={try{if(persist(MatchEngine.undo(j),Cue.UNDO))scope.launch{snackbar.showSnackbar("Operazione annullata")}}catch(t:Exception){failure(t)}},onRedo={try{persist(MatchEngine.redo(j))}catch(t:Exception){failure(t)}},
-                        canUndo=j.events.isNotEmpty(),canRedo=j.redo.isNotEmpty(),onHistory={tab=1})
+                        canUndo=j.events.isNotEmpty(),canRedo=j.redo.isNotEmpty(),onHistory={tab=1},onEditSetup=::editCurrentMatch) }
                     1 -> HistoryScreen(j,onUndoTo={confirmUndo=it},onRedo={try{persist(MatchEngine.redo(j))}catch(t:Exception){failure(t)}})
                     2 -> ExportScreen(j,onError=::failure,onComplete={feedback.play(Cue.CONFIRM)},onBackup={pendingBackup=store.encode(j);saveBackup.launch("gara-${j.config.matchNumber.ifBlank{"volley"}}.json")})
                     3 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                         Text("Dati e regolamento",style=MaterialTheme.typography.headlineSmall)
                         Text("${j.config.teams[0].name} / ${j.config.teams[1].name}\n${j.config.date} · ${j.config.location}\n${j.config.format.label}")
-                        Button(onClick={editing=true}){Text("Modifica i dati della gara")}
+                        Button(onClick=::editCurrentMatch){Text("Modifica i dati della gara")}
                         Text(if(j.events.isEmpty())"Distinte e formula sono modificabili prima dell'inizio." else "Distinte e formula sono bloccate dopo l'inizio. Per correggerle, annulla fino all'inizio dal Registro.")
                         RulesCard()
                         OutlinedButton(onClick={pendingBackup=store.encode(j);saveBackup.launch("gara-${j.config.matchNumber.ifBlank{"volley"}}.json")}){Text("Salva copia della gara (JSON)")}
@@ -190,6 +205,9 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
             try{val draft=SetupDraft(config);draftStore.save(draft);savedDraft=draft;pendingStore.clear();importedDraft=config;incomingReview=null;journal=null;id=null;editing=true;tab=0}catch(t:Exception){failure(t)}
         }){Text("Rivedi dati")}},dismissButton={TextButton(onClick={pendingStore.clear();incomingReview=null}){Text("Ignora")}})
     if(discardDraft)AlertDialog(onDismissRequest={discardDraft=false},title={Text("Scartare la preparazione?")},text={Text("La bozza corrente verrà eliminata. Le gare già salvate restano invariate.")},confirmButton={TextButton(onClick={try{clearDraft();discardDraft=false;beginNew()}catch(t:Exception){failure(t)}}){Text("Scarta e nuova gara")}},dismissButton={TextButton(onClick={discardDraft=false;resumeDraft()}){Text("Riprendi bozza")}})
+    if(confirmLeaveEdit)AlertDialog(onDismissRequest={confirmLeaveEdit=false},title={Text("Modifiche non applicate")},text={Text("Le correzioni sono conservate nella bozza. Premi Salva modifiche per applicarle alla gara; tornando ora vedrai i dati precedenti.")},
+        confirmButton={TextButton(onClick={confirmLeaveEdit=false;leaveEditor()}){Text("Torna senza applicare")}},
+        dismissButton={TextButton(onClick={confirmLeaveEdit=false}){Text("Continua a correggere")}})
     if(confirmUndo>0 && journal!=null) AlertDialog(onDismissRequest={confirmUndo=0},title={Text("Annullare ${confirmUndo} operazioni?")},
         text={Text("Saranno ripristinati anche formazioni, servizio, libero, timeout e rotazioni. Puoi recuperare le operazioni con Ripristina finché non registri un nuovo evento.")},
         confirmButton={TextButton(onClick={try{persist(MatchEngine.undo(journal!!,confirmUndo),Cue.UNDO)}catch(t:Exception){failure(t)};confirmUndo=0}){Text("Annulla operazioni")}},

@@ -57,7 +57,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
     var deleting by remember{mutableStateOf<Pair<String,String>?>(null)}
     if(deleting!=null)AlertDialog(onDismissRequest={deleting=null},title={Text("Eliminare questa gara?")},text={Text("${deleting!!.second}\n\nLa gara e la sua cronologia verranno eliminate da questo dispositivo. Le copie JSON già esportate e le rose salvate restano disponibili.")},confirmButton={TextButton(modifier=Modifier.testTag("confirm-delete-match"),onClick={val key=deleting!!.first;deleting=null;onDelete(key)}){Text("Elimina gara",color=MaterialTheme.colorScheme.error)}},dismissButton={TextButton(onClick={deleting=null}){Text("Annulla")}})
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF103E34),Color(0xFF1A6552))),RoundedCornerShape(28.dp))) {
+        if(archives.isEmpty())Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF103E34),Color(0xFF1A6552))),RoundedCornerShape(28.dp))) {
             Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
                     Surface(color=Color.White.copy(alpha=.12f),shape=RoundedCornerShape(50)) {
@@ -73,6 +73,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
                 }
             }
         }
+        if(archives.isNotEmpty())Button(onClick=onNew,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){ActionLabel("Prepara una nuova gara",UiSymbol.ADD)}
         if(onResume!=null)Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             FilledTonalButton(onClick=onResume,modifier=Modifier.weight(1f)){Text("Riprendi preparazione")}
             if(onDiscardDraft!=null)TextButton(onClick=onDiscardDraft){Text("Scarta bozza")}
@@ -82,29 +83,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
             Text("Le tue gare",style=MaterialTheme.typography.titleLarge)
             Text("${archives.count{it.second.isSuccess}} salvate",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        archives.forEach { (key,result) ->
-            val j=result.getOrNull()
-            if(j!=null) {
-                val state=remember(j){MatchEngine.replay(j.config,j.events)}
-                Card(onClick={onOpen(key)},modifier=Modifier.fillMaxWidth(),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
-                    Row(Modifier.padding(16.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                        Surface(shape=RoundedCornerShape(14.dp),color=MaterialTheme.colorScheme.surfaceVariant) {
-                            Box(Modifier.size(44.dp),contentAlignment=Alignment.Center){UiGlyph(UiSymbol.COURT,color=MaterialTheme.colorScheme.primary)}
-                        }
-                        Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                            Text("${j.config.teams[0].name} — ${j.config.teams[1].name}",style=MaterialTheme.typography.titleSmall,maxLines=2,overflow=TextOverflow.Ellipsis)
-                            Text("${j.config.date} · ${if(state.finished(j.config))"Terminata" else "Da riprendere"}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Text("${state.wins(0)}:${state.wins(1)}",style=MaterialTheme.typography.titleLarge)
-                        IconButton(onClick={deleting=key to "${j.config.teams[0].name} — ${j.config.teams[1].name} · ${j.config.date}"},
-                            modifier=Modifier.testTag("delete-match-$key").semantics{contentDescription="Elimina gara ${j.config.teams[0].name} — ${j.config.teams[1].name}"}){UiGlyph(UiSymbol.DELETE,color=MaterialTheme.colorScheme.onSurfaceVariant)}
-                    }
-                }
-            } else Column {
-                Notice("Archivio $key non leggibile: è stato conservato. Puoi recuperare una copia JSON valida.")
-                TextButton(onClick={deleting=key to "Archivio non leggibile: $key"},modifier=Modifier.testTag("delete-match-$key")){Text("Elimina archivio non leggibile")}
-            }
-        }
+        MatchBadges(archives,onOpen,onDeleteRequest={id,title->deleting=id to title})
         TextButton(onClick=onImport,modifier=Modifier.fillMaxWidth()){ActionLabel("Importa una copia della gara (JSON)",UiSymbol.UPLOAD)}
         Text("Le gare restano su questo dispositivo. Salva una copia dal menu Referto per trasferirle o conservarle altrove.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }

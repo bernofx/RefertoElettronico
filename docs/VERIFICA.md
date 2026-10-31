@@ -1,6 +1,6 @@
 # Verifica prima dell'uso
 
-La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 143 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
+La build e i test automatici esercitano il motore, le schermate Compose e il PDF con le librerie effettivamente usate dall'app. Robolectric esegue i test Android in modalità grafica nativa, senza dispositivo o emulatore. La suite corrente contiene 147 test, inclusi i controlli di geometria dal tavolo del segnapunti e dei fotogrammi intermedi di rotazione/annullamento, compatibilità dei colori con le gare precedenti, contrasto dei testi, silenziamento e conferme delle sole azioni accettate. I fotogrammi della registrazione sono generati dal test delle schermate, non da un disegno simulato.
 
 Per la prova su telefono:
 
@@ -48,4 +48,10 @@ La prova UI ricrea due volte l’Activity: prima con la revisione ricevuta ancor
 I dati dei test sono fittizi. L’app destinataria non importa direttamente `tesserati` da eScoreVolley: recupero, unione cronologica e disponibilità dello staff in VolleyAlerts rimangono una dipendenza del produttore. Gli APK precedenti alla 0.6.5 rifiutano il nuovo array di oggetti `staff`; non se ne dichiara la compatibilità.
 
 
-Verifica **0.6.6**: regression test UI a 360×800 dp e caratteri al 130%, con due squadre che iniziano per POLISPORTIVA. Per tutte le sei scelte (servizio, lato e formazione, due squadre ciascuna) verifica che il testo completo sia renderizzato su più righe senza overflow né ellissi, e che la selezione della formazione non cambi il sorteggio. La suite totale contiene 143 test. Identità Casa/Ospiti e colori restano associati all’indice della squadra, indipendentemente da A/B e cambio campo.
+Verifica **0.6.6**: regression test UI a 360×800 dp e caratteri al 130%, con due squadre che iniziano per POLISPORTIVA. Per tutte le sei scelte (servizio, lato e formazione, due squadre ciascuna) verifica che il testo completo sia renderizzato su più righe senza overflow né ellissi, e che la selezione della formazione non cambi il sorteggio. La suite totale contiene 147 test. Identità Casa/Ospiti e colori restano associati all’indice della squadra, indipendentemente da A/B e cambio campo.
+
+
+Verifiche **0.6.7**: dal primo tagliando si rientra nei dati tramite pulsante e Indietro Android; si correggono numero gara e nominativo prima del set e si salva nella stessa gara, senza duplicati o avvio automatico. Sorteggio e posizione già inserita rimangono selezionati. Un’uscita senza applicare le modifiche lascia invariata la gara e conserva la bozza, riaperta al successivo ingresso. Correggendo un numero di maglia, solo la posizione che non è più valida viene svuotata. Totale 147 test.
+
+
+Verifiche aggiuntive **0.6.7**: il layout effettivo dei numeri del tagliando usa testo nero su squadre bianche e gialle; per tutti i colori della palette è verificato un rapporto di contrasto di almeno 4,5:1 sulle superfici normali, di campo e di destinazione. Il colore della squadra rimane invariato. La rete ha tratti a contrasto e i numeri della rosa un bordo visibile. Le schede iniziali sono raggruppate per data e ordinate per ora; mantengono zeri iniziali del numero gara, categoria, punti e set distinti, stato e apertura corretta. Il clic sul cestino richiede conferma e non apre la gara. Totale 147 test.
