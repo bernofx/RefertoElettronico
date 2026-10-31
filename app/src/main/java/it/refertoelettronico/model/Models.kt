@@ -6,7 +6,8 @@ import java.time.format.DateTimeFormatter
 
 /** Positions are indexed 0..5 for zones 1..6. A team identity never changes with court ends. */
 data class Player(val number: Int, val name: String, val libero: Boolean = false, val captain: Boolean = false)
-data class Team(val name: String, val players: List<Player>, val staff: List<String> = List(5) { "" }, val clubCode: String = "", val colorKey: String? = null)
+data class RosterMember(val id:String,val player:Player,val present:Boolean=true)
+data class Team(val name: String, val players: List<Player>, val staff: List<String> = List(5) { "" }, val clubCode: String = "", val colorKey: String? = null, val roster:List<RosterMember>?=null)
 enum class Format(val label: String, val maxSets: Int, val wins: Int) {
     BEST_OF_FIVE("Al meglio di 5 set", 5, 3), BEST_OF_THREE("Al meglio di 3 set", 3, 2),
     THREE_FIXED("3 set obbligatori a 25", 3, 3)

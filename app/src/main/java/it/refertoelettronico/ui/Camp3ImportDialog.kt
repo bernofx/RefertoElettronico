@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -37,6 +38,7 @@ fun Camp3ImportDialog(teamName:String,onDismiss:()->Unit,onApply:(List<Player>)-
     var crop by remember{mutableStateOf(PhotoCrop())}
     var column by remember{mutableStateOf<Float?>(null)}
     var needColumn by remember{mutableStateOf(false)}
+    var photoMenu by remember{mutableStateOf(false)}
     var cameraFile by remember{mutableStateOf<File?>(null)}
     DisposableEffect(Unit){onDispose{originalPhoto?.close();photoBitmap?.takeUnless{it.isRecycled}?.recycle();cameraFile?.delete()}}
     DisposableEffect(photoBitmap){val bitmap=photoBitmap;onDispose{bitmap?.takeUnless{it.isRecycled}?.recycle()}}
@@ -92,36 +94,47 @@ fun Camp3ImportDialog(teamName:String,onDismiss:()->Unit,onApply:(List<Player>)-
     val camera=rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()){ok->
         if(ok)cameraFile?.let{load(FileProvider.getUriForFile(context,"${context.packageName}.files",it))}
     }
+    fun takePhoto() { try {
+        cameraFile?.delete()
+        val file=File.createTempFile("camp3-",".jpg",File(context.cacheDir,"camp3").apply{mkdirs()})
+        cameraFile=file
+        camera.launch(FileProvider.getUriForFile(context,"${context.packageName}.files",file))
+    }catch(t:Exception){error="Fotocamera non disponibile. Usa Carica foto."} }
     Dialog(onDismissRequest=onDismiss,properties=DialogProperties(usePlatformDefaultWidth=false)) {
-        Surface(Modifier.fillMaxWidth().fillMaxHeight(.95f).padding(12.dp),shape=MaterialTheme.shapes.large) {
-            Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("${if(section==Camp3Section.PLAYERS)"Lista giocatrici" else "Staff"} · $teamName",style=MaterialTheme.typography.titleLarge)
-                if(photoBitmap==null)Text(if(section==Camp3Section.PLAYERS)"Fotografa da vicino la lista e la colonna N° maglia. Lo staff si acquisisce con una foto separata, facoltativa." else "Fotografa da vicino lo staff, includendo i nomi dei ruoli. Questa acquisizione non modifica la lista delle giocatrici.",style=MaterialTheme.typography.bodySmall)
-                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(enabled=!busy,onClick={try {
-                        cameraFile?.delete()
-                        val file=File.createTempFile("camp3-",".jpg",File(context.cacheDir,"camp3").apply{mkdirs()})
-                        cameraFile=file
-                        camera.launch(FileProvider.getUriForFile(context,"${context.packageName}.files",file))
-                    }catch(t:Exception){error="Fotocamera non disponibile. Usa Carica foto."}}){Text("Fotografa")}
-                    OutlinedButton(enabled=!busy,onClick={photo.launch(arrayOf("image/*"))}){Text("Carica foto")}
+        Surface(Modifier.fillMaxWidth().fillMaxHeight(.98f).padding(6.dp),shape=MaterialTheme.shapes.large) {
+            Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text(if(section==Camp3Section.PLAYERS)"Lista giocatrici" else "Staff",style=MaterialTheme.typography.titleMedium)
+                        Text(teamName,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.bodySmall)
+                    }
+                    Box {
+                        TextButton(enabled=!busy,onClick={photoMenu=true}){Text("Foto")}
+                        DropdownMenu(expanded=photoMenu,onDismissRequest={photoMenu=false}) {
+                            DropdownMenuItem(text={Text("Fotografa")},onClick={photoMenu=false;takePhoto()})
+                            DropdownMenuItem(text={Text("Carica foto")},onClick={photoMenu=false;photo.launch(arrayOf("image/*"))})
+                            if(photoBitmap!=null)DropdownMenuItem(text={Text("Ruota di 90°")},onClick={photoMenu=false;source?.let{load(it,(rotation+1)%4)}})
+                            if(reading!=null)DropdownMenuItem(text={Text("Ritaglia e rileggi")},onClick={photoMenu=false;reading=null})
+                        }
+                    }
+                    TextButton(onClick=onDismiss){Text("Chiudi")}
                 }
-                if(busy){LinearProgressIndicator(Modifier.fillMaxWidth());Text("${if(photoBitmap==null)"Preparazione foto" else "Individuazione e lettura della tabella"}…")}
-                if(error!=null)Notice(error!!)
-                if(photoBitmap!=null && !busy)Row {
-                    TextButton(onClick={source?.let{load(it,(rotation+1)%4)}}){Text("Ruota di 90°")}
-                    if(reading!=null)TextButton(onClick={reading=null}){Text("Ritaglia e rileggi")}
-                }
+                if(error!=null)Text(error!!,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.error,maxLines=3,overflow=TextOverflow.Ellipsis)
                 Box(Modifier.weight(1f)) {
                     val result=reading
-                    if(!busy && result!=null)key(result) {
-                        if(section==Camp3Section.PLAYERS)Camp3RosterReview(result,onApply)
-                        else Camp3StaffReview(result,onStaff)
+                    when {
+                        busy ->Column(verticalArrangement=Arrangement.spacedBy(8.dp)){LinearProgressIndicator(Modifier.fillMaxWidth());Text("Lettura documento…")}
+                        result!=null ->key(result) {
+                            if(section==Camp3Section.PLAYERS)Camp3RosterReview(result,onApply) else Camp3StaffReview(result,onStaff)
+                        }
+                        photoBitmap!=null ->Camp3PhotoEditor(photoBitmap!!,crop,{crop=it},column,{column=it},section==Camp3Section.PLAYERS,::scan,chooseColumnInitially=needColumn)
+                        else ->Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                            Text(if(section==Camp3Section.PLAYERS)"Fotografa da vicino la lista e la colonna N°. Lo staff può essere acquisito separatamente." else "Includi i nomi e le etichette dei ruoli.")
+                            Button(onClick=::takePhoto,modifier=Modifier.fillMaxWidth()){Text("Fotografa")}
+                            OutlinedButton(onClick={photo.launch(arrayOf("image/*"))},modifier=Modifier.fillMaxWidth()){Text("Carica foto")}
+                        }
                     }
-                    else if(!busy && photoBitmap!=null)Camp3PhotoEditor(photoBitmap!!,crop,{crop=it},column,{column=it},section==Camp3Section.PLAYERS,::scan,chooseColumnInitially=needColumn)
-                    else if(!busy)Text("Puoi usare una foto diversa per ogni sezione. Le immagini vengono lette sul dispositivo. Controlla sempre il risultato prima di importarlo.")
                 }
-                TextButton(onClick=onDismiss,modifier=Modifier.fillMaxWidth()){Text("Chiudi senza importare")}
             }
         }
     }

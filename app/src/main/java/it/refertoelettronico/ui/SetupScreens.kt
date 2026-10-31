@@ -73,11 +73,13 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         date=LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))) }
     var config by remember { mutableStateOf(initial) }
     var section by remember { mutableIntStateOf(0) }
+    val scroll=rememberScrollState()
+    LaunchedEffect(section){scroll.scrollTo(0)}
     Column(Modifier.fillMaxSize()) {
         ScrollableTabRow(selectedTabIndex=section,edgePadding=12.dp) {
             listOf("Gara","Squadra di casa","Squadra ospite","Ufficiali").forEachIndexed { i,label ->Tab(selected=section==i,onClick={section=i},text={Text(label)})}
         }
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(18.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.weight(1f).verticalScroll(scroll).padding(14.dp),verticalArrangement=Arrangement.spacedBy(if(section in 1..2)6.dp else 12.dp)) {
             when(section) {
                 0 -> {
                     Notice("U14 femminile Como 2026/27: al meglio di 5 set, rete 2,15 m, libero e secondo libero ammessi. Otto sostituzioni e due timeout per set.")
@@ -102,7 +104,7 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
                 }
                 1,2 -> {
                     val t=section-1;val team=config.teams[t]
-                    TeamEditor(team,index=t,locked=rosterLocked,onChange={config=config.copy(teams=config.teams.with(t,it))})
+                    TeamEditor(team,index=t,season=config.season,locked=rosterLocked,onChange={config=config.copy(teams=config.teams.with(t,it))})
                 }
                 3 -> {
                     Text("Nomi e città degli ufficiali",style=MaterialTheme.typography.titleLarge)
@@ -117,44 +119,6 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
             if(section<3)OutlinedButton(onClick={section++},modifier=Modifier.weight(1f)){Text("Avanti")}
             Button(onClick={onSave(config)},modifier=Modifier.weight(1f)){Text(if(original==null)"Salva gara" else "Salva modifiche")}
         }
-    }
-}
-
-@Composable
-private fun TeamEditor(team:Team,index:Int,locked:Boolean,onChange:(Team)->Unit) {
-    var importSection by remember(index){mutableStateOf<it.refertoelettronico.ocr.Camp3Section?>(null)}
-    if(importSection!=null)Camp3ImportDialog(team.name,onDismiss={importSection=null},onApply={players->onChange(team.copy(players=players));importSection=null},
-        section=importSection!!,onStaff={changes->onChange(team.copy(staff=List(5){changes[it] ?: team.staff.getOrElse(it){""}}));importSection=null})
-    Field("Denominazione squadra",team.name,{onChange(team.copy(name=it))})
-    TeamColorPicker(team,index,onChange)
-    Field("Codice società",team.clubCode,{onChange(team.copy(clubCode=it))})
-    if(locked)Notice("Numeri e ruoli bloccati: per correggerli annulla gli eventi fino all'inizio. I nomi delle giocatrici, delle squadre e gli altri dati restano modificabili.")
-    Text("Distinta · ${team.players.size}/14",style=MaterialTheme.typography.titleLarge)
-    if(!locked)OutlinedButton(onClick={importSection=it.refertoelettronico.ocr.Camp3Section.PLAYERS}){Text("Foto lista giocatrici") }
-    Text("Puoi iniziare con i soli numeri. Per il referto cartaceo FIPAV completa cognome e nome di tutte le giocatrici, anche in seguito.",style=MaterialTheme.typography.bodySmall)
-    Text("K = capitana · L = libero. Seleziona una sola capitana e al massimo due liberi.",style=MaterialTheme.typography.bodySmall)
-    team.players.forEachIndexed { index,p ->
-        OutlinedCard {
-            Column(Modifier.padding(10.dp)) {
-                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    Field("N°",if(p.number==0)"" else p.number.toString(),{v ->onChange(team.copy(players=team.players.with(index,p.copy(number=v.filter{it.isDigit()}.take(2).toIntOrNull()?:0))))},Modifier.width(74.dp),numeric=true,enabled=!locked)
-                    Field("Cognome e nome",p.name,{onChange(team.copy(players=team.players.with(index,p.copy(name=it))))},Modifier.weight(1f))
-                }
-                Row {
-                    Row(Modifier.weight(1f)) {
-                        Checkbox(checked=p.captain,enabled=!locked,onCheckedChange={checked ->onChange(team.copy(players=team.players.mapIndexed {i,v ->v.copy(captain=i==index && checked)}))});Text("K",Modifier.padding(top=13.dp))
-                        Checkbox(checked=p.libero,enabled=!locked,onCheckedChange={onChange(team.copy(players=team.players.with(index,p.copy(libero=it))))});Text("L",Modifier.padding(top=13.dp))
-                    }
-                    if(!locked && team.players.size>6)TextButton(onClick={onChange(team.copy(players=team.players.filterIndexed { i,_ ->i!=index }))}){Text("Rimuovi")}
-                }
-            }
-        }
-    }
-    if(!locked && team.players.size<14)OutlinedButton(onClick={onChange(team.copy(players=team.players+Player(0,"")))}){Text("Aggiungi giocatrice")}
-    Text("Panchina",style=MaterialTheme.typography.titleMedium)
-    OutlinedButton(onClick={importSection=it.refertoelettronico.ocr.Camp3Section.STAFF}){Text("Foto staff (facoltativa)")}
-    listOf("Allenatore","Vice allenatore","Fisioterapista","Medico","Dirigente").forEachIndexed { i,label ->
-        Field(label,team.staff.getOrElse(i){""},{onChange(team.copy(staff=team.staff.with(i,it)))})
     }
 }
 

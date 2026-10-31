@@ -9,8 +9,12 @@ object MatchEngine {
         rule(config.teams.size == 2, "Servono due squadre.")
         rule(config.teams.map { it.name.trim().lowercase() }.distinct().size == 2, "Le squadre devono avere nomi diversi.")
         config.teams.forEach { team ->
+            team.roster?.let { catalog ->
+                rule(catalog.size<=60 && catalog.map{it.id}.distinct().size==catalog.size && catalog.all{it.id.isNotBlank()},"Rosa salvata non valida.")
+                rule(catalog.filter{it.present}.map{it.player}==team.players,"La distinta non corrisponde alle presenze selezionate.")
+            }
             rule(team.name.isNotBlank(), "Inserisci il nome di entrambe le squadre.")
-            rule(team.players.size in 6..14, "${team.name}: inserisci da 6 a 14 giocatrici.")
+            rule(team.players.size in 6..14, "${team.name}: seleziona da 6 a 14 giocatrici presenti.")
             rule(team.players.all { it.number in 1..99 }, "${team.name}: il numero di maglia deve essere compreso tra 1 e 99.")
             rule(team.players.distinctBy { it.number }.size == team.players.size, "${team.name}: numeri di maglia duplicati.")
             rule(team.players.count { it.libero } <= 2, "Sono consentiti al massimo due liberi.")

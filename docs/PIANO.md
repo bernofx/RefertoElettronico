@@ -16,3 +16,11 @@
 
 - Verificare l’OCR 0.5.0 su CAMP3 reali di Como: una foto ravvicinata della lista per squadra e, se utile, una foto separata dello staff. Controllare ritaglio automatico, selezione delle maglie, nomi parziali e numero di atlete riconosciute. Serve un campione reale: i test sintetici non misurano l’accuratezza del riconoscitore sul documento fotografato.
 - Passaggio da VolleyAlerts con il suo FileProvider e i permessi Android reali, seguendo [la specifica](INTEGRAZIONE-VOLLEYALERTS.md).
+
+## Rose e interfaccia 0.6.2
+
+- Archivio locale di rose riutilizzabili, aggiornabile senza modificare le gare passate; recupero anche da una partita precedente.
+- Rosa completa separata dalle presenti della gara. Solo le presenti entrano in formazioni, cambi e referto; copia JSON completa e compatibilità con i vecchi archivi.
+- Righe compatte con dettagli espandibili; colore e panchina richiudibili.
+- Ritaglio foto bloccato all'apertura e modifica esplicita, lettura sempre accessibile senza scorrere l'immagine.
+- Da verificare sul dispositivo: flusso foto e tastiera, scelta presenze prima di una gara reale.

@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.1](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.1.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.2](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.2.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -41,7 +41,7 @@ Non è un'integrazione con eScoreVolley e non invia dati al Comitato. La procedu
 
 ## Sviluppo
 
-Nei sorgenti **0.6.0** è disponibile anche l'apertura da VolleyAlerts tramite collegamento browser/PWA (`refertovolley://import-match`). Richiede il nuovo APK; quelli 0.5.0 e precedenti continuano a usare il file JSON. Il download sopra rimane la versione 0.5.0 finché non viene pubblicato un APK 0.6.0 verificato e firmato con la chiave originale, necessario per aggiornare senza perdere le gare locali.
+Dalla versione **0.6.0** è disponibile anche l’apertura da VolleyAlerts tramite collegamento browser/PWA (`refertovolley://import-match`), oltre al file JSON.
 
 Android 8.0/API 26 o successivo. Kotlin 2.2.21, Compose, AGP 8.13.2, Gradle 8.13, JDK 21 e SDK 36. Nessuna chiave, servizio remoto o permesso Internet richiesto dall'app.
 
@@ -62,3 +62,8 @@ Il codice del motore è separato dall'interfaccia: `model/MatchEngine.kt` applic
 Le gare contengono dati personali: l'app le conserva localmente, esclude il backup automatico e la migrazione del dispositivo, e condivide soltanto su comando dell'utente. Disinstallare l'app elimina gli archivi locali; salvare la copia JSON per conservarli.
 
 La versione **0.6.1** rilegge la zona selezionata dalla **foto originale** e ridimensiona solo il ritaglio (fino a 3600 pixel), mentre l'anteprima può essere ridotta a 1800 pixel. Questo vale per rilettura automatica/manuale, colonna maglie e staff. Se il formato non consente lettura regionale, l'app usa una lettura alternativa a memoria limitata e segnala la limitazione. Inoltre adatta la lettura delle foto al CAMP3 con intestazione **N°**: non richiede la parola MAGLIA per riconoscere la prima colonna. La tabella dello staff, introdotta da Qualifica, resta distinta dalla rosa. Gli indicatori espliciti K/L1/L2 possono essere proposti nella revisione e vanno controllati. Il test del modello usa esclusivamente dati anonimizzati e non incorpora il CAMP3 fornito dall'utente.
+
+
+La versione **0.6.2** rende compatta la distinta: ogni giocatrice occupa una riga, con spunta **Presente** e dettagli sotto **Modifica**. Solo le presenti sono disponibili nelle formazioni e nel referto; la rosa completa può superare le 14 giocatrici, mentre la distinta della gara mantiene i vincoli del regolamento. **Salva rosa** conserva una copia riutilizzabile sul dispositivo, comprese le assenti; **Carica rosa** permette di recuperarla oppure partire da una gara precedente. Il caricamento sostituisce i dati della squadra e lascia tutte le presenze da selezionare. Per aggiornare una rosa salvata usa lo stesso nome e conferma **Aggiorna rosa**. Le partite precedenti rimangono invariate.
+
+Le vecchie gare mantengono tutte le giocatrici come presenti. La copia JSON di una gara include rosa completa e presenze; l’archivio separato delle rose è locale e viene eliminato disinstallando l’app. Dopo l’inizio della gara le presenze sono bloccate come numeri e ruoli. Nell’editor foto il ritaglio parte bloccato: attiva **Ritaglia** solo per modificarlo, oppure **Maglie** per indicare la colonna. Il pulsante **Leggi** rimane visibile sotto la foto senza dover scorrere. Colore e panchina sono espandibili per lasciare più spazio alla lista.
