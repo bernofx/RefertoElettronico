@@ -1,0 +1,24 @@
+{
+  "source_commit": "6b439ec0e76c4bdbe19a165b40d6dcdf03a6e191",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.2",
+  "version_code": 8,
+  "variant": "debug",
+  "apk_sha256": "2a0e71eeb80f605b305e9d6848d9cfe702679e6eaa71c15e92e9870d0f706017",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 121,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested"
+  },
+  "changes": [
+    "Reusable local roster library and loading from previous matches",
+    "Explicit match attendance: only present players in lineups, substitutions and PDF",
+    "Compact roster rows and collapsible details",
+    "Locked photo selection by default and always visible OCR read button"
+  ]
+}
