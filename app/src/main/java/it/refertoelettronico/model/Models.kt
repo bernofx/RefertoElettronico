@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter
 /** Positions are indexed 0..5 for zones 1..6. A team identity never changes with court ends. */
 data class Player(val number: Int, val name: String, val libero: Boolean = false, val captain: Boolean = false)
 data class RosterMember(val id:String,val player:Player,val present:Boolean=true)
-data class Team(val name: String, val players: List<Player>, val staff: List<String> = List(5) { "" }, val clubCode: String = "", val colorKey: String? = null, val roster:List<RosterMember>?=null)
+data class Team(val name: String, val players: List<Player>, val staff: List<String> = List(5) { "" }, val clubCode: String = "", val colorKey: String? = null, val roster:List<RosterMember>?=null, val staffRoster:List<StaffCandidate>?=null, val historicalRoster:Boolean?=null)
 enum class Format(val label: String, val maxSets: Int, val wins: Int) {
     BEST_OF_FIVE("Al meglio di 5 set", 5, 3), BEST_OF_THREE("Al meglio di 3 set", 3, 2),
     THREE_FIXED("3 set obbligatori a 25", 3, 3)
@@ -18,7 +18,7 @@ data class MatchConfig(
     val location: String = "", val venue: String = "", val date: String = "", val scheduledTime: String = "",
     val officials: List<String> = List(7) { "" }, val officialCities: List<String> = List(7) { "" },
     val format: Format = Format.BEST_OF_FIVE, val maxSubstitutions: Int = 8,
-    val initialObservations: String = "", val fallbackReason: String = ""
+    val initialObservations: String = "", val fallbackReason: String = "", val refereeAttendant:String? = null
 )
 enum class Kind { START_SET, POINT, TIMEOUT, SUBSTITUTION, LIBERO_IN, LIBERO_OUT, NOTE, SANCTION,
     EXCEPTIONAL_SUB, REDESIGNATE_LIBERO, CAPTAIN, INTERRUPT, RESUME, END_MATCH, UNAVAILABLE }

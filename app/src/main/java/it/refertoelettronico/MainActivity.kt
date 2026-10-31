@@ -27,6 +27,8 @@ import it.refertoelettronico.feedback.ActionFeedback
 import it.refertoelettronico.feedback.Cue
 import it.refertoelettronico.pdf.PdfExporter
 import it.refertoelettronico.storage.MatchStore
+import it.refertoelettronico.storage.DraftStore
+import it.refertoelettronico.storage.SetupDraft
 import it.refertoelettronico.ui.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -52,18 +54,24 @@ class MainActivity : ComponentActivity() {
 fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     val context=LocalContext.current
     val store=remember { MatchStore(File(context.filesDir,"matches")) }
+    val draftStore=remember{DraftStore(File(context.filesDir,"setup-draft.json"))}
+    val pendingStore=remember{DraftStore(File(context.filesDir,"incoming-setup.json"))}
+    val restored=remember{runCatching{draftStore.load()}}
+    var savedDraft by remember{mutableStateOf(restored.getOrNull())}
+    val restoredJournal=remember{savedDraft?.matchId?.let{runCatching{store.load(it)}.getOrNull()}}
+    var discardDraft by remember{mutableStateOf(false)}
     val feedback=remember { ActionFeedback(context) }
     var soundEnabled by remember { mutableStateOf(feedback.enabled) }
     DisposableEffect(feedback) { onDispose{feedback.close()} }
-    var journal by remember { mutableStateOf<Journal?>(null) }
-    var id by remember { mutableStateOf<String?>(null) }
-    var editing by remember { mutableStateOf(false) }
-    var importedDraft by remember { mutableStateOf<MatchConfig?>(null) }
-    var incomingReview by remember { mutableStateOf<MatchConfig?>(null) }
+    var journal by remember { mutableStateOf<Journal?>(restoredJournal) }
+    var id by remember { mutableStateOf<String?>(if(restoredJournal!=null)savedDraft?.matchId else null) }
+    var editing by remember { mutableStateOf(savedDraft!=null) }
+    var importedDraft by remember { mutableStateOf(savedDraft?.config) }
+    var incomingReview by remember { mutableStateOf(runCatching{pendingStore.load()?.config}.getOrNull()) }
     var tab by remember { mutableIntStateOf(0) }
     var archiveRevision by remember { mutableIntStateOf(0) }
     var confirmUndo by remember { mutableIntStateOf(0) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf(restored.exceptionOrNull()?.let{"Bozza non leggibile: il file è stato conservato. ${it.message}"}) }
     val snackbar=remember { SnackbarHostState() }
     val scope=rememberCoroutineScope()
     fun failure(t: Throwable) { error=t.message ?: "Operazione non riuscita.";feedback.play(Cue.ERROR) }
@@ -71,10 +79,13 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
         try { val key=id ?: store.create(next);if(id!=null)store.save(key,next);id=key;journal=next;archiveRevision++;feedback.play(cue);return true }
         catch(t:Exception) { failure(t);return false }
     }
+    fun clearDraft(){draftStore.clear();savedDraft=null}
+    fun resumeDraft(){val draft=savedDraft ?: return;val previous=draft.matchId?.let{runCatching{store.load(it)}.getOrNull()};journal=previous;id=if(previous!=null)draft.matchId else null;importedDraft=draft.config;editing=true}
+    fun beginNew(){journal=null;id=null;importedDraft=null;editing=true}
     fun event(e: Event) { try { persist(MatchEngine.add(journal!!,e),Cue.forEvent(e)) } catch(t:Exception) { failure(t) } }
     LaunchedEffect(incoming) {
         if(incoming!=null) {
-            try { incomingReview=withContext(Dispatchers.IO){IncomingMatch.read(context,incoming)} }
+            try { incomingReview=withContext(Dispatchers.IO){IncomingMatch.read(context,incoming).also{pendingStore.save(SetupDraft(it))}} }
             catch(t:Exception){failure(IllegalArgumentException("Importazione non riuscita: ${t.message ?: "file non valido"}",t))}
             finally { onIncomingHandled() }
         }
@@ -136,15 +147,18 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                     }.orEmpty()
                     val next=previous?.copy(config=config,redo=retainedRedo) ?: Journal(config=config)
                     MatchEngine.replay(config,next.events);persist(next)
-                    if(journal==next){editing=false;importedDraft=null;tab=0}
+                    if(journal==next){clearDraft();editing=false;importedDraft=null;tab=0}
                 } catch(t:Exception){failure(t)}
-            },rosterLocked=journal?.events?.any{it.kind==Kind.START_SET}==true) }
+            },rosterLocked=journal?.events?.any{it.kind==Kind.START_SET}==true,onDraftChange={config->
+                try{val draft=SetupDraft(config,id);draftStore.save(draft);savedDraft=draft}catch(t:Exception){failure(t)}
+            }) }
             else if(journal==null) {
                 val archives=remember(archiveRevision) { store.list() }
-                HomeScreen(archives,onNew={importedDraft=null;id=null;editing=true},onDemo={id=null;persist(Journal(config=Demo.config(),events=listOf(Demo.start())));tab=0},
+                HomeScreen(archives,onNew={if(savedDraft!=null)discardDraft=true else beginNew()},onDemo={id=null;persist(Journal(config=Demo.config(),events=listOf(Demo.start())));tab=0},
                     onOpen={key ->try {journal=store.load(key);id=key;tab=0;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}},
                     onImport={importBackup.launch(arrayOf("application/json","text/plain","application/octet-stream"))},
-                    onDelete={key->try{store.delete(key);archiveRevision++;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}})
+                    onDelete={key->try{store.delete(key);if(savedDraft?.matchId==key)clearDraft();archiveRevision++;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}},
+                    onResume=if(savedDraft!=null)({resumeDraft()})else null,onDiscardDraft=if(savedDraft!=null)({discardDraft=true})else null)
             } else {
                 val j=journal!!;val s=state!!
                 when(tab) {
@@ -165,15 +179,17 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
             }
         }
     }
-    if(incomingReview!=null)AlertDialog(onDismissRequest={incomingReview=null},title={Text("Dati gara ricevuti")},
+    if(incomingReview!=null)AlertDialog(onDismissRequest={pendingStore.clear();incomingReview=null},title={Text("Dati gara ricevuti")},
         text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
             val config=incomingReview!!
             Text(config.competition)
-            config.teams.forEach { Text("${it.name.ifBlank{"Squadra da completare"}} · ${it.players.size} giocatrici") }
-            Text("Si aprirà una nuova gara da controllare e completare. Le gare già salvate rimarranno nell'archivio. Nessun dato ricevuto è stato ancora salvato.")
+            config.teams.forEach { Text("${it.name.ifBlank{"Squadra da completare"}} · ${it.roster?.size ?: it.players.size} candidate · ${it.staffRoster?.size ?: 0} proposte staff") }
+            Text("Rosa recuperata da partite precedenti. Seleziona le atlete presenti e verifica numeri e ruoli. Si aprirà una bozza da controllare; l’eventuale bozza precedente verrà sostituita. Nessuna gara definitiva è stata creata.")
         }},confirmButton={TextButton(onClick={
-            importedDraft=incomingReview;incomingReview=null;journal=null;id=null;editing=true;tab=0
-        }){Text("Rivedi dati")}},dismissButton={TextButton(onClick={incomingReview=null}){Text("Ignora")}})
+            val config=incomingReview!!
+            try{val draft=SetupDraft(config);draftStore.save(draft);savedDraft=draft;pendingStore.clear();importedDraft=config;incomingReview=null;journal=null;id=null;editing=true;tab=0}catch(t:Exception){failure(t)}
+        }){Text("Rivedi dati")}},dismissButton={TextButton(onClick={pendingStore.clear();incomingReview=null}){Text("Ignora")}})
+    if(discardDraft)AlertDialog(onDismissRequest={discardDraft=false},title={Text("Scartare la preparazione?")},text={Text("La bozza corrente verrà eliminata. Le gare già salvate restano invariate.")},confirmButton={TextButton(onClick={try{clearDraft();discardDraft=false;beginNew()}catch(t:Exception){failure(t)}}){Text("Scarta e nuova gara")}},dismissButton={TextButton(onClick={discardDraft=false;resumeDraft()}){Text("Riprendi bozza")}})
     if(confirmUndo>0 && journal!=null) AlertDialog(onDismissRequest={confirmUndo=0},title={Text("Annullare ${confirmUndo} operazioni?")},
         text={Text("Saranno ripristinati anche formazioni, servizio, libero, timeout e rotazioni. Puoi recuperare le operazioni con Ripristina finché non registri un nuovo evento.")},
         confirmButton={TextButton(onClick={try{persist(MatchEngine.undo(journal!!,confirmUndo),Cue.UNDO)}catch(t:Exception){failure(t)};confirmUndo=0}){Text("Annulla operazioni")}},

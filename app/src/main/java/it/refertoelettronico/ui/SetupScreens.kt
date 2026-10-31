@@ -53,7 +53,7 @@ fun <T> Picker(label:String,selected:T,choices:List<T>,name:(T)->String,onChange
 }
 
 @Composable
-fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo:()->Unit,onOpen:(String)->Unit,onImport:()->Unit,onDelete:(String)->Unit) {
+fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo:()->Unit,onOpen:(String)->Unit,onImport:()->Unit,onDelete:(String)->Unit,onResume:(()->Unit)?=null,onDiscardDraft:(()->Unit)?=null) {
     var deleting by remember{mutableStateOf<Pair<String,String>?>(null)}
     if(deleting!=null)AlertDialog(onDismissRequest={deleting=null},title={Text("Eliminare questa gara?")},text={Text("${deleting!!.second}\n\nLa gara e la sua cronologia verranno eliminate da questo dispositivo. Le copie JSON già esportate e le rose salvate restano disponibili.")},confirmButton={TextButton(modifier=Modifier.testTag("confirm-delete-match"),onClick={val key=deleting!!.first;deleting=null;onDelete(key)}){Text("Elimina gara",color=MaterialTheme.colorScheme.error)}},dismissButton={TextButton(onClick={deleting=null}){Text("Annulla")}})
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -72,6 +72,10 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
                     ActionLabel("Prepara una nuova gara",UiSymbol.ADD)
                 }
             }
+        }
+        if(onResume!=null)Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            FilledTonalButton(onClick=onResume,modifier=Modifier.weight(1f)){Text("Riprendi preparazione")}
+            if(onDiscardDraft!=null)TextButton(onClick=onDiscardDraft){Text("Scarta bozza")}
         }
         FilledTonalButton(onClick=onDemo,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) {ActionLabel("Prova con una gara dimostrativa",UiSymbol.COURT)}
         if(archives.isNotEmpty())Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
@@ -107,11 +111,20 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
 }
 
 @Composable
-fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Boolean) {
-    val initial=remember { original ?: MatchConfig(teams=List(2){Team("",(1..6).map { Player(it,"",captain=it==1) })},
+fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Boolean,onDraftChange:(MatchConfig)->Unit={}) {
+    val initial=remember { original?.let{StaffReview.prepare(it)} ?: MatchConfig(teams=List(2){Team("",(1..6).map { Player(it,"",captain=it==1) })},
         date=LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))) }
-    var config by remember { mutableStateOf(initial) }
+    val configState=remember{mutableStateOf(initial)}
+    val saveDraft by rememberUpdatedState(onDraftChange)
+    // Persist in the edit callback, before a pause can interrupt the next Compose frame.
+    var config by object:kotlin.properties.ReadWriteProperty<Any?,MatchConfig> {
+        override fun getValue(thisRef:Any?,property:kotlin.reflect.KProperty<*>)=configState.value
+        override fun setValue(thisRef:Any?,property:kotlin.reflect.KProperty<*>,value:MatchConfig){configState.value=value;saveDraft(value)}
+    }
+    LaunchedEffect(Unit){saveDraft(config)}
     var section by remember { mutableIntStateOf(0) }
+    var validationError by remember{mutableStateOf<String?>(null)}
+    if(validationError!=null)AlertDialog(onDismissRequest={validationError=null},title={Text("Controlla la distinta")},text={Text(validationError!!)},confirmButton={TextButton(onClick={validationError=null}){Text("Correggi")}})
     val scroll=rememberScrollState()
     LaunchedEffect(section){scroll.scrollTo(0)}
     Column(Modifier.fillMaxSize()) {
@@ -144,11 +157,17 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
                 1,2 -> {
                     val t=section-1;val team=config.teams[t]
                     TeamEditor(team,index=t,season=config.season,locked=rosterLocked,onChange={config=config.copy(teams=config.teams.with(t,it))})
+                    StaffCandidatesEditor(config,teamIndex=t,onChange={i,items->config=config.copy(teams=config.teams.with(i,config.teams[i].copy(staffRoster=items)))})
                 }
                 3 -> {
+                    StaffCandidatesEditor(config,serviceOnly=true,onChange={i,items->config=config.copy(teams=config.teams.with(i,config.teams[i].copy(staffRoster=items)))})
+                    val service=config.teams.flatMap{it.staffRoster.orEmpty()}.filter{it.selected && it.scope=="SERVICE"}
+                    val attendant=service.firstOrNull{it.assignment=="ATTENDANT"}
+                    Field("Addetto all’arbitro",attendant?.name ?: config.refereeAttendant.orEmpty(),{config=config.copy(refereeAttendant=it)},enabled=attendant==null)
                     Text("Nomi e città degli ufficiali",style=MaterialTheme.typography.titleLarge)
                     listOf("1° arbitro","2° arbitro","Segnapunti","Giudice di linea 1","Giudice di linea 2","Giudice di linea 3","Giudice di linea 4").forEachIndexed { i,label ->
-                        Field(label,config.officials.getOrElse(i){""},{config=config.copy(officials=config.officials.with(i,it))})
+                        val proposal=if(i==2)service.firstOrNull{it.assignment=="SCORER"}else null
+                        Field(label,proposal?.name ?: config.officials.getOrElse(i){""},{config=config.copy(officials=config.officials.with(i,it))},enabled=proposal==null)
                         if(i<3)Field("Città · $label",config.officialCities.getOrElse(i){""},{config=config.copy(officialCities=config.officialCities.with(i,it))})
                     }
                 }
@@ -156,7 +175,7 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         }
         Row(Modifier.padding(16.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             if(section<3)OutlinedButton(onClick={section++},modifier=Modifier.weight(1f)){Text("Avanti")}
-            Button(onClick={onSave(config)},modifier=Modifier.weight(1f)){Text(if(original==null)"Salva gara" else "Salva modifiche")}
+            Button(onClick={try{val final=StaffReview.confirm(config);MatchEngine.validate(final);onSave(final)}catch(t:IllegalArgumentException){validationError=t.message}},modifier=Modifier.weight(1f)){Text(if(original==null)"Salva gara" else "Salva modifiche")}
         }
     }
 }

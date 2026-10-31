@@ -8,13 +8,15 @@ object MatchEngine {
     fun validate(config: MatchConfig) {
         rule(config.teams.size == 2, "Servono due squadre.")
         rule(config.teams.map { it.name.trim().lowercase() }.distinct().size == 2, "Le squadre devono avere nomi diversi.")
+        rule(StaffReview.issues(config).isEmpty(),StaffReview.issues(config).values.firstOrNull() ?: "Incarichi non validi.")
         config.teams.forEach { team ->
+            team.staffRoster?.let{rule(it.size<=60 && it.map{p->p.id}.distinct().size==it.size && it.all{p->p.id.isNotBlank()},"Candidati staff non validi.")}
             team.roster?.let { catalog ->
                 rule(catalog.size<=60 && catalog.map{it.id}.distinct().size==catalog.size && catalog.all{it.id.isNotBlank()},"Rosa salvata non valida.")
                 rule(catalog.filter{it.present}.map{it.player}==team.players,"La distinta non corrisponde alle presenze selezionate.")
             }
             rule(team.name.isNotBlank(), "Inserisci il nome di entrambe le squadre.")
-            rule(team.players.size in 6..14, "${team.name}: seleziona da 6 a 14 giocatrici presenti.")
+            rule(team.players.size in 6..RosterReview.MATCH_LIMIT, "${team.name}: seleziona da 6 a ${RosterReview.MATCH_LIMIT} giocatrici presenti.")
             rule(team.players.all { it.number in 1..99 }, "${team.name}: il numero di maglia deve essere compreso tra 1 e 99.")
             rule(team.players.distinctBy { it.number }.size == team.players.size, "${team.name}: numeri di maglia duplicati.")
             rule(team.players.count { it.libero } <= 2, "Sono consentiti al massimo due liberi.")

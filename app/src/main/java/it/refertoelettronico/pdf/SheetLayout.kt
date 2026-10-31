@@ -237,6 +237,7 @@ object SheetLayout {
         appendix += "Fase/girone: ${config.phase} · campo: ${config.venue} · ora prevista: ${config.scheduledTime}"
         appendix += "Formula: ${config.format.label} · limite sostituzioni: ${config.maxSubstitutions}"
         config.officials.forEachIndexed { i,name->appendix+="${listOf("1° arbitro","2° arbitro","Segnapunti","Giudice linea 1","Giudice linea 2","Giudice linea 3","Giudice linea 4").getOrElse(i){"Ufficiale"}}: $name · città: ${config.officialCities.getOrElse(i){""}}" }
+        if(!config.refereeAttendant.isNullOrBlank())appendix += "Addetto all’arbitro: ${config.refereeAttendant}"
         appendix += "ELENCHI COMPLETI (numeri, capitana K, liberi L)"
         listOf(teamA,teamB).forEach { t ->
             appendix += "Squadra ${state.letter(t)}: ${config.teams[t].name} · codice società ${config.teams[t].clubCode}"

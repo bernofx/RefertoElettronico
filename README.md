@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.4](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.4.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.5](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.5.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -75,3 +75,6 @@ La versione **0.6.3** aggiorna la UI con un tema Material 3 coerente: palette ve
 La versione **0.6.4** introduce il tagliando formazioni con trascinamento e alternativa a tocchi. Le zone partono vuote; una giocatrice già assegnata scambia posto con quella nella zona di destinazione. Solo le presenti non libero e disponibili sono proposte. Nei set successivi puoi copiare esplicitamente la formazione del set precedente e correggerla secondo il nuovo tagliando. Primo servizio e lato del campo si scelgono in testa al primo e al quinto set; negli altri si alternano automaticamente. Il campo durante la gara resta visto dal tavolo del segnapunti.
 
 La barra superiore e le schede punteggio sono compatte, con ultima azione e avvisi nella parte scorrevole. In **Le tue gare**, il cestino apre una conferma con squadre e data: **Elimina gara** rimuove soltanto la gara scelta e la sua cronologia dal dispositivo. Le rose salvate separatamente e i file JSON già esportati rimangono disponibili; una copia JSON permette di importare nuovamente una gara eliminata. Si possono eliminare anche gli archivi non leggibili.
+
+
+La versione **0.6.5** adatta l’importazione alle rose cumulative VolleyAlerts: fino a 60 candidate per squadra, mai troncate né fuse, tutte inizialmente non presenti. Ricerca per nome/numero, errori accanto alle voci e controlli sulle sole selezionate. Supporta inoltre le proposte staff strutturate con revisione di panchina, incarichi di servizio e ruoli sconosciuti; il segnapunti è unico per gara. La preparazione viene salvata separatamente e può essere ripresa senza perdere chiavi, selezioni o modifiche. File JSON e link usano lo stesso parser e mantengono le soglie precedenti. Lo staff richiede anche l’esportazione corrispondente in VolleyAlerts, dipendenza ancora da verificare. [Contratto aggiornato e limiti](docs/INTEGRAZIONE-VOLLEYALERTS.md).

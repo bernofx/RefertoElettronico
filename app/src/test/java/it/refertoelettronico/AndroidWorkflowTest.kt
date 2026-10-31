@@ -66,7 +66,7 @@ class AndroidWorkflowTest {
         compose.onNodeWithText("VolleyAlerts Casa").assertExists()
         compose.onNodeWithTag("attendance-count").assertTextContains("0/14",substring=true)
         compose.onNodeWithText("Salva modifiche").performClick()
-        compose.onNodeWithText("Controlla l'operazione").assertExists()
+        compose.onNodeWithText("Controlla la distinta").assertExists()
         assertEquals(before,store.list().map{it.first to it.second.getOrThrow()})
     }
     @Test fun sharedJsonIsAcceptedButWebAndPrivateFilePathsAreRejected() {
@@ -315,6 +315,50 @@ class AndroidWorkflowTest {
         compose.onNodeWithTag("point-button-0").assertIsDisplayed()
         compose.onNodeWithTag("point-button-1").assertIsDisplayed()
         captureUi("ui-gara-0.6.4.png")
+    }
+
+
+    @Test fun cumulativeImportDraftSurvivesActivityRecreationWithSameIdsAndEdits() {
+        compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
+        compose.onNodeWithTag("point-button-0").performClick()
+        val store=it.refertoelettronico.storage.MatchStore(File(compose.activity.filesDir,"matches"))
+        val before=store.list().associate{it.first to it.second.getOrThrow()}
+        val json=it.refertoelettronico.integration.CumulativeRosterTest().payload(staff=listOf(it.refertoelettronico.integration.CumulativeRosterTest().candidate("TEC1")))
+        val encoded=java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(json.toByteArray())
+        compose.runOnUiThread{compose.activity.onNewIntent(android.content.Intent(android.content.Intent.ACTION_VIEW,android.net.Uri.parse("refertovolley://import-match?data=$encoded")))}
+        compose.waitUntil(10000){compose.onAllNodesWithText("Dati gara ricevuti").fetchSemanticsNodes().isNotEmpty()}
+        compose.runOnUiThread{compose.activity.intent=launchIntent}
+        compose.mainClock.autoAdvance=false
+        compose.activityRule.scenario.recreate()
+        compose.mainClock.autoAdvance=true
+        compose.onNodeWithText("Dati gara ricevuti").assertExists()
+        compose.onNodeWithText("Rivedi dati").performClick()
+        compose.onNodeWithText("Squadra di casa").performClick()
+        val drafts=it.refertoelettronico.storage.DraftStore(File(compose.activity.filesDir,"setup-draft.json"))
+        val initial=drafts.load()!!.config
+        assertEquals(21,initial.teams[0].roster!!.size)
+        val id=initial.teams[0].roster!!.first().id
+        compose.onNodeWithTag("presence-$id").performScrollTo().performClick()
+        compose.onNodeWithText("Cerca nome o numero").performScrollTo().performTextReplacement("Atleta è 1")
+        compose.onNodeWithContentDescription("Modifica giocatrice 1").performScrollTo().performClick()
+        compose.onNodeWithText("Cognome e nome").performScrollTo().performTextReplacement("Correzione persistente")
+        compose.waitUntil(10000){drafts.load()!!.config.teams[0].roster!!.first().player.name=="Correzione persistente"}
+        val staffId=initial.teams[0].staffRoster!!.single().id
+        compose.onNodeWithTag("staff-presence-$staffId").performScrollTo().performClick()
+        compose.runOnIdle{assertTrue(drafts.load()!!.config.teams[0].staffRoster!!.single().selected)}
+        val saved=drafts.load()!!
+        compose.runOnUiThread{compose.activity.intent=launchIntent}
+        compose.mainClock.autoAdvance=false
+        compose.activityRule.scenario.recreate()
+        compose.mainClock.autoAdvance=true
+        compose.onNodeWithText("Squadra di casa").performClick()
+        compose.onNodeWithTag("presence-$id").performScrollTo().assertIsOn()
+        compose.onNodeWithText("1 · Correzione persistente").assertExists()
+        assertEquals(saved,drafts.load())
+        assertEquals(before,store.list().associate{it.first to it.second.getOrThrow()})
+        captureUi("ui-candidate-0.6.5.png")
+        compose.onNodeWithTag("staff-presence-$staffId").performScrollTo().assertIsOn()
+        captureUi("ui-staff-0.6.5.png")
     }
 
     private fun captureUi(name:String) {

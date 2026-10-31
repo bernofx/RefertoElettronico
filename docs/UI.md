@@ -22,3 +22,12 @@ Il sorteggio è all’inizio della preparazione del primo e del quinto set: **Ch
 
 
 Verifiche: suite di 128 test, build APK e lint Android. Restano da verificare sul telefono tastiera, dimensione caratteri personalizzata e comportamento dei dialoghi di sistema.
+
+
+## Revisione rose e staff 0.6.5
+
+Le candidate cumulative sono tutte inizialmente non presenti. La ricerca per nome/numero restringe la lista senza eliminare o deselezionare le altre voci. I numeri mancanti e i conflitti fra presenti sono evidenziati vicino alle righe. La preparazione può essere ripresa dalla pagina iniziale e mantiene gli identificativi locali, le selezioni e le correzioni.
+
+Lo staff ha sezioni separate per panchina, servizi e ruoli da verificare. La scheda Ufficiali riunisce le proposte per i servizi dell’intera gara; sono richieste selezioni esplicite. Le persone selezionate compilano i campi corrispondenti, da correggere sulla proposta. I codici ricevuti restano conservati anche quando si mappa un incarico manualmente.
+
+![Candidate dopo il ripristino](ui/candidate-0.6.5.png)

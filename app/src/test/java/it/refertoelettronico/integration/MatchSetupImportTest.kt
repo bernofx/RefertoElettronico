@@ -27,9 +27,12 @@ class MatchSetupImportTest {
     @Test fun completeSetupPreservesRolesColorsAndCompetition() {
         val json=com.google.gson.Gson().toJson(Demo.config().copy(teams=Demo.config().teams.map{it.copy(colorKey="GREEN")}))
         val config=MatchSetupImport.decode(envelope(json))
-        MatchEngine.validate(config)
+        assertTrue(config.teams.all{it.players.isEmpty()})
+        assertTrue(config.teams.all{it.roster!!.none{member->member.present}})
+        val selected=config.copy(teams=config.teams.map{Rosters.withMembers(it,it.roster!!.map{member->member.copy(present=true)})})
+        MatchEngine.validate(selected)
         assertEquals(TeamColor.GREEN,TeamColor.of(config.teams[0],0))
-        assertEquals(2,config.teams[0].players.count{it.libero})
+        assertEquals(2,config.teams[0].roster!!.count{it.player.libero})
         assertEquals(7,config.officials.size)
     }
     @Test fun malformedVersionsAndWrongTypesAreRejected() {

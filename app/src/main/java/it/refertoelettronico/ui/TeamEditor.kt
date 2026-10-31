@@ -19,6 +19,8 @@ import java.util.UUID
 @Composable
 fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)->Unit) {
     val members=remember(team){Rosters.members(team)}
+    var query by remember(index){mutableStateOf("")}
+    val issues=RosterReview.issues(team)
     var expanded by remember(index){mutableStateOf<String?>(null)}
     var details by remember(index){mutableStateOf(false)}
     var colors by remember(index){mutableStateOf(false)}
@@ -42,7 +44,7 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
     if(colors)TeamColorPicker(team,index,onChange)
     if(saved)Text("Rosa salvata sul dispositivo",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary)
     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
-        Text("Presenti ${team.players.size}/14 · Rosa ${members.size}",Modifier.weight(1f).padding(top=12.dp).testTag("attendance-count"),fontWeight=FontWeight.Bold)
+        Text("Presenti ${team.players.size}/${RosterReview.MATCH_LIMIT} · Rosa ${members.size}",Modifier.weight(1f).padding(top=12.dp).testTag("attendance-count"),fontWeight=FontWeight.Bold)
         Box {
             TextButton(onClick={photos=true}){ActionLabel("Foto",UiSymbol.CAMERA)}
             DropdownMenu(expanded=photos,onDismissRequest={photos=false}) {
@@ -56,7 +58,12 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
         TextButton(onClick={update(members.map{it.copy(present=false)})}){Text("Nessuna")}
     }
     Text(if(locked)"Presenze, numeri e ruoli bloccati dopo l'inizio. I nomi restano correggibili." else "Spunta chi partecipa. La matita apre numero, nome e ruoli.",style=MaterialTheme.typography.bodySmall)
-    members.forEach { member->key(member.id) {
+    if(team.historicalRoster==true) {
+        Text("Rosa recuperata da partite precedenti. Seleziona le atlete presenti e verifica numeri e ruoli.",style=MaterialTheme.typography.bodySmall)
+    }
+    if(team.roster!=null)Field("Cerca nome o numero",query,{query=it})
+    if(team.players.isNotEmpty() && team.players.none{it.captain})Text("Indica una capitana tra le presenti.",color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)
+    members.filter{query.isBlank() || it.player.name.contains(query,true) || it.player.number.toString().contains(query)}.forEach { member->key(member.id) {
         val player=member.player
         Surface(shape=MaterialTheme.shapes.medium,color=if(member.present)MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerLow) {
         Row(Modifier.fillMaxWidth().padding(horizontal=4.dp),horizontalArrangement=Arrangement.spacedBy(4.dp),verticalAlignment=Alignment.CenterVertically) {
@@ -72,6 +79,8 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
             IconButton(onClick={expanded=if(expanded==member.id)null else member.id},modifier=Modifier.semantics{contentDescription="Modifica giocatrice ${player.number}"}){UiGlyph(if(expanded==member.id)UiSymbol.CHECK else UiSymbol.EDIT,color=MaterialTheme.colorScheme.primary)}
         }
         }
+        if(player.number==0)Text("Numero da verificare",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.error)
+        issues[member.id]?.let{Text(it,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.error)}
         if(expanded==member.id)Column(Modifier.fillMaxWidth().padding(start=12.dp,bottom=6.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
             Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 Field("N°",player.number.takeIf{it>0}?.toString().orEmpty(),{value->
@@ -81,7 +90,7 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
                 Field("Cognome e nome",player.name,{value->update(members.map{if(it.id==member.id)it.copy(player=player.copy(name=value))else it})},Modifier.weight(1f))
             }
             Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected=player.captain,enabled=!locked,onClick={update(members.map{it.copy(player=it.player.copy(captain=it.id==member.id && !player.captain))})},label={Text("K · capitana")})
+                FilterChip(selected=player.captain,enabled=!locked,onClick={update(members.map{if(it.id==member.id)it.copy(player=player.copy(captain=!player.captain))else it})},label={Text("K · capitana")})
                 FilterChip(selected=player.libero,enabled=!locked,onClick={update(members.map{if(it.id==member.id)it.copy(player=player.copy(libero=!player.libero))else it})},label={Text("L · libero")})
                 if(!locked)TextButton(onClick={update(members.filter{it.id!=member.id});expanded=null}){Text("Rimuovi")}
             }
@@ -92,7 +101,8 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
     if(details) {
         Field("Codice società",team.clubCode,{onChange(team.copy(clubCode=it))})
         listOf("Allenatore","Vice allenatore","Fisioterapista","Medico","Dirigente").forEachIndexed{i,label->
-            Field(label,team.staff.getOrElse(i){""},{value->onChange(team.copy(staff=List(5){if(it==i)value else team.staff.getOrElse(it){""}}))})
+            val proposal=team.staffRoster.orEmpty().firstOrNull{it.selected && it.scope=="BENCH" && it.assignment==StaffReview.bench[i]}
+            Field(label,proposal?.name ?: team.staff.getOrElse(i){""},{value->onChange(team.copy(staff=List(5){if(it==i)value else team.staff.getOrElse(it){""}}))},enabled=proposal==null)
         }
     }
 }
