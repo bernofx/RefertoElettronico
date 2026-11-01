@@ -56,3 +56,8 @@ La pagina iniziale riprende la struttura dei badge dell’esempio: raggruppament
 | Tagliando bianco leggibile | Schede gara |
 | --- | --- |
 | ![Tagliando bianco](ui/formazione-bianco-0.6.7.png) | ![Schede gara](ui/badge-gare-0.6.7.png) |
+
+
+## Icona e guida · 0.6.8
+
+La testata e il launcher adottano l’icona C6 approvata, con referto blu, sfondo giallo e pallone blu/giallo/bianco. La guida al primo avvio è un overlay con contenuto scorrevole e navigazione sempre accessibile; resta disponibile dalla pagina iniziale, nell’editor e nella scheda Guida. [Anteprime e manutenzione dei contenuti](GUIDA-E-TUTORIAL.md).

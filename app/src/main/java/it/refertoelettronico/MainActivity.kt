@@ -19,6 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -61,6 +65,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     var savedDraft by remember{mutableStateOf(restored.getOrNull())}
     val restoredJournal=remember{savedDraft?.matchId?.let{runCatching{store.load(it)}.getOrNull()}}
     var discardDraft by remember{mutableStateOf(false)}
+    val guideProgress=remember{GuideProgress(context)}
+    var showGuide by remember{mutableStateOf(guideProgress.needsIntroduction)}
     val feedback=remember { ActionFeedback(context) }
     var soundEnabled by remember { mutableStateOf(feedback.enabled) }
     DisposableEffect(feedback) { onDispose{feedback.close()} }
@@ -130,8 +136,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     val state=remember(journal) { journal?.let { MatchEngine.replay(it.config,it.events) } }
     Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
         if(journal!=null && !editing) NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp) {
-            listOf("Gara","Registro","Referto","Dati").forEachIndexed { index,label ->
-                NavigationBarItem(selected=tab==index,onClick={tab=index},icon={UiGlyph(listOf(UiSymbol.COURT,UiSymbol.HISTORY,UiSymbol.DOCUMENT,UiSymbol.SETTINGS)[index])},label={Text(label)})
+            listOf("Gara","Registro","Referto","Dati","Guida").forEachIndexed { index,label ->
+                NavigationBarItem(selected=tab==index,onClick={tab=index},icon={UiGlyph(listOf(UiSymbol.COURT,UiSymbol.HISTORY,UiSymbol.DOCUMENT,UiSymbol.SETTINGS,UiSymbol.GUIDE)[index])},label={Text(label)})
             }
         }
     }) { padding ->
@@ -139,14 +145,16 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
             val compactHeader=journal!=null && !editing && tab==0
             Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=if(compactHeader)0.dp else 10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 if(editing)TextButton(onClick=::navigateBack,contentPadding=PaddingValues(horizontal=8.dp)){Text("Indietro")}
-                else Surface(shape=MaterialTheme.shapes.small,color=MaterialTheme.colorScheme.primaryContainer) {
-                    Box(Modifier.size(if(compactHeader)28.dp else 38.dp),contentAlignment=Alignment.Center){UiGlyph(UiSymbol.COURT,color=MaterialTheme.colorScheme.primary)}
+                else Surface(shape=MaterialTheme.shapes.small,color=Color(0xFFFFD23F)) {
+                    Box(Modifier.size(if(compactHeader)28.dp else 38.dp),contentAlignment=Alignment.Center){Image(painterResource(R.drawable.ic_launcher_art),contentDescription=null,modifier=Modifier.fillMaxSize())}
                 }
                 Column(Modifier.weight(1f)) {
                     Text("REFERTO VOLLEY",style=if(compactHeader)MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
                     if(!compactHeader)Text(if(editing) "Prepara la gara" else if(journal==null) "A bordo campo" else journal!!.config.competition,
                         style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold,maxLines=2)
                 }
+                if(journal==null && !editing)TextButton(onClick={showGuide=true},modifier=Modifier.testTag("home-guide")){Text("Guida")}
+                else if(editing)IconButton(onClick={showGuide=true},modifier=Modifier.testTag("editor-guide").semantics{contentDescription="Guida"}){UiGlyph(UiSymbol.GUIDE)}
                 SoundToggle(soundEnabled){ enabled ->
                     try {feedback.setEnabled(enabled);soundEnabled=enabled}catch(t:Exception){failure(t)}
                 }
@@ -182,6 +190,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                         canUndo=j.events.isNotEmpty(),canRedo=j.redo.isNotEmpty(),onHistory={tab=1},onEditSetup=::editCurrentMatch) }
                     1 -> HistoryScreen(j,onUndoTo={confirmUndo=it},onRedo={try{persist(MatchEngine.redo(j))}catch(t:Exception){failure(t)}})
                     2 -> ExportScreen(j,onError=::failure,onComplete={feedback.play(Cue.CONFIRM)},onBackup={pendingBackup=store.encode(j);saveBackup.launch("gara-${j.config.matchNumber.ifBlank{"volley"}}.json")})
+                    4 -> GuideScreen(onStart={showGuide=true})
                     3 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                         Text("Dati e regolamento",style=MaterialTheme.typography.headlineSmall)
                         Text("${j.config.teams[0].name} / ${j.config.teams[1].name}\n${j.config.date} · ${j.config.location}\n${j.config.format.label}")
@@ -194,7 +203,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
             }
         }
     }
-    if(incomingReview!=null)AlertDialog(onDismissRequest={pendingStore.clear();incomingReview=null},title={Text("Dati gara ricevuti")},
+    if(incomingReview!=null && !showGuide)AlertDialog(onDismissRequest={pendingStore.clear();incomingReview=null},title={Text("Dati gara ricevuti")},
         text={Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
             val config=incomingReview!!
             Text(config.competition)
@@ -213,6 +222,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
         confirmButton={TextButton(onClick={try{persist(MatchEngine.undo(journal!!,confirmUndo),Cue.UNDO)}catch(t:Exception){failure(t)};confirmUndo=0}){Text("Annulla operazioni")}},
         dismissButton={TextButton(onClick={confirmUndo=0}){Text("Mantieni")}})
     if(error!=null)AlertDialog(onDismissRequest={error=null},title={Text("Controlla l'operazione")},text={Text(error!!)},confirmButton={TextButton(onClick={error=null}){Text("Ho capito")}})
+    if(showGuide)GuideOverlay(onClose={guideProgress.markSeen();showGuide=false})
+
 }
 
 @Composable

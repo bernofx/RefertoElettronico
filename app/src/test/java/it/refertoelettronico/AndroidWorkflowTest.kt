@@ -27,6 +27,7 @@ class AndroidWorkflowTest {
     @get:Rule val compose=createAndroidComposeRule<MainActivity>()
     private var launchIntent:android.content.Intent?=null
     @org.junit.Before fun retainScenarioLaunchIntent(){
+        if(compose.onAllNodesWithTag("guide-close").fetchSemanticsNodes().isNotEmpty())compose.onNodeWithTag("guide-close").performClick()
         launchIntent=compose.activity.intent
         org.robolectric.util.ReflectionHelpers.getStaticField<MutableMap<String,Any>>(androidx.core.content.FileProvider::class.java,"sCache").clear()
     }
