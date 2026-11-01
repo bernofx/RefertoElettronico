@@ -1,0 +1,26 @@
+{
+  "source_commit": "097c146c3fbedf96797d7110b9814005182c1eb4",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.8",
+  "version_code": 14,
+  "variant": "debug",
+  "apk_sha256": "826f6c3362e8392ea5969010eaf67ab1be993fc50f6076924c36e6576013e19b",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 150,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "physical_device_and_launcher_masks": "not tested",
+    "icon_rendering": "Android adaptive drawable resources rendered in Robolectric native graphics"
+  },
+  "guide_revision": 1,
+  "changes": [
+    "Approved C6 adaptive launcher icon: yellow background, blue scoresheet and blue-yellow-white volleyball",
+    "Seven-step first-launch overlay with next/back/skip and persistent seen revision",
+    "Guide tab with shared content and manual reopening from home, match and editor",
+    "Documented guide update workflow for substantive user-flow changes"
+  ]
+}
