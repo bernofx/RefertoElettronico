@@ -1,0 +1,28 @@
+{
+  "source_commit": "3b660f5544112b414e0b60c9f86c4a9a3b214ecd",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.7.1",
+  "version_code": 17,
+  "variant": "debug",
+  "apk_sha256": "a330a038ac1e9657366860f5628b9e3335ca926542699f80ad83dbb23fa10308",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 174,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "testDebugUnitTest": "passed",
+    "lintDebug": "passed",
+    "native_input_regressions": "Android DOWN, small MOVE, UP, CANCEL, batched samples, stylus and active-pointer handling, resize/recomposition persistence and cursor pixel checks",
+    "physical_device": "not tested; the reported phone failure has not been reproduced on physical hardware"
+  },
+  "guide_revision": 3,
+  "changes": [
+    "Native Android handwriting view consumes touch from first contact without waiting for drag touch slop",
+    "Unconfirmed ink and its original aspect ratio survive view resizing and recomposition; clear is explicit",
+    "A green cursor follows the active contact and disappears on release; it is excluded from saved signatures and PDF",
+    "Existing signature capture, approval ordering, archive persistence and PDF tests continue to pass"
+  ]
+}
