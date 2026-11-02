@@ -1,0 +1,29 @@
+{
+  "source_commit": "3408df421be5eb3323fa88fadc87a7ee6a7e5deb",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.7.2",
+  "version_code": 18,
+  "variant": "debug",
+  "apk_sha256": "b7368c59452033eca8b694e592acc3232dc736d6c5090b16a103e6ca056e4c22",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 182,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "testDebugUnitTest": "passed",
+    "lintDebug": "passed",
+    "regressions": "Missing referee added after finished match preserves team signatures; legacy hash migration and recovery, JSON persistence and PDF signatures verified; roster/toss changes are not silently approved",
+    "physical_device": "not tested"
+  },
+  "guide_revision": 3,
+  "changes": [
+    "Preliminary signatures cover the relevant team, match identity and toss; officials and administrative notes are excluded",
+    "Missing first-referee or scorer name can be entered directly in the approval panel",
+    "Valid legacy signatures are preserved during unrelated official metadata edits",
+    "Explicit recovery verifies old hashes against original blank official fields before retaining ink, signer and original timestamp; original hash is retained",
+    "Official/scorer fields are separated from club referee attendant assistance; existing role projection is unchanged"
+  ]
+}
