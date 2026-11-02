@@ -1,0 +1,26 @@
+{
+  "source_commit": "debc808cd37052b2d8abf3bd0c0a9edfb7587d4a",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.6.9",
+  "version_code": 15,
+  "variant": "debug",
+  "apk_sha256": "84d16076e2012226ff0132a271b0bc175012de79727502646d5d15f719028784",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 155,
+    "failures": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested",
+    "rendering": "Native Android rendering in Robolectric; court, libero form and final PDF preview inspected"
+  },
+  "guide_revision": 2,
+  "changes": [
+    "Contextual walkthrough on real production screens with dimmed background and spotlight on actual controls",
+    "Memory-only example: scoring, rotations, timeout, substitution, libero, undo/redo, history, observations and sanctions",
+    "Real completed-match PDF generated in private temporary cache, previewed and cleaned on exit",
+    "Guide accessible on first launch and manually; real matches and preparation preserved"
+  ]
+}
