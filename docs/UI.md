@@ -75,3 +75,8 @@ La preparazione del primo set introduce l’accesso alle firme preliminari dopo 
 ## Input firma e indicatore · 0.7.1
 
 Il primo contatto disegna subito; il tratto non dipende dalla soglia di trascinamento e non viene cancellato dai cambi di dimensione. Durante la scrittura un pallino verde con alone segue dito o penna. Al rilascio resta soltanto l’inchiostro nero; pallino e alone non fanno parte della firma salvata o del PDF.
+
+
+## Completamento nominativi e recupero · 0.7.2
+
+Il pannello di approvazione offre Nome e cognome e Salva nominativo per primo arbitro e segnapunti mancanti. Le firme preliminari delle squadre restano valide dopo il completamento degli ufficiali. Per vecchie firme non aggiornate compare Recupera firme preliminari: la verifica lavora in background e indica quante firme originali sono state recuperate; se mancano riscontri non viene ricreata alcuna firma.

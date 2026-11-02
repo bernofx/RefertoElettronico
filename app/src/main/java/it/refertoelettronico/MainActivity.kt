@@ -176,7 +176,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                     val retainedRedo=previous?.redo?.takeIf { events ->
                         runCatching{MatchEngine.replay(config,previous.events+events)}.isSuccess
                     }.orEmpty()
-                    val next=previous?.copy(config=config,redo=retainedRedo) ?: Journal(config=config)
+                    val next=previous?.let{Signatures.withConfig(it.copy(redo=retainedRedo),config)} ?: Journal(config=config)
                     MatchEngine.replay(config,next.events);persist(next)
                     if(journal==next){clearDraft();editing=false;importedDraft=null;tab=0}
                 } catch(t:Exception){failure(t)}

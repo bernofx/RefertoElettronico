@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.7.1](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.1.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.7.2](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.2.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -90,6 +90,6 @@ La versione **0.6.7** aggiunge **Correggi dati e rose** nella preparazione del p
 Nella **0.6.7** la preparazione delle formazioni mantiene leggibili rete, zone e numeri anche per squadre bianche o con colori chiari: i colori restano quelli scelti, mentre testo e tratti usano un contrasto adeguato e i numeri trascinabili hanno un bordo. La pagina iniziale mostra le gare come schede con fascia colorata, raggruppate per data e ordinate per ora: campo, squadre su righe separate, categoria, numero gara e stato. In corso vengono mostrati punti e numero del set, a gara terminata i set vinti. Il cestino mantiene la conferma. La categoria è un’etichetta descrittiva e non modifica il regolamento.
 
 
-La versione **0.7.1** aggiorna il riquadro firma con input Android nativo: il tratto appare dal primo contatto e rimane durante ridimensionamenti e ricomposizioni. Un pallino segue il dito o la penna durante la scrittura e scompare al rilascio; non entra nella firma salvata né nel PDF. Sono mantenuti il flusso FIPAV, la firma in orizzontale e il controllo delle approvazioni dopo modifiche. [Regole e funzionamento delle firme](docs/FIRME-REFERTO.md) · [Guida e tutorial](docs/GUIDA-E-TUTORIAL.md).
+La versione **0.7.2** permette di completare i nominativi degli ufficiali senza invalidare le firme preliminari delle squadre. Il nome mancante di arbitro o segnapunti si può inserire direttamente nel pannello di approvazione. Per le firme raccolte con le versioni precedenti è disponibile un recupero verificato, quando il vecchio riferimento conferma che sono stati soltanto completati campi degli ufficiali originariamente vuoti. Vengono conservati tratti e data della firma. Restano la firma in orizzontale e il pallino che segue il contatto. [Regole, correzioni e recupero delle firme](docs/FIRME-REFERTO.md).
 
 Per chi modifica l’app: aggiornare `AppGuide.steps` e `updatedFor` quando cambiano sostanzialmente i flussi; incrementare `AppGuide.revision` per riproporre una volta i contenuti aggiornati. Le patch estetiche non devono riattivare il tutorial.

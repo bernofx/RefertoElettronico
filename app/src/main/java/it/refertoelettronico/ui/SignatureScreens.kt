@@ -31,6 +31,9 @@ import androidx.compose.ui.window.DialogProperties
 import it.refertoelettronico.model.*
 import it.refertoelettronico.pdf.SignatureGeometry
 import it.refertoelettronico.pdf.TextCell
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -83,6 +86,7 @@ internal fun SignatureWorkflow(journal:Journal,preliminary:Boolean,toss:Event?=S
                 }
                 Text(if(preliminary)"Dopo il sorteggio e prima del primo set: capitane e allenatori presenti." else "A gara terminata e dopo i controlli arbitrali: segnapunti, 2° arbitro se presente, 1° arbitro, in quest’ordine.",style=MaterialTheme.typography.bodyMedium)
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                    if(!preliminary)LegacySignatureRecovery(journal,onUpdate)
                     if(!preliminary)Text("Le capitane non firmano a fine gara nelle competizioni FIPAV. Attendere i controlli e gli eventuali termini previsti per le istanze prima dell’approvazione.",style=MaterialTheme.typography.bodySmall)
                     roles.forEachIndexed { index,role ->
                         val current=Signatures.current(journal,role,toss)
@@ -93,7 +97,8 @@ internal fun SignatureWorkflow(journal:Journal,preliminary:Boolean,toss:Event?=S
                             Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                                 Text("${index+1}. ${role.label}",style=MaterialTheme.typography.titleSmall)
                                 if(role.team>=0)Text(journal.config.teams[role.team].name,style=MaterialTheme.typography.bodySmall)
-                                Text(name.ifBlank{"Completa il nominativo nei Dati"},style=MaterialTheme.typography.bodyMedium)
+                                Text(name.ifBlank{if(preliminary)"Completa il nominativo nei Dati"else"Nominativo da completare"},style=MaterialTheme.typography.bodyMedium)
+                                if(!preliminary && name.isBlank())MissingOfficialName(journal,role,onUpdate)
                                 Text(when{current!=null->"Raccolta il ${signatureTime(current.signedAt)}";old->"Da rifirmare: il contenuto approvato è cambiato";else->"Da raccogliere"},style=MaterialTheme.typography.bodySmall,
                                     color=if(old&&current==null)MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                                 if(current!=null)SignatureThumbnail(current)
@@ -123,6 +128,46 @@ internal fun SignatureWorkflow(journal:Journal,preliminary:Boolean,toss:Event?=S
             if(onUpdate(next)){capturing=null;error=null}
         } catch(t:IllegalArgumentException){error=t.message;capturing=null}
     })
+}
+
+@Composable
+private fun MissingOfficialName(journal:Journal,role:SignatureRole,onUpdate:(Journal)->Boolean) {
+    var name by remember(role){mutableStateOf("")}
+    Field("Nome e cognome",name,{name=it},Modifier.testTag("signature-official-name-${role.name}"))
+    TextButton(enabled=name.isNotBlank(),modifier=Modifier.testTag("save-official-name-${role.name}"),onClick={
+        val index=when(role){SignatureRole.SCORER->2;SignatureRole.SECOND_REFEREE->1;else->0}
+        val names=journal.config.officials.toMutableList()
+        while(names.size<=index)names.add("")
+        names[index]=name.trim()
+        onUpdate(Signatures.withConfig(journal,journal.config.copy(officials=names)))
+    }){Text("Salva nominativo")}
+}
+
+@Composable
+private fun LegacySignatureRecovery(journal:Journal,onUpdate:(Journal)->Boolean) {
+    val available=remember(journal){Signatures.hasLegacyPreliminariesToRecover(journal)}
+    val latestJournal by rememberUpdatedState(journal)
+    var busy by remember{mutableStateOf(false)}
+    var message by remember{mutableStateOf<String?>(null)}
+    val scope=rememberCoroutineScope()
+    if(available || message!=null)OutlinedCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+            Text("Firme delle versioni precedenti",style=MaterialTheme.typography.titleSmall)
+            Text("Se sono diventate non valide dopo aver completato gli ufficiali, verifica il recupero delle firme già raccolte. Distinte e sorteggio devono risultare invariati.",style=MaterialTheme.typography.bodySmall)
+            if(available)FilledTonalButton(enabled=!busy,modifier=Modifier.testTag("recover-preliminary-signatures"),onClick={scope.launch {
+                busy=true
+                try {
+                    val next=withContext(Dispatchers.Default){Signatures.recoverLegacyPreliminaries(journal)}
+                    val recovered=Signatures.missing(journal,true).size-Signatures.missing(next,true).size
+                    if(latestJournal!=journal)message="I dati sono cambiati durante la verifica: riprova il recupero."
+                    else if(recovered>0) {
+                        if(onUpdate(next))message="Recuperate $recovered firme preliminari, conservando tratti e data originali."
+                    } else message="Nessuna firma recuperabile: i dati originali non sono verificabili. Le firme non vengono ricreate."
+                } finally {busy=false}
+            }}){Text(if(busy)"Verifica firme…" else "Recupera firme preliminari")}
+            if(message!=null)Text(message!!,style=MaterialTheme.typography.bodySmall,modifier=Modifier.testTag("signature-recovery-result"))
+        }
+    }
 }
 
 private fun signatureTime(at:Long)=DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.of("Europe/Rome")).format(Instant.ofEpochMilli(at))

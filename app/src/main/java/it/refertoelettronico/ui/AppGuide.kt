@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 /** Update the shared walkthrough and increment revision when a substantial user flow changes. */
 object AppGuide {
     const val revision=3
-    const val updatedFor="0.7.1"
+    const val updatedFor="0.7.2"
     enum class Screen { HOME, DATA, ROSTER, LINEUP, LIVE, TIMEOUT, SUB, LIBERO, HISTORY, NOTE, SANCTION, PDF }
     data class Step(val title:String,val body:String,val tip:String,val screen:Screen,val target:String,val phase:Int=0)
     val steps=listOf(
@@ -41,7 +41,7 @@ object AppGuide {
         Step("Aggiungi un’osservazione","Trascrivi le annotazioni e le decisioni comunicate dall’arbitro e premi Registra.","L’esempio qui sotto finirà nelle osservazioni del PDF, con il contesto della gara.",Screen.NOTE,"operation-form",7),
         Step("Registra una sanzione","Da Altre operazioni apri Sanzione: scegli squadra, provvedimento dell’arbitro e numero o ruolo del destinatario.","Un avvertimento giallo non assegna punti. Una penalizzazione assegna automaticamente punto e servizio agli avversari. Qui usiamo un avvertimento di esempio.",Screen.SANCTION,"operation-form",8),
         Step("Altre decisioni arbitrali","Qui trovi anche sostituzione eccezionale, ridesignazione libero, nuova capitana, inabilità, interruzione e ripresa, termine anticipato.","Usa queste operazioni quando richiesto dall’arbitro, riportando la motivazione. Nel tutorial completiamo ora i restanti set con azioni simulate.",Screen.LIVE,"other",9),
-        Step("Approvazione finale","Dopo i controlli arbitrali firmano segnapunti, secondo arbitro se presente e primo arbitro, nell’ordine. I capitani non firmano a fine gara in FIPAV.","Le firme raccolte entrano nel PDF. Se correggi i dati o le azioni approvate, l’app segnala le firme da raccogliere nuovamente. Nel tutorial le firme sono dimostrative.",Screen.PDF,"final-signatures",10),
+        Step("Approvazione finale","Dopo i controlli arbitrali firmano segnapunti, secondo arbitro se presente e primo arbitro, nell’ordine. I capitani non firmano a fine gara in FIPAV.","Completa qui gli eventuali nominativi mancanti. I dati degli ufficiali non invalidano le firme preliminari delle squadre. Le approvazioni finali seguono le correzioni alla gara. Nel tutorial le firme sono dimostrative.",Screen.PDF,"final-signatures",10),
         Step("Genera il referto finale","La gara dimostrativa è terminata 3–0. Nella scheda Referto, Genera referto PDF compila il modello cartaceo classico FIPAV.","Con Avanti generiamo davvero il PDF di questa esercitazione. Dati e firme sono fittizi; nessuna partita viene aggiunta al tuo archivio.",Screen.PDF,"pdf-generate",11),
         Step("Ecco il PDF compilato","Questa è l’anteprima effettiva del referto appena generato: riporta squadre, formazioni, punteggi e operazioni dell’esercitazione.","Il PDF completo include il registro cronologico e gli allegati necessari. Le firme raccolte nell’app sono già nei campi previsti; gli spazi mancanti vanno completati sulla stampa. Una gara in corso produce un documento provvisorio.",Screen.PDF,"pdf-preview",11),
         Step("Salva o condividi","Al termine della tua gara usa Salva PDF o Condividi. Salva anche la gara modificabile per conservarne una copia JSON.","L’esercitazione finisce qui: tornerai alla tua schermata senza modifiche. La guida si riapre dalla voce Guida e viene aggiornata quando cambiano i flussi principali.",Screen.PDF,"pdf-export",11),

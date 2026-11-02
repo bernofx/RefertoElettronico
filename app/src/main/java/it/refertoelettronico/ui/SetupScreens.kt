@@ -142,11 +142,18 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
                     StaffCandidatesEditor(config,serviceOnly=true,onChange={i,items->config=config.copy(teams=config.teams.with(i,config.teams[i].copy(staffRoster=items)))})
                     val service=config.teams.flatMap{it.staffRoster.orEmpty()}.filter{it.selected && it.scope=="SERVICE"}
                     val attendant=service.firstOrNull{it.assignment=="ATTENDANT"}
-                    Field("Addetto all’arbitro",attendant?.name ?: config.refereeAttendant.orEmpty(),{config=config.copy(refereeAttendant=it)},enabled=attendant==null)
-                    Text("Nomi e città degli ufficiali",style=MaterialTheme.typography.titleLarge)
+                    Text("Assistenza della società",style=MaterialTheme.typography.titleSmall)
+                    Field("Addetto di società all’arbitro",attendant?.name ?: config.refereeAttendant.orEmpty(),{config=config.copy(refereeAttendant=it)},enabled=attendant==null)
+                    Text("L’addetto assiste l’arbitro. Il direttore di gara va indicato nel campo 1° arbitro qui sotto.",style=MaterialTheme.typography.bodySmall)
+                    if(attendant!=null)Text("Nome ripreso dall’incarico selezionato sopra: per cambiarlo, modifica quella selezione.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    HorizontalDivider()
+                    Text("Arbitri e segnapunti",style=MaterialTheme.typography.titleLarge)
+                    Text("Le firme finali usano i nominativi di segnapunti, 2° arbitro se presente e 1° arbitro.",style=MaterialTheme.typography.bodySmall)
                     listOf("1° arbitro","2° arbitro","Segnapunti","Giudice di linea 1","Giudice di linea 2","Giudice di linea 3","Giudice di linea 4").forEachIndexed { i,label ->
                         val proposal=if(i==2)service.firstOrNull{it.assignment=="SCORER"}else null
+                        if(i==3)Text("Giudici di linea",style=MaterialTheme.typography.titleSmall)
                         Field(label,proposal?.name ?: config.officials.getOrElse(i){""},{config=config.copy(officials=config.officials.with(i,it))},enabled=proposal==null)
+                        if(proposal!=null)Text("Segnapunti ripreso dall’incarico selezionato sopra.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         if(i<3)Field("Città · $label",config.officialCities.getOrElse(i){""},{config=config.copy(officialCities=config.officialCities.with(i,it))})
                     }
                 }
