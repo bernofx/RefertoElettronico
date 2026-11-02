@@ -1,0 +1,32 @@
+{
+  "source_commit": "7653c8225aa18c2517e9816ab37bfb470cbd48e1",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.7.0",
+  "version_code": 16,
+  "variant": "debug",
+  "apk_sha256": "cb217ebbeae085e1d651ccc0d4fea3d2184ac250ceeab7e05fd4f24ac5f4864b",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "validation": {
+    "tests_passed": 169,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "testDebugUnitTest": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested",
+    "signature_orientation": "Landscape layout, ink capture and restoration of requested orientation on cancel/save tested in Robolectric; physical rotation not tested",
+    "pdf": "Actual PDF rendered; vector ink inside designated fields, printed labels preserved and stale approvals excluded"
+  },
+  "guide_revision": 3,
+  "changes": [
+    "FIPAV preliminary signatures after the toss, before starting the match",
+    "Final approval in scorer, second referee if present, first referee order; no final captain signatures",
+    "Full-screen landscape signature pad with previous orientation policy restored on close",
+    "Current vector signatures embedded in original scoresheet PDF and preview; absent/stale signatures left blank",
+    "Signatures tied to approved match content; corrections require affected approvals again",
+    "Signature persistence in match archive and JSON backup, compatible with older unsigned archives",
+    "Updated contextual tutorial with signature stages and a signed fictitious example PDF"
+  ]
+}
