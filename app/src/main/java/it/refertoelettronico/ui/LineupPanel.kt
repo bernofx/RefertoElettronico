@@ -37,18 +37,18 @@ fun assignLineup(lineup:List<Int>,zone:Int,number:Int):List<Int> {
 }
 
 @Composable
-fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit) {
+fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tutorialDefaults:Event?=null) {
     val n=state.sets.size+1
     val deciding=MatchEngine.isDeciding(config,n)
     val eligible=config.teams.mapIndexed { t,team->team.players.filter {
         it.number !in state.designatedLiberos[t] && it.number !in state.retired[t] && it.number !in state.disqualified[t]
     }.map{it.number} }
     val lineupSaver=listSaver<List<List<Int>>,Int>(save={it.flatten()},restore={it.chunked(6)})
-    var lineups by rememberSaveable(n,stateSaver=lineupSaver){mutableStateOf(List(2){List(6){0}})}
+    var lineups by rememberSaveable(n,stateSaver=lineupSaver){mutableStateOf(tutorialDefaults?.lineups ?: List(2){List(6){0}})}
     // Editing a roster may remove a number: retain valid positions and clear only those no longer available.
     LaunchedEffect(eligible){lineups=lineups.mapIndexed{t,slots->slots.map{if(it in eligible[t])it else 0}}}
-    var server by rememberSaveable(n){mutableIntStateOf(if(n>1 && !deciding)1-state.current!!.firstServer else -1)}
-    var left by rememberSaveable(n){mutableIntStateOf(if(n>1 && !deciding)1-state.current!!.initialLeft else -1)}
+    var server by rememberSaveable(n){mutableIntStateOf(tutorialDefaults?.server ?: if(n>1 && !deciding)1-state.current!!.firstServer else -1)}
+    var left by rememberSaveable(n){mutableIntStateOf(tutorialDefaults?.left ?: if(n>1 && !deciding)1-state.current!!.initialLeft else -1)}
     var team by rememberSaveable(n){mutableIntStateOf(0)}
     val complete=lineups.all{it.all{number->number>0} && it.distinct().size==6}
     Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
@@ -75,7 +75,7 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit) {
             Text("Casa ${lineups[0].count{it>0}}/6 · Ospiti ${lineups[1].count{it>0}}/6",style=MaterialTheme.typography.labelMedium)
             if(server<0 || left<0)Text("Completa entrambe le scelte del sorteggio.",style=MaterialTheme.typography.bodySmall)
             Button(enabled=complete && server>=0 && left>=0,onClick={onEvent(Event(Kind.START_SET,lineups=lineups,server=server,left=left))},
-                modifier=Modifier.fillMaxWidth().testTag("start-set")){Text("Conferma e inizia il set $n")}
+                modifier=Modifier.fillMaxWidth().tourTarget("start-set").testTag("start-set")){Text("Conferma e inizia il set $n")}
         }
     }
 }
@@ -83,7 +83,7 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit) {
 @Composable
 private fun TossChoice(label:String,tag:String,selected:Int,config:MatchConfig,onSelect:(Int)->Unit) {
     Text(label,style=MaterialTheme.typography.labelLarge)
-    TeamChoiceRow(config,selected,"toss-$tag",onSelect=onSelect)
+    Box(Modifier.tourTarget("toss-$tag")){TeamChoiceRow(config,selected,"toss-$tag",onSelect=onSelect)}
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -115,7 +115,7 @@ private fun LineupBoard(teamIndex:Int,team:Team,eligible:List<Int>,lineup:List<I
         Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("Tagliando · vista dal fondo verso la rete",style=MaterialTheme.typography.labelLarge)
             Text("Tieni premuto un numero e trascinalo. Oppure tocca il numero, poi la zona. Un numero già in campo scambia posto.",style=MaterialTheme.typography.bodySmall)
-            Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceVariant) {
+            Surface(modifier=Modifier.tourTarget("lineup-grid"),shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceVariant) {
                 Column(Modifier.padding(10.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                     Text("RETE",Modifier.align(Alignment.CenterHorizontally),style=MaterialTheme.typography.labelSmall)
                     Canvas(Modifier.fillMaxWidth().height(8.dp).testTag("lineup-net-$teamIndex")) {

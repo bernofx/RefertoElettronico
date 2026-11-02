@@ -35,6 +35,9 @@ import it.refertoelettronico.storage.MatchStore
 import it.refertoelettronico.storage.DraftStore
 import it.refertoelettronico.storage.SetupDraft
 import it.refertoelettronico.ui.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -227,11 +230,12 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
 }
 
 @Composable
-private fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:()->Unit,onBackup:()->Unit) {
+internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:()->Unit,onBackup:()->Unit,tutorialDirectory:File?=null) {
     val context=LocalContext.current;val scope=rememberCoroutineScope()
     var file by remember(journal) { mutableStateOf<File?>(null) }
     var bitmap by remember(journal) { mutableStateOf<android.graphics.Bitmap?>(null) }
     var busy by remember { mutableStateOf(false) }
+    DisposableEffect(Unit){onDispose{bitmap?.recycle()}}
     val saver=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         val source=file
         if(uri!=null && source!=null)scope.launch { try {
@@ -245,15 +249,24 @@ private fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:(
         if(!state.finished(journal.config))Notice("Gara in corso: il PDF sarà contrassegnato come provvisorio.")
         if(journal.config.missingMetadata().isNotEmpty())Notice("Dati da completare: ${journal.config.missingMetadata().joinToString()}. Puoi correggerli nella scheda Dati.")
         if(journal.config.fallbackReason.isBlank())Notice("Completa il motivo dell'uso del cartaceo nei Dati o nelle Osservazioni.")
-        Button(enabled=!busy,onClick={scope.launch {
+        val generate:()->Unit={scope.launch {
             busy=true
-            try { val result=withContext(Dispatchers.IO) { val f=PdfExporter.export(context,journal);f to PdfExporter.preview(context,journal) };file=result.first;bitmap?.recycle();bitmap=result.second;onComplete() }
+            try {
+                val result=withContext(Dispatchers.IO) {
+                    try {
+                        val f=if(tutorialDirectory==null)PdfExporter.export(context,journal) else PdfExporter.export(context,journal,tutorialDirectory)
+                        f to PdfExporter.preview(context,journal)
+                    } finally { if(!currentCoroutineContext().isActive)tutorialDirectory?.deleteRecursively() }
+                }
+                file=result.first;bitmap?.recycle();bitmap=result.second;onComplete()
+            } catch(cancelled:CancellationException){throw cancelled}
             catch(t:Exception){onError(t)} finally{busy=false}
-        }}){ActionLabel(if(busy)"Preparazione PDF…" else "Genera referto PDF",UiSymbol.DOCUMENT)}
+        };Unit}
+        Button(enabled=!busy,onClick=generate,modifier=Modifier.tourTarget("pdf-generate",generate)){ActionLabel(if(busy)"Preparazione PDF…" else "Genera referto PDF",UiSymbol.DOCUMENT)}
         if(bitmap!=null) {
-            Image(bitmap!!.asImageBitmap(),contentDescription="Anteprima prima pagina del referto compilato",modifier=Modifier.fillMaxWidth().border(1.dp,Color.LightGray))
+            Image(bitmap!!.asImageBitmap(),contentDescription="Anteprima prima pagina del referto compilato",modifier=Modifier.fillMaxWidth().tourTarget("pdf-preview").border(1.dp,Color.LightGray))
             Text("Prima pagina. Il PDF include anche il registro completo e le eventuali eccedenze.",style=MaterialTheme.typography.bodySmall)
-            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.tourTarget("pdf-export"),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 Button(onClick={saver.launch("referto-${journal.config.matchNumber.ifBlank{"volley"}}.pdf")}){Text("Salva PDF")}
                 OutlinedButton(onClick={try {
                     val uri=FileProvider.getUriForFile(context,"${context.packageName}.files",file!!)

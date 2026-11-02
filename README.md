@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.8](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.8.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.6.9](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.9.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -89,6 +89,6 @@ La versione **0.6.7** aggiunge **Correggi dati e rose** nella preparazione del p
 Nella **0.6.7** la preparazione delle formazioni mantiene leggibili rete, zone e numeri anche per squadre bianche o con colori chiari: i colori restano quelli scelti, mentre testo e tratti usano un contrasto adeguato e i numeri trascinabili hanno un bordo. La pagina iniziale mostra le gare come schede con fascia colorata, raggruppate per data e ordinate per ora: campo, squadre su righe separate, categoria, numero gara e stato. In corso vengono mostrati punti e numero del set, a gara terminata i set vinti. Il cestino mantiene la conferma. La categoria è un’etichetta descrittiva e non modifica il regolamento.
 
 
-La versione **0.6.8** introduce l’icona gialla/blu approvata, con referto e pallone a pannelli blu/gialli/bianchi, e il tutorial iniziale a overlay. Sette passaggi brevi spiegano i flussi principali; puoi saltarli e riaprirli da **Guida**, disponibile anche nell’editor e nella navigazione della gara. La scheda Guida raccoglie gli stessi contenuti e permette di riavviare il tutorial. [Funzionamento e procedura di aggiornamento della guida](docs/GUIDA-E-TUTORIAL.md).
+La versione **0.6.9** introduce il tutorial sulle schermate reali: la schermata si oscura lasciando evidenziato il controllo spiegato. Il percorso illustra preparazione, sorteggio, formazioni e operazioni durante la gara (punti/rotazioni, timeout, cambi, libero, correzioni, osservazioni e sanzioni). Alla fine genera e mostra il PDF classico FIPAV di una gara con dati fittizi, separata dagli archivi. La voce **Guida** permette di consultare le istruzioni e riaprire il percorso. Rimane l’icona gialla/blu approvata. [Funzionamento e aggiornamento della guida](docs/GUIDA-E-TUTORIAL.md).
 
 Per chi modifica l’app: aggiornare `AppGuide.steps` e `updatedFor` quando cambiano sostanzialmente i flussi; incrementare `AppGuide.revision` per riproporre una volta i contenuti aggiornati. Le patch estetiche non devono riattivare il tutorial.

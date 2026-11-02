@@ -61,3 +61,7 @@ La pagina iniziale riprende la struttura dei badge dell’esempio: raggruppament
 ## Icona e guida · 0.6.8
 
 La testata e il launcher adottano l’icona C6 approvata, con referto blu, sfondo giallo e pallone blu/giallo/bianco. La guida al primo avvio è un overlay con contenuto scorrevole e navigazione sempre accessibile; resta disponibile dalla pagina iniziale, nell’editor e nella scheda Guida. [Anteprime e manutenzione dei contenuti](GUIDA-E-TUTORIAL.md).
+
+## Tutorial contestuale · 0.6.9
+
+Le schede introduttive sono sostituite da un percorso sulle schermate di produzione. Il velo scuro ha un’apertura arrotondata intorno al controllo reale; testo e Avanti/Indietro/Esci restano in un riquadro separato. Il tutorial scorre automaticamente verso il bersaglio e mostra gli effetti delle azioni su una partita in memoria. L’ultimo tratto genera davvero il PDF classico FIPAV e mostra l’anteprima compilata. La visita non modifica archivi, rose, bozze o partita aperta. La scheda Guida e il versionamento dei contenuti restano disponibili.

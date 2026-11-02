@@ -68,7 +68,7 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
         Surface(shape=MaterialTheme.shapes.medium,color=if(member.present)MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerLow) {
         Row(Modifier.fillMaxWidth().padding(horizontal=4.dp),horizontalArrangement=Arrangement.spacedBy(4.dp),verticalAlignment=Alignment.CenterVertically) {
             Checkbox(checked=member.present,enabled=!locked,onCheckedChange={value->update(members.map{if(it.id==member.id)it.copy(present=value)else it})},
-                modifier=Modifier.testTag("presence-${member.id}").semantics{contentDescription="Presente ${player.number} ${player.name}"})
+                modifier=Modifier.tourTarget(if(member==members.firstOrNull())"presence" else "presence-${member.id}").testTag("presence-${member.id}").semantics{contentDescription="Presente ${player.number} ${player.name}"})
             Column(Modifier.weight(1f).padding(vertical=6.dp).clickable{
                 if(locked)expanded=if(expanded==member.id)null else member.id
                 else update(members.map{if(it.id==member.id)it.copy(present=!it.present)else it})

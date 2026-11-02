@@ -67,13 +67,13 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
                 }
                 Text("La tua prossima\ngara, punto per punto.",style=MaterialTheme.typography.headlineLarge,color=Color.White)
                 Text("Formazioni, rotazioni e referto.\nTutto a portata di mano, anche offline.",style=MaterialTheme.typography.bodyMedium,color=Color(0xFFD1E5D8))
-                Button(onClick=onNew,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp),
+                Button(onClick=onNew,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp).tourTarget("home-new"),
                     colors=ButtonDefaults.buttonColors(containerColor=Color(0xFFF4CE7B),contentColor=Color(0xFF33280E))) {
                     ActionLabel("Prepara una nuova gara",UiSymbol.ADD)
                 }
             }
         }
-        if(archives.isNotEmpty())Button(onClick=onNew,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){ActionLabel("Prepara una nuova gara",UiSymbol.ADD)}
+        if(archives.isNotEmpty())Button(onClick=onNew,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp).tourTarget("home-new")){ActionLabel("Prepara una nuova gara",UiSymbol.ADD)}
         if(onResume!=null)Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             FilledTonalButton(onClick=onResume,modifier=Modifier.weight(1f)){Text("Riprendi preparazione")}
             if(onDiscardDraft!=null)TextButton(onClick=onDiscardDraft){Text("Scarta bozza")}
@@ -90,7 +90,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
 }
 
 @Composable
-fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Boolean,onDraftChange:(MatchConfig)->Unit={}) {
+fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Boolean,onDraftChange:(MatchConfig)->Unit={},initialSection:Int=0) {
     val initial=remember { original?.let{StaffReview.prepare(it)} ?: MatchConfig(teams=List(2){Team("",(1..6).map { Player(it,"",captain=it==1) })},
         date=LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))) }
     val configState=remember{mutableStateOf(initial)}
@@ -101,7 +101,7 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         override fun setValue(thisRef:Any?,property:kotlin.reflect.KProperty<*>,value:MatchConfig){configState.value=value;saveDraft(value)}
     }
     LaunchedEffect(Unit){saveDraft(config)}
-    var section by remember { mutableIntStateOf(0) }
+    var section by remember { mutableIntStateOf(initialSection) }
     var validationError by remember{mutableStateOf<String?>(null)}
     if(validationError!=null)AlertDialog(onDismissRequest={validationError=null},title={Text("Controlla la distinta")},text={Text(validationError!!)},confirmButton={TextButton(onClick={validationError=null}){Text("Correggi")}})
     val scroll=rememberScrollState()
@@ -117,7 +117,7 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
                     Field("Campionato",config.competition,{config=config.copy(competition=it)})
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                         Field("Stagione",config.season,{config=config.copy(season=it)},Modifier.weight(1f))
-                        Field("Numero gara",config.matchNumber,{config=config.copy(matchNumber=it)},Modifier.weight(1f))
+                        Field("Numero gara",config.matchNumber,{config=config.copy(matchNumber=it)},Modifier.weight(1f).tourTarget("match-data"))
                     }
                     Field("Girone / fase",config.phase,{config=config.copy(phase=it)})
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
@@ -154,7 +154,7 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         }
         Row(Modifier.padding(16.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             if(section<3)OutlinedButton(onClick={section++},modifier=Modifier.weight(1f)){Text("Avanti")}
-            Button(onClick={try{val final=StaffReview.confirm(config);MatchEngine.validate(final);onSave(final)}catch(t:IllegalArgumentException){validationError=t.message}},modifier=Modifier.weight(1f)){Text(if(original==null)"Salva gara" else "Salva modifiche")}
+            Button(onClick={try{val final=StaffReview.confirm(config);MatchEngine.validate(final);onSave(final)}catch(t:IllegalArgumentException){validationError=t.message}},modifier=Modifier.weight(1f).tourTarget("save-setup")){Text(if(original==null)"Salva gara" else "Salva modifiche")}
         }
     }
 }

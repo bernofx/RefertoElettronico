@@ -15,9 +15,9 @@ import java.io.File
 
 /** Preserve the source form at its original resolution and overlay searchable, embedded-font text. */
 object PdfExporter {
-    fun export(context: Context, journal: Journal): File {
+    fun export(context: Context, journal: Journal, directory:File=File(context.filesDir,"exports")): File {
         PDFBoxResourceLoader.init(context.applicationContext)
-        val exportDir=File(context.filesDir,"exports").apply { mkdirs() }
+        val exportDir=directory.apply { mkdirs() }
         val output=File(exportDir,"referto-${System.currentTimeMillis()}.pdf")
         try {
             PDDocument().use { doc ->

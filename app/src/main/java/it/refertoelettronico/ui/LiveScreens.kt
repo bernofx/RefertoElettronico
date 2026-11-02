@@ -32,7 +32,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
     Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=4.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             Text("Set ${set?.number ?: 1} · ${state.wins(leftTeam)}–${state.wins(1-leftTeam)} set",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
-            Row {TextButton(onClick=onUndo,enabled=canUndo,contentPadding=PaddingValues(horizontal=8.dp)){Text("↶ Annulla")};TextButton(onClick=onRedo,enabled=canRedo,contentPadding=PaddingValues(horizontal=8.dp)){Text("Ripristina")}}
+            Row {TextButton(onClick=onUndo,enabled=canUndo,contentPadding=PaddingValues(horizontal=8.dp),modifier=Modifier.tourTarget("undo")){Text("↶ Annulla")};TextButton(onClick=onRedo,enabled=canRedo,contentPadding=PaddingValues(horizontal=8.dp),modifier=Modifier.tourTarget("redo")){Text("Ripristina")}}
         }
         if(playing && set!=null) Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             for(t in listOf(leftTeam,1-leftTeam)) key(t) {
@@ -44,7 +44,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
                             Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.Bold)
                             Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,
                                 colors=ButtonDefaults.buttonColors(containerColor=accent,contentColor=teamInk(accent)),
-                                contentPadding=PaddingValues(horizontal=8.dp),modifier=Modifier.weight(1f).height(48.dp).testTag("point-button-$t"),shape=MaterialTheme.shapes.small) {
+                                contentPadding=PaddingValues(horizontal=8.dp),modifier=Modifier.weight(1f).height(48.dp).tourTarget("point-$t").testTag("point-button-$t"),shape=MaterialTheme.shapes.small) {
                                 Text("+1 punto",fontSize=14.sp,fontWeight=FontWeight.Bold,maxLines=1)
                             }
                         }
@@ -68,7 +68,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
             TimeoutClock(lastEvent,config)
             if(set.changedEndsAt!=null)Text("Quinto set · cambio campo effettuato a ${scoreLabel(set.changedEndsAt)}",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall)
             val left=CourtGeometry.leftTeam(set)
-            ScorerCourt(config,state)
+            ScorerCourt(config,state,Modifier.tourTarget("court"))
             BoxWithConstraints {
                 val compact=maxWidth<650.dp
                 Row(horizontalArrangement=Arrangement.spacedBy(if(compact)8.dp else 14.dp)) {
@@ -79,8 +79,8 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
         }
         if(state.interrupted)Notice("Gara interrotta. Registra la ripresa prima di continuare a segnare punti.")
         Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(onClick={operation="note"},modifier=Modifier.weight(1f)){Text("Osservazioni")}
-            OutlinedButton(onClick={operation="other"},modifier=Modifier.weight(1f)){Text("Altre operazioni")}
+            OutlinedButton(onClick={operation="note"},modifier=Modifier.weight(1f).tourTarget("notes")){Text("Osservazioni")}
+            OutlinedButton(onClick={operation="other"},modifier=Modifier.weight(1f).tourTarget("other")){Text("Altre operazioni")}
         }
         TextButton(onClick=onHistory,modifier=Modifier.fillMaxWidth()){Text("Apri registro · correggi più operazioni")}
         }
@@ -120,19 +120,19 @@ private fun TeamActions(config:MatchConfig,state:MatchState,team:Int,onAction:(S
                 }
             }
             @Composable fun controls() {
-                FilledTonalButton(onClick={onAction("timeout")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Timeout ${set.timeouts.count{it.team==team}}/2",fontSize=12.sp)}
-                FilledTonalButton(onClick={onAction("sub")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Cambi ${set.countSubs(team)}/${config.maxSubstitutions}",fontSize=12.sp)}
-                FilledTonalButton(onClick={onAction("libero")},modifier=if(compact)Modifier.fillMaxWidth() else Modifier,contentPadding=PaddingValues(8.dp)){Text("Libero",fontSize=12.sp)}
+                FilledTonalButton(onClick={onAction("timeout")},modifier=(if(compact)Modifier.fillMaxWidth() else Modifier).tourTarget("timeout-$team"),contentPadding=PaddingValues(8.dp)){Text("Timeout ${set.timeouts.count{it.team==team}}/2",fontSize=12.sp)}
+                FilledTonalButton(onClick={onAction("sub")},modifier=(if(compact)Modifier.fillMaxWidth() else Modifier).tourTarget("sub-$team"),contentPadding=PaddingValues(8.dp)){Text("Cambi ${set.countSubs(team)}/${config.maxSubstitutions}",fontSize=12.sp)}
+                FilledTonalButton(onClick={onAction("libero")},modifier=(if(compact)Modifier.fillMaxWidth() else Modifier).tourTarget("libero-$team"),contentPadding=PaddingValues(8.dp)){Text("Libero",fontSize=12.sp)}
             }
             if(compact)Column(verticalArrangement=Arrangement.spacedBy(2.dp)) {
-                FilledTonalButton(onClick={onAction("timeout")},modifier=Modifier.fillMaxWidth(),contentPadding=PaddingValues(horizontal=8.dp,vertical=6.dp)) {
+                FilledTonalButton(onClick={onAction("timeout")},modifier=Modifier.fillMaxWidth().tourTarget("timeout-$team"),contentPadding=PaddingValues(horizontal=8.dp,vertical=6.dp)) {
                     UiGlyph(UiSymbol.CLOCK,Modifier.size(16.dp));Spacer(Modifier.width(6.dp));Text("Timeout ${set.timeouts.count{it.team==team}}/2",fontSize=12.sp)
                 }
                 Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                    FilledTonalButton(onClick={onAction("sub")},modifier=Modifier.weight(1.15f),contentPadding=PaddingValues(horizontal=4.dp,vertical=6.dp)) {
+                    FilledTonalButton(onClick={onAction("sub")},modifier=Modifier.weight(1.15f).tourTarget("sub-$team"),contentPadding=PaddingValues(horizontal=4.dp,vertical=6.dp)) {
                         Text("Cambi ${set.countSubs(team)}/${config.maxSubstitutions}",fontSize=12.sp,maxLines=1)
                     }
-                    FilledTonalButton(onClick={onAction("libero")},modifier=Modifier.weight(1f),contentPadding=PaddingValues(horizontal=4.dp,vertical=6.dp)){Text("Libero",fontSize=12.sp)}
+                    FilledTonalButton(onClick={onAction("libero")},modifier=Modifier.weight(1f).tourTarget("libero-$team"),contentPadding=PaddingValues(horizontal=4.dp,vertical=6.dp)){Text("Libero",fontSize=12.sp)}
                 }
             } else Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){controls()}
 
@@ -141,7 +141,7 @@ private fun TeamActions(config:MatchConfig,state:MatchState,team:Int,onAction:(S
 }
 
 @Composable
-private fun OperationDialog(action:String,initialTeam:Int,config:MatchConfig,state:MatchState,onDismiss:()->Unit,onEvent:(Event)->Unit) {
+internal fun OperationDialog(action:String,initialTeam:Int,config:MatchConfig,state:MatchState,onDismiss:()->Unit,onEvent:(Event)->Unit,embedded:Boolean=false,exampleText:String="",exampleRecipient:String="") {
     var team by remember(action){mutableIntStateOf(initialTeam)}
     val set=state.current
     val regular=set?.court?.get(team).orEmpty()
@@ -151,8 +151,8 @@ private fun OperationDialog(action:String,initialTeam:Int,config:MatchConfig,sta
     var incoming by remember(action,team){mutableIntStateOf(players.firstOrNull{it !in regular && it !in state.designatedLiberos[team]}?:players.first())}
     var selectedLibero by remember(action,team){mutableIntStateOf(state.designatedLiberos[team].firstOrNull{it!=libero?.number}?:state.designatedLiberos[team].firstOrNull()?:0)}
     var replaced by remember(action,team){mutableIntStateOf(libero?.replaced ?: regular.getOrElse(4){regular.firstOrNull()?:0})}
-    var text by remember(action){mutableStateOf("")}
-    var recipient by remember(action){mutableStateOf("")}
+    var text by remember(action){mutableStateOf(exampleText)}
+    var recipient by remember(action){mutableStateOf(exampleRecipient)}
     var card by remember(action){mutableStateOf(Card.WARNING)}
     var localError by remember(action){mutableStateOf<String?>(null)}
     var liberoExit by remember(action){mutableStateOf(false)}
@@ -162,8 +162,8 @@ private fun OperationDialog(action:String,initialTeam:Int,config:MatchConfig,sta
         "interrupt"->"Interrompi la gara";"resume"->"Riprendi la gara";"end"->"Termine anticipato";else->"Osservazioni"
     }
     fun send(e:Event) {try {MatchEngine.apply(config,state,e);onEvent(e)}catch(t:IllegalArgumentException){localError=t.message}}
-    AlertDialog(onDismissRequest=onDismiss,title={Text(title)},text={
-        Column(Modifier.heightIn(max=480.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+    OperationFrame(embedded,onDismiss,title={Text(title)},text={
+        Column(Modifier.tourTarget("operation-form").heightIn(max=480.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             if(action !in listOf("note","interrupt","resume","end"))Picker("Squadra",team,listOf(0,1),{config.teams[it].name},{team=it})
             fun label(n:Int) = "$n · ${config.teams[team].players.find{it.number==n}?.name.orEmpty()}"
             when(action) {
@@ -204,7 +204,7 @@ private fun OperationDialog(action:String,initialTeam:Int,config:MatchConfig,sta
                 OutlinedTextField(value=text,onValueChange={text=it},label={Text(if(action=="note")"Annotazione" else "Motivo / decisione dell'arbitro")},minLines=2,modifier=Modifier.fillMaxWidth())
             if(localError!=null)Text(localError!!,color=MaterialTheme.colorScheme.error)
         }
-    },confirmButton={TextButton(onClick={
+    },confirmButton={TextButton(modifier=Modifier.tourTarget("operation-confirm"),onClick={
         val event=when(action) {
             "sub"->Event(Kind.SUBSTITUTION,team,outgoing,incoming)
             "exception"->Event(Kind.EXCEPTIONAL_SUB,team,outgoing,incoming,text=text)
@@ -229,7 +229,7 @@ fun HistoryScreen(journal:Journal,onUndoTo:(Int)->Unit,onRedo:()->Unit) {
         journal.events.map { e -> s=MatchEngine.apply(journal.config,s,e);Triple(e,s.current?.number?:0,s.current?.score?:listOf(0,0)) }
     }
     Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
-        Text("Registro della gara",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,modifier=Modifier.padding(vertical=14.dp))
+        Text("Registro della gara",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,modifier=Modifier.padding(vertical=14.dp).tourTarget("history"))
         Text("Per correggere un errore, annulla da quell'operazione in avanti e reinserisci gli eventi corretti. Le rotazioni vengono ricostruite insieme al punteggio.",style=MaterialTheme.typography.bodyMedium)
         if(journal.redo.isNotEmpty())TextButton(onClick=onRedo){Text("Ripristina operazione · ${journal.redo.size} disponibili")}
         if(rows.isEmpty())Text("Nessuna operazione registrata.",Modifier.padding(20.dp))
@@ -243,6 +243,21 @@ fun HistoryScreen(journal:Journal,onUndoTo:(Int)->Unit,onRedo:()->Unit) {
                         TextButton(onClick={onUndoTo(journal.events.size-index)}){Text("Annulla da qui (${journal.events.size-index})")}
                     }
                 }
+            }
+        }
+    }
+}
+
+/** The tour embeds the very same operation form in its own window, so spotlight bounds share a root. */
+@Composable
+private fun OperationFrame(embedded:Boolean,onDismiss:()->Unit,title:@Composable ()->Unit,text:@Composable ()->Unit,
+                           confirmButton:@Composable ()->Unit,dismissButton:@Composable ()->Unit) {
+    if(!embedded)AlertDialog(onDismissRequest=onDismiss,title=title,text=text,confirmButton=confirmButton,dismissButton=dismissButton)
+    else Box(Modifier.fillMaxSize().padding(16.dp),contentAlignment=Alignment.Center) {
+        Surface(shape=MaterialTheme.shapes.large,tonalElevation=6.dp) {
+            Column(Modifier.widthIn(max=480.dp).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+                title();Box(Modifier.weight(1f,fill=false)){text()}
+                Row(Modifier.align(Alignment.End)){dismissButton();confirmButton()}
             }
         }
     }
