@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.7.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.7.1](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.1.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -90,6 +90,6 @@ La versione **0.6.7** aggiunge **Correggi dati e rose** nella preparazione del p
 Nella **0.6.7** la preparazione delle formazioni mantiene leggibili rete, zone e numeri anche per squadre bianche o con colori chiari: i colori restano quelli scelti, mentre testo e tratti usano un contrasto adeguato e i numeri trascinabili hanno un bordo. La pagina iniziale mostra le gare come schede con fascia colorata, raggruppate per data e ordinate per ora: campo, squadre su righe separate, categoria, numero gara e stato. In corso vengono mostrati punti e numero del set, a gara terminata i set vinti. Il cestino mantiene la conferma. La categoria è un’etichetta descrittiva e non modifica il regolamento.
 
 
-La versione **0.7.0** aggiunge le firme preliminari e l’approvazione finale secondo il flusso FIPAV, con riquadro di scrittura in orizzontale e inserimento dei tratti nel modello PDF. Le modifiche ai contenuti approvati segnalano le firme da raccogliere nuovamente. Il tutorial sulle schermate reali include i nuovi passaggi e mostra il PDF finale con dati e firme dimostrativi. [Regole e funzionamento delle firme](docs/FIRME-REFERTO.md) · [Guida e tutorial](docs/GUIDA-E-TUTORIAL.md).
+La versione **0.7.1** aggiorna il riquadro firma con input Android nativo: il tratto appare dal primo contatto e rimane durante ridimensionamenti e ricomposizioni. Un pallino segue il dito o la penna durante la scrittura e scompare al rilascio; non entra nella firma salvata né nel PDF. Sono mantenuti il flusso FIPAV, la firma in orizzontale e il controllo delle approvazioni dopo modifiche. [Regole e funzionamento delle firme](docs/FIRME-REFERTO.md) · [Guida e tutorial](docs/GUIDA-E-TUTORIAL.md).
 
 Per chi modifica l’app: aggiornare `AppGuide.steps` e `updatedFor` quando cambiano sostanzialmente i flussi; incrementare `AppGuide.revision` per riproporre una volta i contenuti aggiornati. Le patch estetiche non devono riattivare il tutorial.

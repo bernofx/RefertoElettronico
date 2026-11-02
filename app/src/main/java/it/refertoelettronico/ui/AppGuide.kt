@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 /** Update the shared walkthrough and increment revision when a substantial user flow changes. */
 object AppGuide {
     const val revision=3
-    const val updatedFor="0.7.0"
+    const val updatedFor="0.7.1"
     enum class Screen { HOME, DATA, ROSTER, LINEUP, LIVE, TIMEOUT, SUB, LIBERO, HISTORY, NOTE, SANCTION, PDF }
     data class Step(val title:String,val body:String,val tip:String,val screen:Screen,val target:String,val phase:Int=0)
     val steps=listOf(
@@ -24,7 +24,7 @@ object AppGuide {
         Step("Chi serve per primo?","Riporta la scelta comunicata dall’arbitro. Il colore, il nome completo e Casa/Ospiti distinguono le squadre.","Per il nostro esempio serve per prima Lago Volley.",Screen.LINEUP,"toss-serve",0),
         Step("Chi è a sinistra?","Guarda dal tavolo del segnapunti e indica la squadra inizialmente alla tua sinistra.","Nel primo set sarà A; l’altra sarà B. Non confondere questa vista con il tagliando delle formazioni.",Screen.LINEUP,"toss-left",0),
         Step("Riporta il tagliando","Le zone seguono il foglietto dell’allenatore: 4–3–2 davanti, 5–6–1 dietro, con la rete in alto.","Trascina i numeri della rosa negli slot, oppure tocca prima il numero e poi la zona. Un numero già in campo scambia posto. Ripeti per entrambe le squadre.",Screen.LINEUP,"lineup-grid",0),
-        Step("Firme dopo il sorteggio","Prima del primo set raccogli sul dispositivo le firme di capitane e allenatori presenti. Il riquadro si apre in orizzontale: traccia e conferma la firma, poi torni all’elenco.","Sono le firme preliminari richieste dal referto. Se verranno apposte sulla stampa, usa il comando esplicito per proseguire con gli spazi da completare.",Screen.LINEUP,"pre-signatures",0),
+        Step("Firme dopo il sorteggio","Prima del primo set raccogli sul dispositivo le firme di capitane e allenatori presenti. Il riquadro si apre in orizzontale: il pallino segue il dito o la penna mentre firmi. Conferma per tornare all’elenco.","Sono le firme preliminari richieste dal referto. Se verranno apposte sulla stampa, usa il comando esplicito per proseguire con gli spazi da completare.",Screen.LINEUP,"pre-signatures",0),
         Step("Inizia il set","Dopo aver completato sorteggio e sei posizioni per squadra, conferma l’inizio.","Nel tutorial le formazioni sono già compilate: ora entriamo in una gara di esempio.",Screen.LINEUP,"start-set",0),
         Step("Assegna un punto","Premi +1 punto dalla parte di chi ha vinto l’azione. I pulsanti e i colori seguono il lato delle squadre in campo.","Con Avanti assegniamo un punto a Stella Como, che finora era in ricezione.",Screen.LIVE,"point-1",1),
         Step("Servizio e rotazione","Stella Como ora serve: osserva la rotazione e il pallone sulla battitrice. Il campo è visto dal tavolo del segnapunti.","Le rotazioni sono automatiche a ogni cambio di servizio. Non ruotare manualmente dopo un punto della squadra già al servizio.",Screen.LIVE,"court",2),

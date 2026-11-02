@@ -8,7 +8,6 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,21 +15,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import it.refertoelettronico.model.*
 import it.refertoelettronico.pdf.SignatureGeometry
@@ -157,9 +153,10 @@ internal fun SignaturePad(role:SignatureRole,signer:String,onCancel:()->Unit,onS
     }
     val landscape=LocalConfiguration.current.orientation==Configuration.ORIENTATION_LANDSCAPE
     var strokes by remember { mutableStateOf<List<List<SignaturePoint>>>(emptyList()) }
-    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
+    var clearToken by remember { mutableIntStateOf(0) }
     var truncated by remember { mutableStateOf(false) }
-    // Keep a consistent coordinate space: resizing an unsigned pad clears its draft only.
+    // The native view owns the live stroke; recomposition and rotation must not reset it.
     Dialog(onDismissRequest=onCancel,properties=DialogProperties(usePlatformDefaultWidth=false)) {
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().padding(if(landscape)12.dp else 16.dp),verticalArrangement=Arrangement.spacedBy(if(landscape)8.dp else 12.dp)) {
@@ -175,31 +172,20 @@ internal fun SignaturePad(role:SignatureRole,signer:String,onCancel:()->Unit,onS
                     Text("Traccia qui la tua firma con il dito o la penna.",style=MaterialTheme.typography.bodyMedium)
                 }
                 val padModifier=if(landscape)Modifier.fillMaxWidth().weight(1f) else Modifier.fillMaxWidth().height(220.dp).weight(1f,fill=false)
-                Canvas(padModifier.background(Color.White).border(1.dp,MaterialTheme.colorScheme.outline)
-                    .testTag("signature-pad").semantics{contentDescription="Riquadro firma di $signer"}
-                    .onSizeChanged{if(canvasSize!=IntSize.Zero && canvasSize!=it){strokes=emptyList();truncated=false};canvasSize=it}
-                    .pointerInput(canvasSize) {
-                        fun point(p:Offset)=SignaturePoint((p.x/size.width.coerceAtLeast(1)).coerceIn(0f,1f),(p.y/size.height.coerceAtLeast(1)).coerceIn(0f,1f))
-                        detectDragGestures(onDragStart={p->
-                            if(strokes.size<128 && strokes.sumOf{it.size}<4000)strokes=strokes+listOf(listOf(point(p))) else truncated=true
-                        },onDrag={change,_->
-                            change.consume()
-                            if(!truncated && strokes.isNotEmpty()) {
-                                if(strokes.sumOf{it.size}>=4000)truncated=true
-                                else strokes=strokes.dropLast(1)+listOf(strokes.last()+point(change.position))
-                            }
-                        })
-                    }) {
-                    strokes.forEach { points->
-                        val path=Path();points.forEachIndexed { i,p->if(i==0)path.moveTo(p.x*size.width,p.y*size.height)else path.lineTo(p.x*size.width,p.y*size.height) }
-                        drawPath(path,Color.Black,style=Stroke(2.5.dp.toPx(),cap=StrokeCap.Round))
+                AndroidView(
+                    factory={context->SignatureInkView(context)},
+                    modifier=padModifier.border(1.dp,MaterialTheme.colorScheme.outline)
+                        .testTag("signature-pad").semantics{contentDescription="Riquadro firma di $signer"},
+                    update={view->
+                        view.onInkChanged={ink,ratio,limited->strokes=ink;aspectRatio=ratio;truncated=limited}
+                        view.clearIfRequested(clearToken)
                     }
-                }
+                )
                 Text(if(truncated)"Firma troppo lunga: cancella e riprova."else"La firma sarà riportata negli spazi del referto.",style=MaterialTheme.typography.bodySmall,color=if(truncated)MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                    TextButton(onClick={strokes=emptyList();truncated=false},modifier=Modifier.testTag("signature-clear")){Text("Cancella")}
+                    TextButton(onClick={clearToken++},modifier=Modifier.testTag("signature-clear")){Text("Cancella")}
                     TextButton(onClick=onCancel,modifier=Modifier.testTag("signature-cancel")){Text("Annulla")}
-                    Button(enabled=!truncated && strokes.sumOf{it.size}>=2,onClick={onSave(strokes,canvasSize.width.toFloat()/canvasSize.height.coerceAtLeast(1))},modifier=Modifier.weight(1f).testTag("signature-save")){Text("Conferma firma")}
+                    Button(enabled=!truncated && strokes.sumOf{it.size}>=2,onClick={onSave(strokes,aspectRatio)},modifier=Modifier.weight(1f).testTag("signature-save")){Text("Conferma firma")}
                 }
             }
         }

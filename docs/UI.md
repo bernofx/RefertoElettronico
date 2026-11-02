@@ -70,3 +70,8 @@ Le schede introduttive sono sostituite da un percorso sulle schermate di produzi
 ## Firme · 0.7.0
 
 La preparazione del primo set introduce l’accesso alle firme preliminari dopo il sorteggio; l’inizio del set propone il completamento delle firme o il passaggio esplicito alla firma sulla stampa. La scheda Referto e la conclusione della gara permettono di raccogliere l’approvazione nell’ordine previsto. Il riquadro firma richiede l’orientamento orizzontale, con intestazione compatta e area di scrittura ampia; chiudendolo viene ripristinata l’impostazione precedente. [Regole, conservazione e anteprime](FIRME-REFERTO.md).
+
+
+## Input firma e indicatore · 0.7.1
+
+Il primo contatto disegna subito; il tratto non dipende dalla soglia di trascinamento e non viene cancellato dai cambi di dimensione. Durante la scrittura un pallino verde con alone segue dito o penna. Al rilascio resta soltanto l’inchiostro nero; pallino e alone non fanno parte della firma salvata o del PDF.
