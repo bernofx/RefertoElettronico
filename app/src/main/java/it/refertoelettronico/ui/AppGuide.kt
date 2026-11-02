@@ -12,8 +12,8 @@ import androidx.compose.ui.unit.dp
 
 /** Update the shared walkthrough and increment revision when a substantial user flow changes. */
 object AppGuide {
-    const val revision=2
-    const val updatedFor="0.6.9"
+    const val revision=3
+    const val updatedFor="0.7.0"
     enum class Screen { HOME, DATA, ROSTER, LINEUP, LIVE, TIMEOUT, SUB, LIBERO, HISTORY, NOTE, SANCTION, PDF }
     data class Step(val title:String,val body:String,val tip:String,val screen:Screen,val target:String,val phase:Int=0)
     val steps=listOf(
@@ -24,6 +24,7 @@ object AppGuide {
         Step("Chi serve per primo?","Riporta la scelta comunicata dall’arbitro. Il colore, il nome completo e Casa/Ospiti distinguono le squadre.","Per il nostro esempio serve per prima Lago Volley.",Screen.LINEUP,"toss-serve",0),
         Step("Chi è a sinistra?","Guarda dal tavolo del segnapunti e indica la squadra inizialmente alla tua sinistra.","Nel primo set sarà A; l’altra sarà B. Non confondere questa vista con il tagliando delle formazioni.",Screen.LINEUP,"toss-left",0),
         Step("Riporta il tagliando","Le zone seguono il foglietto dell’allenatore: 4–3–2 davanti, 5–6–1 dietro, con la rete in alto.","Trascina i numeri della rosa negli slot, oppure tocca prima il numero e poi la zona. Un numero già in campo scambia posto. Ripeti per entrambe le squadre.",Screen.LINEUP,"lineup-grid",0),
+        Step("Firme dopo il sorteggio","Prima del primo set raccogli sul dispositivo le firme di capitane e allenatori presenti. Il riquadro si apre in orizzontale: traccia e conferma la firma, poi torni all’elenco.","Sono le firme preliminari richieste dal referto. Se verranno apposte sulla stampa, usa il comando esplicito per proseguire con gli spazi da completare.",Screen.LINEUP,"pre-signatures",0),
         Step("Inizia il set","Dopo aver completato sorteggio e sei posizioni per squadra, conferma l’inizio.","Nel tutorial le formazioni sono già compilate: ora entriamo in una gara di esempio.",Screen.LINEUP,"start-set",0),
         Step("Assegna un punto","Premi +1 punto dalla parte di chi ha vinto l’azione. I pulsanti e i colori seguono il lato delle squadre in campo.","Con Avanti assegniamo un punto a Stella Como, che finora era in ricezione.",Screen.LIVE,"point-1",1),
         Step("Servizio e rotazione","Stella Como ora serve: osserva la rotazione e il pallone sulla battitrice. Il campo è visto dal tavolo del segnapunti.","Le rotazioni sono automatiche a ogni cambio di servizio. Non ruotare manualmente dopo un punto della squadra già al servizio.",Screen.LIVE,"court",2),
@@ -40,9 +41,10 @@ object AppGuide {
         Step("Aggiungi un’osservazione","Trascrivi le annotazioni e le decisioni comunicate dall’arbitro e premi Registra.","L’esempio qui sotto finirà nelle osservazioni del PDF, con il contesto della gara.",Screen.NOTE,"operation-form",7),
         Step("Registra una sanzione","Da Altre operazioni apri Sanzione: scegli squadra, provvedimento dell’arbitro e numero o ruolo del destinatario.","Un avvertimento giallo non assegna punti. Una penalizzazione assegna automaticamente punto e servizio agli avversari. Qui usiamo un avvertimento di esempio.",Screen.SANCTION,"operation-form",8),
         Step("Altre decisioni arbitrali","Qui trovi anche sostituzione eccezionale, ridesignazione libero, nuova capitana, inabilità, interruzione e ripresa, termine anticipato.","Usa queste operazioni quando richiesto dall’arbitro, riportando la motivazione. Nel tutorial completiamo ora i restanti set con azioni simulate.",Screen.LIVE,"other",9),
-        Step("Genera il referto finale","La gara dimostrativa è terminata 3–0. Nella scheda Referto, Genera referto PDF compila il modello cartaceo classico FIPAV.","Con Avanti generiamo davvero il PDF di questa esercitazione. I dati sono fittizi; nessuna partita viene aggiunta al tuo archivio.",Screen.PDF,"pdf-generate",10),
-        Step("Ecco il PDF compilato","Questa è l’anteprima effettiva del referto appena generato: riporta squadre, formazioni, punteggi e operazioni dell’esercitazione.","Il PDF completo include il registro cronologico e gli allegati necessari. Le firme si appongono sulla stampa; una gara ancora in corso produce un documento provvisorio.",Screen.PDF,"pdf-preview",10),
-        Step("Salva o condividi","Al termine della tua gara usa Salva PDF o Condividi. Salva anche la gara modificabile per conservarne una copia JSON.","L’esercitazione finisce qui: tornerai alla tua schermata senza modifiche. La guida si riapre dalla voce Guida e viene aggiornata quando cambiano i flussi principali.",Screen.PDF,"pdf-export",10),
+        Step("Approvazione finale","Dopo i controlli arbitrali firmano segnapunti, secondo arbitro se presente e primo arbitro, nell’ordine. I capitani non firmano a fine gara in FIPAV.","Le firme raccolte entrano nel PDF. Se correggi i dati o le azioni approvate, l’app segnala le firme da raccogliere nuovamente. Nel tutorial le firme sono dimostrative.",Screen.PDF,"final-signatures",10),
+        Step("Genera il referto finale","La gara dimostrativa è terminata 3–0. Nella scheda Referto, Genera referto PDF compila il modello cartaceo classico FIPAV.","Con Avanti generiamo davvero il PDF di questa esercitazione. Dati e firme sono fittizi; nessuna partita viene aggiunta al tuo archivio.",Screen.PDF,"pdf-generate",11),
+        Step("Ecco il PDF compilato","Questa è l’anteprima effettiva del referto appena generato: riporta squadre, formazioni, punteggi e operazioni dell’esercitazione.","Il PDF completo include il registro cronologico e gli allegati necessari. Le firme raccolte nell’app sono già nei campi previsti; gli spazi mancanti vanno completati sulla stampa. Una gara in corso produce un documento provvisorio.",Screen.PDF,"pdf-preview",11),
+        Step("Salva o condividi","Al termine della tua gara usa Salva PDF o Condividi. Salva anche la gara modificabile per conservarne una copia JSON.","L’esercitazione finisce qui: tornerai alla tua schermata senza modifiche. La guida si riapre dalla voce Guida e viene aggiornata quando cambiano i flussi principali.",Screen.PDF,"pdf-export",11),
     )
 }
 

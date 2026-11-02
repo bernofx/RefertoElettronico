@@ -53,6 +53,17 @@ object PdfExporter {
                                         c.restoreGraphicsState()
                                     }
                                 }
+                                "signature" -> {
+                                    c.saveGraphicsState()
+                                    val box=m.cell!!
+                                    c.addRect(box.left,794f-box.bottom,box.width,box.height);c.clip()
+                                    c.setLineWidth(.8f);c.setLineCapStyle(1);c.setLineJoinStyle(1)
+                                    SignatureGeometry.fit(m.signature!!,box).forEach { stroke->
+                                        stroke.forEachIndexed { n,p->if(n==0)c.moveTo(p.x,794f-p.y) else c.lineTo(p.x,794f-p.y) }
+                                        c.stroke()
+                                    }
+                                    c.restoreGraphicsState()
+                                }
                                 "line" ->{c.moveTo(m.x,y);c.lineTo(m.x2,794f-m.y2);c.stroke()}
                                 "circle" -> {
                                     val r=m.size;val k=r*.55228475f;val x=m.x
@@ -67,7 +78,7 @@ object PdfExporter {
                                 }
                             }
                         }
-                        text(18f,27f,"Referto cartaceo di supporto · Firme sul documento stampato · Pagina ${i+1}",8f)
+                        text(18f,27f,"Referto cartaceo di supporto · Firme raccolte in app / spazi mancanti sulla stampa · Pagina ${i+1}",8f)
                     }
                 }
                 doc.save(output)

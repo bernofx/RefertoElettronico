@@ -82,6 +82,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     var archiveRevision by remember { mutableIntStateOf(0) }
     val liveScreens=rememberSaveableStateHolder()
     var confirmLeaveEdit by remember{mutableStateOf(false)}
+    var showFinalSignatures by remember{mutableStateOf(false)}
     var confirmUndo by remember { mutableIntStateOf(0) }
     var error by remember { mutableStateOf(restored.exceptionOrNull()?.let{"Bozza non leggibile: il file è stato conservato. ${it.message}"}) }
     val snackbar=remember { SnackbarHostState() }
@@ -105,7 +106,11 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
         else if(current!=null && tab!=0)tab=0
         else {journal=null;id=null}
     }
-    fun event(e: Event) { try { persist(MatchEngine.add(journal!!,e),Cue.forEvent(e)) } catch(t:Exception) { failure(t) } }
+    fun event(e: Event) { try {
+        val old=journal!!;val next=MatchEngine.add(old,e)
+        val wasFinished=MatchEngine.replay(old.config,old.events).finished(old.config)
+        if(persist(next,Cue.forEvent(e)) && !wasFinished && MatchEngine.replay(next.config,next.events).finished(next.config))showFinalSignatures=true
+    } catch(t:Exception) { failure(t) } }
     LaunchedEffect(incoming) {
         if(incoming!=null) {
             try { incomingReview=withContext(Dispatchers.IO){IncomingMatch.read(context,incoming).also{pendingStore.save(SetupDraft(it))}} }
@@ -190,9 +195,9 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                 when(tab) {
                     0 -> liveScreens.SaveableStateProvider(id ?: "current") { LiveScreen(j.config,s,j.events.lastOrNull(),onEvent=::event,
                         onUndo={try{if(persist(MatchEngine.undo(j),Cue.UNDO))scope.launch{snackbar.showSnackbar("Operazione annullata")}}catch(t:Exception){failure(t)}},onRedo={try{persist(MatchEngine.redo(j))}catch(t:Exception){failure(t)}},
-                        canUndo=j.events.isNotEmpty(),canRedo=j.redo.isNotEmpty(),onHistory={tab=1},onEditSetup=::editCurrentMatch) }
+                        canUndo=j.events.isNotEmpty(),canRedo=j.redo.isNotEmpty(),onHistory={tab=1},onEditSetup=::editCurrentMatch,journal=j,onSignatures={persist(it)},onFinalSignatures={showFinalSignatures=true}) }
                     1 -> HistoryScreen(j,onUndoTo={confirmUndo=it},onRedo={try{persist(MatchEngine.redo(j))}catch(t:Exception){failure(t)}})
-                    2 -> ExportScreen(j,onError=::failure,onComplete={feedback.play(Cue.CONFIRM)},onBackup={pendingBackup=store.encode(j);saveBackup.launch("gara-${j.config.matchNumber.ifBlank{"volley"}}.json")})
+                    2 -> ExportScreen(j,onError=::failure,onComplete={feedback.play(Cue.CONFIRM)},onBackup={pendingBackup=store.encode(j);saveBackup.launch("gara-${j.config.matchNumber.ifBlank{"volley"}}.json")},onSignatures={persist(it)})
                     4 -> GuideScreen(onStart={showGuide=true})
                     3 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                         Text("Dati e regolamento",style=MaterialTheme.typography.headlineSmall)
@@ -225,16 +230,18 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
         confirmButton={TextButton(onClick={try{persist(MatchEngine.undo(journal!!,confirmUndo),Cue.UNDO)}catch(t:Exception){failure(t)};confirmUndo=0}){Text("Annulla operazioni")}},
         dismissButton={TextButton(onClick={confirmUndo=0}){Text("Mantieni")}})
     if(error!=null)AlertDialog(onDismissRequest={error=null},title={Text("Controlla l'operazione")},text={Text(error!!)},confirmButton={TextButton(onClick={error=null}){Text("Ho capito")}})
+    if(showFinalSignatures && journal!=null)SignatureWorkflow(journal!!,false,onUpdate={persist(it)},onClose={showFinalSignatures=false})
     if(showGuide)GuideOverlay(onClose={guideProgress.markSeen();showGuide=false})
 
 }
 
 @Composable
-internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:()->Unit,onBackup:()->Unit,tutorialDirectory:File?=null) {
+internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:()->Unit,onBackup:()->Unit,tutorialDirectory:File?=null,onSignatures:((Journal)->Boolean)?=null) {
     val context=LocalContext.current;val scope=rememberCoroutineScope()
     var file by remember(journal) { mutableStateOf<File?>(null) }
     var bitmap by remember(journal) { mutableStateOf<android.graphics.Bitmap?>(null) }
     var busy by remember { mutableStateOf(false) }
+    var signing by remember{mutableStateOf(false)}
     DisposableEffect(Unit){onDispose{bitmap?.recycle()}}
     val saver=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         val source=file
@@ -244,11 +251,12 @@ internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
         Text("Il referto, pronto da stampare",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-        Text("Modello cartaceo FIPAV con registrazioni e allegato cronologico. Le firme vanno apposte sul documento stampato.")
+        Text("Modello cartaceo FIPAV con registrazioni e allegato cronologico. Le firme raccolte nell’app sono riportate nei campi del modello; gli spazi mancanti restano da completare sulla stampa.")
         val state=remember(journal){MatchEngine.replay(journal.config,journal.events)}
         if(!state.finished(journal.config))Notice("Gara in corso: il PDF sarà contrassegnato come provvisorio.")
         if(journal.config.missingMetadata().isNotEmpty())Notice("Dati da completare: ${journal.config.missingMetadata().joinToString()}. Puoi correggerli nella scheda Dati.")
         if(journal.config.fallbackReason.isBlank())Notice("Completa il motivo dell'uso del cartaceo nei Dati o nelle Osservazioni.")
+        if(onSignatures!=null)FinalSignatures(journal){signing=true}
         val generate:()->Unit={scope.launch {
             busy=true
             try {
@@ -277,4 +285,5 @@ internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:
         }
         OutlinedButton(onClick=onBackup){Text("Salva anche la gara modificabile")}
     }
+    if(signing && onSignatures!=null)SignatureWorkflow(journal,false,onUpdate=onSignatures,onClose={signing=false})
 }

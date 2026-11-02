@@ -11,6 +11,8 @@ internal object GuideExample {
         var j=Journal(config=config)
         fun add(e:Event){j=MatchEngine.add(j,e.copy(at=start+j.events.size*30_000L))}
         if(phase==0)return j
+        val ink=listOf(listOf(SignaturePoint(.12f,.6f),SignaturePoint(.35f,.2f),SignaturePoint(.3f,.75f),SignaturePoint(.65f,.35f),SignaturePoint(.85f,.6f)))
+        Signatures.required(config,true).forEach { role->j=Signatures.capture(j,role,ink,2.8f,Demo.start(start),at=start-10_000) }
         add(Demo.start(start))
         if(phase==1)return j
         add(Event(Kind.POINT,team=1))
@@ -36,6 +38,7 @@ internal object GuideExample {
             if(set.endedAt!=null)add(Demo.start().copy(server=1-set.firstServer,left=1-set.initialLeft))
             else add(Event(Kind.POINT,team=0))
         }
+        if(phase>=11)Signatures.required(config,false).forEach { role->j=Signatures.capture(j,role,ink,2.8f,at=start+(j.events.size+1)*30_000L) }
         return j
     }
 }

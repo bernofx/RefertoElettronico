@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.6.9](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.6.9.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.7.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -12,10 +12,11 @@ App Android offline per assistere il segnapunti e produrre il **referto cartaceo
 4. Usa **+1 punto**. Il campo mostra la formazione, ruota la squadra che conquista il servizio ed evidenzia il battitore. Il campo è visto dal tavolo del segnapunti, con rete verticale e formazioni opposte. Il pallone identifica la battitrice e le rotazioni sono animate; Annulla anima lo spostamento inverso.
 5. Registra timeout, sostituzioni e ingressi/uscite del libero. I rimpiazzi del libero non consumano sostituzioni. Un messaggio segnala quando il libero deve uscire prima della prossima azione.
 6. **Annulla** ripristina immediatamente l'ultima operazione. Dal **Registro**, “Annulla da qui” permette di tornare indietro di più eventi, anche oltre la fine di un set. **Ripristina** recupera gli eventi; registrare un nuovo evento scarta il ramo annullato.
-7. Conferma le formazioni a ogni set. Il primo servizio e i lati si alternano; nel quinto è previsto un nuovo sorteggio e il cambio campo a 8.
-8. In **Referto**, genera e salva/condividi il PDF. La prima pagina riproduce il foglio FIPAV; seguono registro e osservazioni completi. Le firme vanno apposte sulla stampa. Una gara non conclusa produce un PDF esplicitamente provvisorio.
+7. Dopo il sorteggio raccogli le firme preliminari di capitane e allenatori presenti con **Raccogli / controlla firme**. In alternativa scegli esplicitamente di completarle sulla stampa. A gara terminata raccogli segnapunti, secondo arbitro se presente e primo arbitro nell’ordine proposto. Le firme aggiornate vengono inserite nel PDF; modifiche ai dati approvati richiedono di rifirmare. [Regole e funzionamento delle firme](docs/FIRME-REFERTO.md).
+8. Conferma le formazioni a ogni set. Il primo servizio e i lati si alternano; nel quinto è previsto un nuovo sorteggio e il cambio campo a 8.
+9. In **Referto**, genera e salva/condividi il PDF. La prima pagina riproduce il foglio FIPAV; seguono registro e osservazioni completi. Le firme raccolte nell’app compaiono nei campi previsti; gli spazi mancanti restano da completare sulla stampa. Una gara non conclusa produce un PDF esplicitamente provvisorio.
 
-Ogni operazione accettata viene salvata sul dispositivo con scrittura atomica. Dopo la chiusura dell'app la gara si riapre da **Le tue gare**. La copia JSON include dati, cronologia e operazioni ripristinabili; importarla crea una nuova gara senza sovrascrivere l'originale. I numeri, i ruoli delle distinte e la formula sono modificabili prima dell'inizio; in seguito è necessario annullare fino all'inizio. I nomi e gli altri dati della gara restano correggibili.
+Ogni operazione accettata viene salvata sul dispositivo con scrittura atomica. Dopo la chiusura dell'app la gara si riapre da **Le tue gare**. La copia JSON include dati, cronologia, operazioni ripristinabili e firme raccolte; importarla crea una nuova gara senza sovrascrivere l'originale. I numeri, i ruoli delle distinte e la formula sono modificabili prima dell'inizio; in seguito è necessario annullare fino all'inizio. I nomi e gli altri dati della gara restano correggibili.
 
 Sono disponibili sanzioni (con punto automatico per penalizzazione), richieste improprie, sostituzioni eccezionali, inabilità, ridesignazione del libero, nuova capitana, osservazioni, interruzione/ripresa e termine anticipato per decisione arbitrale. Le decisioni eccezionali richiedono una motivazione. Il termine anticipato conserva il risultato acquisito e le osservazioni, senza inventare un risultato a tavolino.
 
@@ -89,6 +90,6 @@ La versione **0.6.7** aggiunge **Correggi dati e rose** nella preparazione del p
 Nella **0.6.7** la preparazione delle formazioni mantiene leggibili rete, zone e numeri anche per squadre bianche o con colori chiari: i colori restano quelli scelti, mentre testo e tratti usano un contrasto adeguato e i numeri trascinabili hanno un bordo. La pagina iniziale mostra le gare come schede con fascia colorata, raggruppate per data e ordinate per ora: campo, squadre su righe separate, categoria, numero gara e stato. In corso vengono mostrati punti e numero del set, a gara terminata i set vinti. Il cestino mantiene la conferma. La categoria è un’etichetta descrittiva e non modifica il regolamento.
 
 
-La versione **0.6.9** introduce il tutorial sulle schermate reali: la schermata si oscura lasciando evidenziato il controllo spiegato. Il percorso illustra preparazione, sorteggio, formazioni e operazioni durante la gara (punti/rotazioni, timeout, cambi, libero, correzioni, osservazioni e sanzioni). Alla fine genera e mostra il PDF classico FIPAV di una gara con dati fittizi, separata dagli archivi. La voce **Guida** permette di consultare le istruzioni e riaprire il percorso. Rimane l’icona gialla/blu approvata. [Funzionamento e aggiornamento della guida](docs/GUIDA-E-TUTORIAL.md).
+La versione **0.7.0** aggiunge le firme preliminari e l’approvazione finale secondo il flusso FIPAV, con riquadro di scrittura in orizzontale e inserimento dei tratti nel modello PDF. Le modifiche ai contenuti approvati segnalano le firme da raccogliere nuovamente. Il tutorial sulle schermate reali include i nuovi passaggi e mostra il PDF finale con dati e firme dimostrativi. [Regole e funzionamento delle firme](docs/FIRME-REFERTO.md) · [Guida e tutorial](docs/GUIDA-E-TUTORIAL.md).
 
 Per chi modifica l’app: aggiornare `AppGuide.steps` e `updatedFor` quando cambiano sostanzialmente i flussi; incrementare `AppGuide.revision` per riproporre una volta i contenuti aggiornati. Le patch estetiche non devono riattivare il tutorial.

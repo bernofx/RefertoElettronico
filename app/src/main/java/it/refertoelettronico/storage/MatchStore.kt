@@ -19,6 +19,7 @@ class MatchStore(private val directory: File) {
         val journal = gson.fromJson(json, Journal::class.java) ?: error("Archivio vuoto.")
         require(journal.version == 1) { "Versione archivio non supportata." }
         require(journal.events.size + journal.redo.size <= 100_000) { "Troppi eventi nell'archivio." }
+        Signatures.validate(journal)
         MatchEngine.replay(journal.config, journal.events + journal.redo)
         return journal
     }
@@ -26,6 +27,7 @@ class MatchStore(private val directory: File) {
     fun save(id: String, journal: Journal) {
         require(id.matches(Regex("[a-zA-Z0-9-]+")))
         require(journal.version==1) { "Versione archivio non supportata." }
+        Signatures.validate(journal)
         MatchEngine.replay(journal.config,journal.events+journal.redo)
         val target = File(directory, "$id.json")
         val temp = File(directory, "$id.tmp")

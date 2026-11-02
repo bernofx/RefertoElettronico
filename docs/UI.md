@@ -65,3 +65,8 @@ La testata e il launcher adottano l’icona C6 approvata, con referto blu, sfond
 ## Tutorial contestuale · 0.6.9
 
 Le schede introduttive sono sostituite da un percorso sulle schermate di produzione. Il velo scuro ha un’apertura arrotondata intorno al controllo reale; testo e Avanti/Indietro/Esci restano in un riquadro separato. Il tutorial scorre automaticamente verso il bersaglio e mostra gli effetti delle azioni su una partita in memoria. L’ultimo tratto genera davvero il PDF classico FIPAV e mostra l’anteprima compilata. La visita non modifica archivi, rose, bozze o partita aperta. La scheda Guida e il versionamento dei contenuti restano disponibili.
+
+
+## Firme · 0.7.0
+
+La preparazione del primo set introduce l’accesso alle firme preliminari dopo il sorteggio; l’inizio del set propone il completamento delle firme o il passaggio esplicito alla firma sulla stampa. La scheda Referto e la conclusione della gara permettono di raccogliere l’approvazione nell’ordine previsto. Il riquadro firma richiede l’orientamento orizzontale, con intestazione compatta e area di scrittura ampia; chiudendolo viene ripristinata l’impostazione precedente. [Regole, conservazione e anteprime](FIRME-REFERTO.md).

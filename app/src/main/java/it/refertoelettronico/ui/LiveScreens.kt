@@ -22,7 +22,9 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Event)->Unit,onUndo:()->Unit,onRedo:()->Unit,
-               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit,onEditSetup:(()->Unit)?=null) {
+               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit,onEditSetup:(()->Unit)?=null,journal:Journal?=null,onSignatures:((Journal)->Boolean)?=null,onFinalSignatures:(()->Unit)?=null) {
+    var signatureStart by remember{mutableStateOf<Event?>(null)}
+    var startAfterSigning by remember{mutableStateOf(false)}
     var operation by remember { mutableStateOf<String?>(null) }
     var team by remember { mutableIntStateOf(0) }
     val set=state.current
@@ -57,12 +59,18 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
         if(problem!=null)Notice(problem)
         if(state.finished(config)) {
             Notice(if(state.endedEarly)"Gara terminata anticipatamente. Le decisioni sono nelle osservazioni." else "Gara conclusa · ${config.teams[if(state.wins(0)>state.wins(1))0 else 1].name} vince ${maxOf(state.wins(0),state.wins(1))}:${minOf(state.wins(0),state.wins(1))}. Puoi generare il referto.")
+            if(onFinalSignatures!=null)Button(onClick=onFinalSignatures,modifier=Modifier.fillMaxWidth()){Text("Firme e approvazione finale")}
         } else if(!playing && !state.interrupted) {
             if(state.sets.isEmpty() && onEditSetup!=null)FilledTonalButton(onClick=onEditSetup,modifier=Modifier.fillMaxWidth().testTag("edit-pre-match")) {
                 Text("← Correggi dati e rose")
             }
             if(set!=null)Notice("Set ${set.number} concluso: ${set.score[0]} — ${set.score[1]}. Conferma le formazioni per il prossimo set.")
-            StartSetPanel(config,state,onEvent)
+            StartSetPanel(config,state,onEvent,signatureJournal=journal,
+                onCollectSignatures=if(onSignatures!=null)({event->startAfterSigning=false;signatureStart=event})else null,
+                onBeforeStart=if(onSignatures!=null && state.sets.isEmpty())({event->
+                    if(journal!=null && Signatures.missing(journal,true,event).isEmpty())onEvent(event)
+                    else {startAfterSigning=true;signatureStart=event}
+                })else null)
         }
         if(playing && set!=null) {
             TimeoutClock(lastEvent,config)
@@ -85,6 +93,9 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
         TextButton(onClick=onHistory,modifier=Modifier.fillMaxWidth()){Text("Apri registro · correggi più operazioni")}
         }
     }
+    val pending=signatureStart
+    if(pending!=null && journal!=null && onSignatures!=null)SignatureWorkflow(journal,true,pending,onSignatures,
+        onClose={signatureStart=null},onStart=if(startAfterSigning)({signatureStart=null;onEvent(pending.copy(at=System.currentTimeMillis()))})else null)
     if(operation=="other")AlertDialog(onDismissRequest={operation=null},title={Text("Altre operazioni")},text={
         Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(6.dp)) {
             if(playing) {

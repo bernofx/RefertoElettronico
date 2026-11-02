@@ -5,10 +5,11 @@ import kotlin.math.max
 
 /** Coordinates refer to the unchanged official blank (1190 x 730). Independent of Android. */
 data class Mark(val type: String, val x: Float, val y: Float, val text: String = "", val size: Float = 7f,
-    val x2: Float = 0f, val y2: Float = 0f, val width: Float = 0f, val cell: TextCell? = null, val color: Int = -1)
+    val x2: Float = 0f, val y2: Float = 0f, val width: Float = 0f, val cell: TextCell? = null, val color: Int = -1,val signature:MatchSignature?=null)
 data class SheetPage(val template: Boolean, val title: String, val marks: List<Mark>)
 object SheetLayout {
     fun build(journal: Journal): List<SheetPage> {
+        Signatures.validate(journal)
         val config = journal.config
         val state = MatchEngine.replay(config, journal.events)
         val marks = mutableListOf<Mark>()
@@ -28,10 +29,11 @@ object SheetLayout {
         cell(197,20,7,8,"X",6f,true)
         cell(56,33,153,10,config.location,7f);cell(264,33,144,10,config.venue,7f)
         cell(456,33,70,10,config.date,7f);cell(560,33,55,10,config.scheduledTime,7f)
-        val teamA = state.sets.firstOrNull()?.initialLeft ?: 0
+        val teamA = Signatures.toss(journal)?.left ?: 0
+        fun letter(team:Int)=if(team==teamA)"A"else"B"
         val teamB = 1-teamA
         cell(43,47,239,10,config.teams[0].name,8f);cell(345,47,243,10,config.teams[1].name,8f)
-        cell(23,48,10,12,state.letter(0),7f,true);cell(594,48,10,12,state.letter(1),7f,true)
+        cell(23,48,10,12,letter(0),7f,true);cell(594,48,10,12,letter(1),7f,true)
         val overflow = mutableListOf<String>()
         val changeSnapshots=mutableMapOf<Int,SetState>()
         var replayed=MatchEngine.initial(config)
@@ -55,7 +57,7 @@ object SheetLayout {
             for(slot in 0..5)cell(x+slot*29.5f+2,105+dy,25.5f,10,set.initial[team][slot],8f,true)
             val letterX=x+if(duplicate || rightHeader)20 else 158
             // Sets 1–4 already contain the correct A/B letters on the printed sheet.
-            if(deciding)cell(letterX-6,73+dy,12,14,state.letter(team),8f,true)
+            if(deciding)cell(letterX-6,73+dy,12,14,letter(team),8f,true)
             val first=team==set.firstServer
             if(!duplicate) {
                 val flagX=x+if(rightHeader)5 else 172
@@ -94,7 +96,7 @@ object SheetLayout {
                             cell(halfLeft+1,rowTop+4,12.75f,8,turn.endScore,5.8f,true)
                             if(shown.endedAt!=null && index==shown.turns[team].lastIndex)circle(cx,cy,4.5f)
                         }
-                    } else if(!duplicate)overflow+="Set ${set.number} sq. ${state.letter(team)} turno ${round+1}, ordine ${turn.slot+1}, n. ${turn.player}: ${turn.endScore?:"in corso"}"
+                    } else if(!duplicate)overflow+="Set ${set.number} sq. ${letter(team)} turno ${round+1}, ordine ${turn.slot+1}, n. ${turn.player}: ${turn.endScore?:"in corso"}"
                 }
             }
             val scoreX=(if(initialPanel)279.5f else 272f)+dx
@@ -115,7 +117,7 @@ object SheetLayout {
                 val lastY=scoreBase+(minOf(priorPoints,12)-1)*step
                 line(scoreX+2,scoreBase-4,scoreX+2,lastY)
             }
-            if(finalScore>capacity && !duplicate)overflow+="Set ${set.number} sq. ${state.letter(team)} punti oltre $capacity: ${capacity+1}-$finalScore"
+            if(finalScore>capacity && !duplicate)overflow+="Set ${set.number} sq. ${letter(team)} punti oltre $capacity: ${capacity+1}-$finalScore"
             if(shown.endedAt!=null)for(col in 0 until if(initialPanel)2 else 4) {
                 val firstUnused=max(finalScore+1,col*rows+1)
                 val last=minOf((col+1)*rows,capacity)
@@ -132,7 +134,7 @@ object SheetLayout {
                 val value=if(config.teams[team].players.count{it.libero}>1 || l.chain.size>1)
                     "${l.chain.first()}-${l.replaced}"+l.chain.drop(1).joinToString(""){"-$it"} else l.replaced.toString()
                 if(i<18){cell(cx,rowTop,25.7f,11,value,6f,true);if(l.exited)line(cx,rowTop+9,cx+25,rowTop+2)}
-                else if(!duplicate)overflow+="Set ${set.number} sq. ${state.letter(team)} libero $value al ${scoreLabel(l.score,team)}${if(l.exited)", rientrata" else""}"
+                else if(!duplicate)overflow+="Set ${set.number} sq. ${letter(team)} libero $value al ${scoreLabel(l.score,team)}${if(l.exited)", rientrata" else""}"
             }
         }
         state.sets.forEach { set ->
@@ -158,13 +160,13 @@ object SheetLayout {
         listOf(0,1).forEachIndexed { side,team ->
             val x=if(side==0)928f else 1058f
             val regular=config.teams[team].players.filter { !it.libero }.sortedBy { it.number }
-            cell(if(side==0)932 else 1168,365,12,13,state.letter(team),7f,true)
+            cell(if(side==0)932 else 1168,365,12,13,letter(team),7f,true)
             regular.take(12).forEachIndexed { i,p ->
                 val y=396f+i*13.15f
                 cell(x+2,y,18,10,p.number,6f,true);if(p.captain) circle(x+11,y+5,5f)
                 cell(x+25,y,101,10,p.name,6f)
             }
-            regular.drop(12).forEach { overflow += "ELENCO AGGIUNTIVO Sq. ${state.letter(team)} n. ${it.number} ${it.name}${if(it.captain) " (K)" else ""}" }
+            regular.drop(12).forEach { overflow += "ELENCO AGGIUNTIVO Sq. ${letter(team)} n. ${it.number} ${it.name}${if(it.captain) " (K)" else ""}" }
             config.teams[team].players.filter { it.libero }.forEachIndexed { i,p ->
                 cell(x+2,568f+i*13f,18,11,p.number,6f,true);cell(x+25,568f+i*13f,101,11,p.name,6f)
             }
@@ -207,11 +209,11 @@ object SheetLayout {
             val x=when(san.card) {Card.WARNING,Card.DELAY_WARNING->6f;Card.PENALTY,Card.DELAY_PENALTY->28f;Card.EXPULSION->50f;else->72f}
             val y=548f+i*13.1f
             cell(x+2,y,17,10,if(san.card==Card.DELAY_WARNING || san.card==Card.DELAY_PENALTY)"R" else san.recipient,6f,true)
-            cell(96,y,17,10,state.letter(san.team),6f,true);cell(117,y,17,10,san.set,6f,true)
+            cell(96,y,17,10,letter(san.team),6f,true);cell(117,y,17,10,san.set,6f,true)
             cell(138,y,40,10,scoreLabel(san.score,san.team),6f,true)
         }
-        state.sanctions.filter { it.card == Card.IMPROPER }.forEach { circle(if(state.letter(it.team)=="A")131f else 175f,521f,5f) }
-        state.sanctions.filter {it.card!=Card.IMPROPER}.drop(13).forEach { overflow += "SANZIONE Set ${it.set} ${scoreLabel(it.score,it.team)} Sq. ${state.letter(it.team)} ${it.card.label}: ${it.recipient}" }
+        state.sanctions.filter { it.card == Card.IMPROPER }.forEach { circle(if(letter(it.team)=="A")131f else 175f,521f,5f) }
+        state.sanctions.filter {it.card!=Card.IMPROPER}.drop(13).forEach { overflow += "SANZIONE Set ${it.set} ${scoreLabel(it.score,it.team)} Sq. ${letter(it.team)} ${it.card.label}: ${it.recipient}" }
         val observations=mutableListOf<String>()
         if(config.initialObservations.isNotBlank()) observations+=config.initialObservations
         if(config.fallbackReason.isNotBlank()) observations+="Referto cartaceo: ${config.fallbackReason}"
@@ -227,9 +229,16 @@ object SheetLayout {
             // Printed line-judge order is 1/3 in the left column and 2/4 on the right.
             cell(if(i%2==0)192 else 449,688f+(i/2)*13.15f,210,10,name,6f)
         }
+        SignatureRole.entries.forEach { role ->
+            Signatures.current(journal,role)?.let { signature->
+                val box=SignatureGeometry.cell(role)
+                marks+=Mark("signature",box.left,box.top,cell=box,signature=signature)
+            }
+        }
+        val missingSignatures=Signatures.required(config,true).plus(Signatures.required(config,false)).filter{Signatures.current(journal,it)==null}
         // Date/identifiers remain human-readable even if an unusually long value was fitted in the form.
         val status=if(state.finished(config) && !state.endedEarly) "GARA CONCLUSA" else if(state.endedEarly) "GARA TERMINATA ANTICIPATAMENTE" else "PROVVISORIO - GARA IN CORSO"
-        val pages=mutableListOf(SheetPage(true,status+if(config.missingMetadata().isNotEmpty())" · DATI DA COMPLETARE" else "",marks))
+        val pages=mutableListOf(SheetPage(true,status+(if(config.missingMetadata().isNotEmpty())" · DATI DA COMPLETARE" else "")+(if(state.finished(config) && missingSignatures.isNotEmpty())" · FIRME DA COMPLETARE" else ""),marks))
         val appendix=mutableListOf<String>()
         appendix += "${config.competition} · stagione ${config.season} · gara ${config.matchNumber}"
         appendix += "${config.teams[teamA].name} (A) - ${config.teams[teamB].name} (B) · ${config.date} · ${config.location}"
@@ -240,12 +249,20 @@ object SheetLayout {
         if(!config.refereeAttendant.isNullOrBlank())appendix += "Addetto all’arbitro: ${config.refereeAttendant}"
         appendix += "ELENCHI COMPLETI (numeri, capitana K, liberi L)"
         listOf(teamA,teamB).forEach { t ->
-            appendix += "Squadra ${state.letter(t)}: ${config.teams[t].name} · codice società ${config.teams[t].clubCode}"
+            appendix += "Squadra ${letter(t)}: ${config.teams[t].name} · codice società ${config.teams[t].clubCode}"
             config.teams[t].staff.forEachIndexed{i,name->appendix+="${listOf("Allenatore","Vice allenatore","Fisioterapista","Medico","Dirigente").getOrElse(i){"Panchina"}}: $name"}
             appendix += config.teams[t].players.sortedBy { it.number }.joinToString("; ") { "${it.number} ${it.name}${if(it.captain) " K" else ""}${if(it.libero) " L" else ""}" }
         }
         appendix += "OSSERVAZIONI COMPLETE";appendix+=observations
         appendix += "REGISTRAZIONI AGGIUNTIVE";appendix+=overflow
+        appendix += "FIRME DEL REFERTO"
+        Signatures.required(config,true).plus(Signatures.required(config,false)).forEach { role->
+            val signature=Signatures.current(journal,role)
+            appendix+=if(signature!=null)"${role.label}: ${signature.signer} - raccolta il ${java.time.Instant.ofEpochMilli(signature.signedAt).atZone(java.time.ZoneId.of("Europe/Rome")).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))} - riferimento dati ${signature.contentHash}"
+                else "${role.label}: ${if(journal.signatures.orEmpty().any{it.role==role.name})"DA RIFIRMARE - dati modificati" else "NON RACCOLTA IN APP - spazio da completare sulla stampa"}"
+        }
+        appendix += "Firme tracciate sul dispositivo e riprodotte nel modello; non firme digitali qualificate. Consegna secondo le indicazioni dell'arbitro e del Comitato."
+        appendix += "FIPAV: firme preliminari dopo il sorteggio; a fine gara segnapunti, 2° arbitro se presente, 1° arbitro. I capitani non firmano a fine gara."
         appendix += "CRONOLOGIA - punteggio indicato nell'ordine A:B"
         var progress=MatchEngine.initial(config)
         journal.events.forEachIndexed { i,e ->
@@ -254,7 +271,7 @@ object SheetLayout {
             val score=set?.let { "${it.score[teamA]}:${it.score[teamB]}" } ?: "0:0"
             appendix += "${i+1}. ${clock(e.at)} · set ${set?.number?:0} · $score · ${e.description(config)}"
         }
-        appendix += "Firme da apporre sul cartaceo. Il registro allegato è di supporto; il foglio principale riproduce la figura 82 del Manuale FIPAV del segnapunti 2025/26."
+        appendix += "Completare sulla stampa le firme non raccolte in app. Il registro allegato è di supporto; il foglio principale riproduce la figura 82 del Manuale FIPAV del segnapunti 2025/26."
         val lines=appendix.flatMap { wrap(it,150) }
         lines.chunked(47).forEachIndexed { i,chunk ->
             pages += SheetPage(false,"ALLEGATO ${i+1} - REGISTRO DI SUPPORTO",chunk.mapIndexed { n,s -> Mark("text",24f,20f+n*14.5f,s,9f,width=1140f,cell=TextCell(24f,10f+n*14.5f,1164f,23f+n*14.5f)) })

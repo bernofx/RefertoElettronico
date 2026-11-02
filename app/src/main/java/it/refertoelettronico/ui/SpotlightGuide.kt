@@ -76,7 +76,7 @@ fun GuideOverlay(onClose:()->Unit) {
                                     AppGuide.Screen.DATA,AppGuide.Screen.ROSTER->MatchEditor(GuideExample.config,{},false,
                                         initialSection=if(item.screen==AppGuide.Screen.ROSTER)1 else 0)
                                     AppGuide.Screen.LINEUP->Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp)) {
-                                        StartSetPanel(GuideExample.config,MatchEngine.initial(GuideExample.config),{},tutorialDefaults=Demo.start())
+                                        StartSetPanel(GuideExample.config,MatchEngine.initial(GuideExample.config),{},tutorialDefaults=Demo.start(),signatureJournal=journal,onCollectSignatures={})
                                     }
                                     AppGuide.Screen.LIVE->LiveScreen(journal.config,state,journal.events.lastOrNull(),{},{},{},journal.events.isNotEmpty(),journal.redo.isNotEmpty(),{})
                                     AppGuide.Screen.HISTORY->HistoryScreen(journal,{},{})
@@ -84,7 +84,7 @@ fun GuideOverlay(onClose:()->Unit) {
                                         OperationDialog(when(item.screen){AppGuide.Screen.TIMEOUT->"timeout";AppGuide.Screen.SUB->"sub";AppGuide.Screen.LIBERO->"libero";AppGuide.Screen.NOTE->"note";else->"sanction"},
                                             1,journal.config,state,{},{},embedded=true,
                                             exampleText=if(item.screen==AppGuide.Screen.NOTE)"Esempio guidato: annotazione comunicata dall’arbitro." else "",exampleRecipient="1")
-                                    AppGuide.Screen.PDF->ExportScreen(journal,{error=it.message?:"Generazione non riuscita"},{},{},tutorialDirectory=directory)
+                                    AppGuide.Screen.PDF->ExportScreen(journal,{error=it.message?:"Generazione non riuscita"},{},{},tutorialDirectory=directory,onSignatures={false})
                                 }
                             }
                         }

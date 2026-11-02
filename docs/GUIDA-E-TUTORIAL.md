@@ -1,8 +1,8 @@
 # Tutorial e guida nell’app
 
-La **0.6.9** sostituisce i pannelli introduttivi della 0.6.8 con una visita delle schermate reali: un velo scuro lascia scoperto il controllo spiegato e il riquadro in sovraimpressione descrive l’operazione. Il bersaglio segue il layout effettivo e viene portato in vista scorrendo la pagina, senza coordinate fisse.
+Dalla **0.6.9** il tutorial usa le schermate reali; la **0.7.0** aggiunge i passaggi delle firme: un velo scuro lascia scoperto il controllo spiegato e il riquadro in sovraimpressione descrive l’operazione. Il bersaglio segue il layout effettivo e viene portato in vista scorrendo la pagina, senza coordinate fisse.
 
-Il percorso comprende preparazione e presenti, sorteggio, tagliando 4–3–2 / 5–6–1, punti e rotazioni, timeout, cambi, ingressi e uscite del libero, Annulla/Ripristina, Registro, osservazioni, sanzioni e altre decisioni arbitrali. Avanti mostra gli effetti su una gara dimostrativa. Alla fine il generatore reale produce il PDF cartaceo classico FIPAV di una gara completata 3–0 con dati fittizi e ne mostra l’anteprima effettiva.
+Il percorso comprende preparazione e presenti, sorteggio, tagliando 4–3–2 / 5–6–1, punti e rotazioni, timeout, cambi, ingressi e uscite del libero, Annulla/Ripristina, Registro, osservazioni, sanzioni e altre decisioni arbitrali, firme preliminari e approvazione finale. Avanti mostra gli effetti su una gara dimostrativa. Alla fine il generatore reale produce il PDF cartaceo classico FIPAV di una gara completata 3–0 con dati e firme fittizi e ne mostra l’anteprima effettiva.
 
 I comandi Avanti, Indietro ed Esci restano disponibili nel riquadro; il testo scorre se necessario. I controlli sottostanti sono illustrati, non azionabili durante la visita. Le azioni vengono simulate dal motore di gara, senza registrarle nell’archivio. Le finestre di timeout, cambio, libero, annotazione e sanzione usano lo stesso modulo della gara reale, incorporato nella finestra del tutorial.
 
@@ -26,7 +26,7 @@ Le immagini in `docs/ui` sono rendering Android con Robolectric native graphics,
 
 ## Anteprime verificate
 
-- [Campo e rotazione](ui/tutorial-0.6.9-campo.png)
-- [Modulo del libero](ui/tutorial-0.6.9-libero.png)
-- [Anteprima PDF nel tutorial](ui/tutorial-0.6.9-pdf.png)
-- [PDF completo dell’esercitazione](../downloads/RefertoVolley-tutorial-0.6.9.pdf)
+- [Campo e rotazione](ui/tutorial-0.7.0-campo.png)
+- [Modulo del libero](ui/tutorial-0.7.0-libero.png)
+- [Anteprima PDF nel tutorial](ui/tutorial-0.7.0-pdf.png)
+- [PDF completo dell’esercitazione](../downloads/RefertoVolley-tutorial-0.7.0.pdf)

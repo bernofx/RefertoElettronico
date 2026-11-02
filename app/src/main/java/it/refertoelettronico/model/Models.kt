@@ -70,7 +70,7 @@ data class MatchState(
         (config.format != Format.THREE_FIXED && (wins(0) >= config.format.wins || wins(1) >= config.format.wins))
     fun letter(team: Int): String = if ((sets.firstOrNull()?.initialLeft ?: 0) == team) "A" else "B"
 }
-data class Journal(val version: Int = 1, val config: MatchConfig, val events: List<Event> = emptyList(), val redo: List<Event> = emptyList())
+data class Journal(val version: Int = 1, val config: MatchConfig, val events: List<Event> = emptyList(), val redo: List<Event> = emptyList(), val signatures:List<MatchSignature>?=null,val openingToss:OpeningToss?=null)
 
 fun <T> List<T>.with(index: Int, value: T): List<T> = mapIndexed { i, t -> if (i == index) value else t }
 fun clock(at: Long): String = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.of("Europe/Rome")).format(Instant.ofEpochMilli(at))

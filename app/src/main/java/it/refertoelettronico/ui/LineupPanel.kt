@@ -37,7 +37,7 @@ fun assignLineup(lineup:List<Int>,zone:Int,number:Int):List<Int> {
 }
 
 @Composable
-fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tutorialDefaults:Event?=null) {
+fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tutorialDefaults:Event?=null,signatureJournal:Journal?=null,onCollectSignatures:((Event)->Unit)?=null,onBeforeStart:((Event)->Unit)?=null) {
     val n=state.sets.size+1
     val deciding=MatchEngine.isDeciding(config,n)
     val eligible=config.teams.mapIndexed { t,team->team.players.filter {
@@ -47,8 +47,8 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tuto
     var lineups by rememberSaveable(n,stateSaver=lineupSaver){mutableStateOf(tutorialDefaults?.lineups ?: List(2){List(6){0}})}
     // Editing a roster may remove a number: retain valid positions and clear only those no longer available.
     LaunchedEffect(eligible){lineups=lineups.mapIndexed{t,slots->slots.map{if(it in eligible[t])it else 0}}}
-    var server by rememberSaveable(n){mutableIntStateOf(tutorialDefaults?.server ?: if(n>1 && !deciding)1-state.current!!.firstServer else -1)}
-    var left by rememberSaveable(n){mutableIntStateOf(tutorialDefaults?.left ?: if(n>1 && !deciding)1-state.current!!.initialLeft else -1)}
+    var server by rememberSaveable(n){mutableIntStateOf(tutorialDefaults?.server ?: signatureJournal?.openingToss?.server?.takeIf{n==1} ?: if(n>1 && !deciding)1-state.current!!.firstServer else -1)}
+    var left by rememberSaveable(n){mutableIntStateOf(tutorialDefaults?.left ?: signatureJournal?.openingToss?.left?.takeIf{n==1} ?: if(n>1 && !deciding)1-state.current!!.initialLeft else -1)}
     var team by rememberSaveable(n){mutableIntStateOf(0)}
     val complete=lineups.all{it.all{number->number>0} && it.distinct().size==6}
     Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
@@ -62,6 +62,10 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tuto
                 Text(if(n==1)"Guarda il campo dal tavolo del segnapunti: la squadra inizialmente a sinistra sarà A, l’altra B." else "Guarda dal tavolo del segnapunti. Le lettere A/B restano quelle del primo set.",style=MaterialTheme.typography.bodySmall)
             }
         } else Text("Servizio: ${config.teams[server].name} · A sinistra del tavolo: ${config.teams[left].name}. Scelte alternate dal set precedente.",style=MaterialTheme.typography.bodySmall)
+        if(n==1 && signatureJournal!=null && onCollectSignatures!=null) {
+            val toss=Event(Kind.START_SET,lineups=lineups,server=server,left=left)
+            PreliminarySignatures(signatureJournal,toss){onCollectSignatures(toss)}
+        }
         if(eligible.any{it.size<6})Notice("Meno di sei giocatrici disponibili: registra la decisione dell’arbitro nelle altre operazioni.")
         else {
             TeamChoiceRow(config,team,"lineup-team",lineups.map{"${it.count{number->number>0}}/6 in formazione"}){team=it}
@@ -74,7 +78,7 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tuto
             if(previous!=null && previous.all{it in eligible[team]})TextButton(onClick={lineups=lineups.with(team,previous)}){Text("Copia formazione del set precedente")}
             Text("Casa ${lineups[0].count{it>0}}/6 · Ospiti ${lineups[1].count{it>0}}/6",style=MaterialTheme.typography.labelMedium)
             if(server<0 || left<0)Text("Completa entrambe le scelte del sorteggio.",style=MaterialTheme.typography.bodySmall)
-            Button(enabled=complete && server>=0 && left>=0,onClick={onEvent(Event(Kind.START_SET,lineups=lineups,server=server,left=left))},
+            Button(enabled=complete && server>=0 && left>=0,onClick={(onBeforeStart ?: onEvent)(Event(Kind.START_SET,lineups=lineups,server=server,left=left))},
                 modifier=Modifier.fillMaxWidth().tourTarget("start-set").testTag("start-set")){Text("Conferma e inizia il set $n")}
         }
     }

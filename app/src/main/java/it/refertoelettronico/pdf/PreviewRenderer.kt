@@ -32,13 +32,21 @@ object PreviewRenderer {
                         canvas.drawText(fitted.text,fitted.x,fitted.baseline,paint);canvas.restore()
                     }
                 }
+                "signature" -> {
+                    paint.style=Paint.Style.STROKE;paint.strokeWidth=.8f;paint.strokeCap=Paint.Cap.ROUND
+                    canvas.save();val box=m.cell!!;canvas.clipRect(box.left,box.top,box.right,box.bottom)
+                    SignatureGeometry.fit(m.signature!!,box).forEach { stroke->
+                        val path=Path();stroke.forEachIndexed { i,p->if(i==0)path.moveTo(p.x,p.y)else path.lineTo(p.x,p.y) };canvas.drawPath(path,paint)
+                    }
+                    canvas.restore();paint.strokeCap=Paint.Cap.BUTT
+                }
                 "line" ->canvas.drawLine(m.x,m.y,m.x2,m.y2,paint)
                 "circle" ->{paint.style=Paint.Style.STROKE;canvas.drawCircle(m.x,m.y,m.size,paint)}
                 "white", "fill" ->{paint.color=if(m.type=="white")Color.WHITE else m.color;canvas.drawRect(m.x,m.y,m.x+m.x2,m.y+m.y2,paint)}
             }
         }
         canvas.restore();paint.style=Paint.Style.FILL;paint.color=Color.BLACK;paint.textSize=8f
-        canvas.drawText("Referto cartaceo di supporto · Firme sul documento stampato · Pagina 1",18f,815f,paint)
+        canvas.drawText("Referto cartaceo di supporto · Firme raccolte in app / spazi mancanti sulla stampa · Pagina 1",18f,815f,paint)
         return result
     }
 }
