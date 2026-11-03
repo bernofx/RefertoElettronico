@@ -3,6 +3,8 @@ package it.refertoelettronico.ui
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +29,21 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+/** Editing keeps navigation and help within one toolbar, including on narrow phones. */
+@Composable
+fun PreparationHeader(onBack:()->Unit,onGuide:()->Unit,onMatches:()->Unit) {
+    Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal=4.dp).testTag("setup-toolbar"),
+        verticalAlignment=Alignment.CenterVertically) {
+        IconButton(onClick=onBack,modifier=Modifier.semantics{contentDescription="Indietro"}) {
+            Text("←",style=MaterialTheme.typography.headlineSmall,color=MaterialTheme.colorScheme.primary)
+        }
+        Text("Prepara la gara",Modifier.weight(1f),style=MaterialTheme.typography.titleMedium,
+            fontWeight=FontWeight.Bold,maxLines=1,softWrap=false,overflow=TextOverflow.Ellipsis)
+        IconButton(onClick=onGuide,modifier=Modifier.testTag("editor-guide").semantics{contentDescription="Guida"}){UiGlyph(UiSymbol.GUIDE)}
+        IconButton(onClick=onMatches,modifier=Modifier.semantics{contentDescription="Gare"}){UiGlyph(UiSymbol.COURT)}
+    }
+}
 
 @Composable
 fun Notice(message: String) { Surface(color=MaterialTheme.colorScheme.primaryContainer,shape=RoundedCornerShape(12.dp)) {Text(message,Modifier.padding(horizontal=14.dp,vertical=10.dp),style=MaterialTheme.typography.bodyMedium)} }
@@ -56,7 +74,7 @@ fun <T> Picker(label:String,selected:T,choices:List<T>,name:(T)->String,onChange
 }
 
 @Composable
-fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo:()->Unit,onOpen:(String)->Unit,onImport:()->Unit,onDelete:(String)->Unit,onResume:(()->Unit)?=null,onDiscardDraft:(()->Unit)?=null) {
+fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo:()->Unit,onOpen:(String)->Unit,onImport:()->Unit,onDelete:(String)->Unit,onResume:(()->Unit)?=null,onDiscardDraft:(()->Unit)?=null,onAppearance:()->Unit={}) {
     var deleting by remember{mutableStateOf<Pair<String,String>?>(null)}
     if(deleting!=null)AlertDialog(onDismissRequest={deleting=null},title={Text("Eliminare questa gara?")},text={Text("${deleting!!.second}\n\nLa gara e la sua cronologia verranno eliminate da questo dispositivo. Le copie JSON già esportate e le rose salvate restano disponibili.")},confirmButton={TextButton(modifier=Modifier.testTag("confirm-delete-match"),onClick={val key=deleting!!.first;deleting=null;onDelete(key)}){Text("Elimina gara",color=MaterialTheme.colorScheme.error)}},dismissButton={TextButton(onClick={deleting=null}){Text("Annulla")}})
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -81,6 +99,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
             FilledTonalButton(onClick=onResume,modifier=Modifier.weight(1f)){Text("Riprendi preparazione")}
             if(onDiscardDraft!=null)TextButton(onClick=onDiscardDraft){Text("Scarta bozza")}
         }
+        OutlinedButton(onClick=onAppearance,modifier=Modifier.fillMaxWidth().testTag("appearance-open")){ActionLabel("Aspetto e temi",UiSymbol.COLOR)}
         FilledTonalButton(onClick=onDemo,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) {ActionLabel("Prova con una gara dimostrativa",UiSymbol.COURT)}
         if(archives.isNotEmpty())Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             Text("Le tue gare",style=MaterialTheme.typography.titleLarge)
@@ -139,12 +158,21 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         }
         LinearProgressIndicator(progress={steps.count{it.complete}/4f},modifier=Modifier.fillMaxWidth().height(3.dp))
         TabRow(selectedTabIndex=section) {
-            steps.forEach { step->Tab(selected=section==step.index,onClick={section=step.index;pendingTarget=null},
-                modifier=Modifier.testTag("setup-step-${step.index}").semantics{stateDescription=if(step.complete)"Completato"else"Da completare"},
-                text={Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Text(if(step.complete)"✓"else"${step.index+1}",style=MaterialTheme.typography.labelMedium,color=if(step.complete)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(step.title,style=MaterialTheme.typography.labelMedium,maxLines=2)
-                }})}
+            steps.forEach { step->
+                Box(Modifier.height(52.dp).selectable(selected=section==step.index,role=Role.Tab,
+                    onClick={section=step.index;pendingTarget=null})
+                    .testTag("setup-step-${step.index}").semantics{
+                        contentDescription=step.title
+                        stateDescription=if(step.complete)"Completato"else"Da completare"
+                    },contentAlignment=Alignment.Center) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal=2.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+                        Text(if(step.complete)"✓"else"${step.index+1}",style=MaterialTheme.typography.labelSmall,color=if(step.complete)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(listOf("Gara","Casa","Ospiti","Ufficiali")[step.index],style=MaterialTheme.typography.labelMedium,
+                            color=if(section==step.index)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines=1,softWrap=false,textAlign=TextAlign.Center,overflow=TextOverflow.Ellipsis,modifier=Modifier.fillMaxWidth().heightIn(min=24.dp).testTag("setup-step-label-${step.index}"))
+                    }
+                }
+            }
         }
         Surface(color=MaterialTheme.colorScheme.primaryContainer.copy(alpha=.5f)) {
             Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically) {

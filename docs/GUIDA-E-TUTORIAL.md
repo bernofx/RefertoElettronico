@@ -32,3 +32,5 @@ Le immagini in `docs/ui` sono rendering Android con Robolectric native graphics,
 - [PDF completo dell’esercitazione](../downloads/RefertoVolley-tutorial-0.8.0.pdf)
 
 La revisione 4 spiega i quattro passi di preparazione, il prossimo dato da completare e la conservazione delle firme dopo le correzioni. Le variazioni sportive vengono segnalate senza cancellare i tratti; le correzioni descrittive non richiedono nuove firme.
+
+Nella **0.8.1** la voce **Aspetto e temi** si trova nella pagina iniziale e nella scheda Dati: tre palette con modalità chiara, scura o automatica. [Anteprime e istruzioni](TEMI.md). Le quattro schede di preparazione ora riportano Gara, Casa, Ospiti e Ufficiali.

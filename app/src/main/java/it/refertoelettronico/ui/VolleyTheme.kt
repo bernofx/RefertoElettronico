@@ -12,19 +12,9 @@ import androidx.compose.ui.unit.sp
 
 /** Stable court-side palette: team colours remain independent of the app theme. */
 @Composable
-fun VolleyTheme(content:@Composable ()->Unit) {
+fun VolleyTheme(appearance:Appearance=Appearance(),content:@Composable ()->Unit) {
     MaterialTheme(
-        colorScheme=lightColorScheme(
-            primary=Color(0xFF126657),onPrimary=Color.White,
-            primaryContainer=Color(0xFFD7F2E7),onPrimaryContainer=Color(0xFF103F35),
-            secondary=Color(0xFF53665E),secondaryContainer=Color(0xFFE3EDE7),onSecondaryContainer=Color(0xFF20372D),
-            tertiary=Color(0xFF795517),tertiaryContainer=Color(0xFFFFE6B3),
-            background=Color(0xFFF4F7F5),onBackground=Color(0xFF192C25),
-            surface=Color(0xFFFCFEFC),onSurface=Color(0xFF192C25),
-            surfaceVariant=Color(0xFFEAF0EB),onSurfaceVariant=Color(0xFF52645B),
-            surfaceContainer=Color(0xFFEEF3EF),surfaceContainerLow=Color(0xFFF6F9F6),
-            surfaceContainerHigh=Color(0xFFE6EEE8),surfaceContainerHighest=Color(0xFFE0E9E2),
-            outline=Color(0xFF75857B),outlineVariant=Color(0xFFD4DFD6)),
+        colorScheme=appearance.scheme(androidx.compose.foundation.isSystemInDarkTheme()),
         shapes=Shapes(extraSmall=RoundedCornerShape(8.dp),small=RoundedCornerShape(12.dp),
             medium=RoundedCornerShape(16.dp),large=RoundedCornerShape(24.dp),extraLarge=RoundedCornerShape(28.dp)),
         typography=Typography(

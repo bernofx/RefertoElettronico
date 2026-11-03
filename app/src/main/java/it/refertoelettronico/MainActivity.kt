@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
 import it.refertoelettronico.model.*
 import it.refertoelettronico.integration.IncomingMatch
 import it.refertoelettronico.feedback.ActionFeedback
@@ -54,12 +55,27 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         if(savedInstanceState==null && IncomingMatch.accepts(intent))incoming=intent
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        setContent { VolleyTheme { VolleyApp(incoming,onIncomingHandled={incoming=null}) } }
+        setContent {
+            val appearanceStore=remember{AppearanceStore(this)}
+            var appearance by remember{mutableStateOf(appearanceStore.load())}
+            var showAppearance by remember{mutableStateOf(false)}
+            val dark=appearance.dark(isSystemInDarkTheme())
+            SideEffect {
+                WindowCompat.getInsetsController(window,window.decorView).apply {
+                    isAppearanceLightStatusBars=!dark
+                    isAppearanceLightNavigationBars=!dark
+                }
+            }
+            VolleyTheme(appearance) {
+                VolleyApp(incoming,onIncomingHandled={incoming=null},onAppearance={showAppearance=true})
+                if(showAppearance)AppearanceDialog(appearance,onChange={appearanceStore.save(it);appearance=it},onClose={showAppearance=false})
+            }
+        }
     }
 }
 
 @Composable
-fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
+fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:()->Unit={}) {
     val context=LocalContext.current
     val store=remember { MatchStore(File(context.filesDir,"matches")) }
     val draftStore=remember{DraftStore(File(context.filesDir,"setup-draft.json"))}
@@ -151,7 +167,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             val compactHeader=journal!=null && !editing && tab==0
-            Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=if(compactHeader)0.dp else 10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
+            if(editing) PreparationHeader(onBack=::navigateBack,onGuide={showGuide=true},onMatches={editing=false;importedDraft=null;journal=null;id=null})
+            else Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=if(compactHeader)0.dp else 10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 if(editing)TextButton(onClick=::navigateBack,contentPadding=PaddingValues(horizontal=8.dp)){Text("Indietro")}
                 else Surface(shape=MaterialTheme.shapes.small,color=Color(0xFFFFD23F)) {
                     Box(Modifier.size(if(compactHeader)28.dp else 38.dp),contentAlignment=Alignment.Center){Image(painterResource(R.drawable.ic_launcher_art),contentDescription=null,modifier=Modifier.fillMaxSize())}
@@ -189,7 +206,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                     onOpen={key ->try {journal=store.load(key);id=key;tab=0;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}},
                     onImport={importBackup.launch(arrayOf("application/json","text/plain","application/octet-stream"))},
                     onDelete={key->try{store.delete(key);if(savedDraft?.matchId==key)clearDraft();archiveRevision++;feedback.play(Cue.CONFIRM)}catch(t:Exception){failure(t)}},
-                    onResume=if(savedDraft!=null)({resumeDraft()})else null,onDiscardDraft=if(savedDraft!=null)({discardDraft=true})else null)
+                    onAppearance=onAppearance,onResume=if(savedDraft!=null)({resumeDraft()})else null,onDiscardDraft=if(savedDraft!=null)({discardDraft=true})else null)
             } else {
                 val j=journal!!;val s=state!!
                 when(tab) {
@@ -201,6 +218,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={}) {
                     4 -> GuideScreen(onStart={showGuide=true})
                     3 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                         Text("Dati e regolamento",style=MaterialTheme.typography.headlineSmall)
+                        OutlinedButton(onClick=onAppearance,modifier=Modifier.testTag("appearance-open")){ActionLabel("Aspetto e temi",UiSymbol.COLOR)}
                         Text("${j.config.teams[0].name} / ${j.config.teams[1].name}\n${j.config.date} · ${j.config.location}\n${j.config.format.label}")
                         Button(onClick=::editCurrentMatch){Text("Modifica i dati della gara")}
                         Text(if(j.events.isEmpty())"Distinte e formula sono modificabili prima dell'inizio." else "Distinte e formula sono bloccate dopo l'inizio. Per correggerle, annulla fino all'inizio dal Registro.")
