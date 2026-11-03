@@ -1,0 +1,32 @@
+{
+  "source_commit": "0c177ddce07753764f62bc8ac891b8d3932f3f01",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.8.1",
+  "version_code": 20,
+  "variant": "debug",
+  "apk_sha256": "26aead34fd008b2a140b555859f20670ae17bb1f6e7676bb3c9cd576d19bab1d",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "guide_revision": 4,
+  "validation": {
+    "tests_total": 197,
+    "tests_passed": 197,
+    "initial_run_passed": 196,
+    "initial_run_timeout": "RosterEditorTest.fullRosterCanBeSavedAndLoadedWithNewAttendanceAndStableEditableRows",
+    "roster_class_repeat": {
+      "tests_passed": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "native_graphics": "Robolectric SDK 35",
+    "physical_device": "not tested"
+  },
+  "changes": [
+    "Compact preparation toolbar with back, guide and matches navigation",
+    "Single-line Gara/Casa/Ospiti/Ufficiali step labels verified on 320dp width at 130% font scale",
+    "Salvia, Blu sport and Lavanda palettes with light/dark/system modes",
+    "Persistent appearance selection available from home and match Data; theme does not alter team colors, match events or PDF"
+  ]
+}
