@@ -38,11 +38,11 @@ class AppGuideTest {
             val bitmap=android.graphics.Bitmap.createBitmap(view.width,view.height,android.graphics.Bitmap.Config.ARGB_8888)
             view.draw(android.graphics.Canvas(bitmap))
             val dir=File("build/outputs/verification").apply{mkdirs()}
-            File(dir,"ui-tutorial-0.7.0.png").outputStream().use{bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
+            File(dir,"ui-tutorial-0.8.0.png").outputStream().use{bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
             val launcher=compose.activity.getDrawable(R.mipmap.ic_launcher)!!
             val iconBitmap=android.graphics.Bitmap.createBitmap(432,432,android.graphics.Bitmap.Config.ARGB_8888)
             launcher.setBounds(0,0,432,432);launcher.draw(android.graphics.Canvas(iconBitmap))
-            File(dir,"launcher-0.7.0.png").outputStream().use{iconBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
+            File(dir,"launcher-0.8.0.png").outputStream().use{iconBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
         }
         repeat(AppGuide.steps.size){ i ->
             compose.onNodeWithTag("guide-step-title").assertTextEquals(AppGuide.steps[i].title)
@@ -57,7 +57,7 @@ class AppGuideTest {
                     val image=android.graphics.Bitmap.createBitmap(view.width,view.height,android.graphics.Bitmap.Config.ARGB_8888)
                     view.draw(android.graphics.Canvas(image))
                     val dir=File("build/outputs/verification").apply{mkdirs()}
-                    File(dir,"tutorial-0.7.0-step-$i.png").outputStream().use{image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
+                    File(dir,"tutorial-0.8.0-step-$i.png").outputStream().use{image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
                     if(AppGuide.steps[i].target=="pdf-preview") {
                         val pdf=compose.activity.cacheDir.walkTopDown().single{it.extension=="pdf"}
                         pdf.copyTo(File(dir,"tutorial-referto.pdf"),overwrite=true)

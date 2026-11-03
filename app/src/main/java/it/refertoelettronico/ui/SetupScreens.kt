@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
@@ -21,6 +22,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import it.refertoelettronico.model.*
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -103,65 +106,123 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
     LaunchedEffect(Unit){saveDraft(config)}
     var section by remember { mutableIntStateOf(initialSection) }
     var validationError by remember{mutableStateOf<String?>(null)}
+    var advanced by remember{mutableStateOf(false)}
+    var notes by remember{mutableStateOf(false)}
+    var officialDetails by remember{mutableStateOf(false)}
+    var serviceDetails by remember{mutableStateOf(false)}
+    var pendingTarget by remember{mutableStateOf<String?>(null)}
+    val targets=remember{PreparationTargets()}
+    val steps=remember(config){PreparationProgress.steps(config)}
+    val next=steps.firstOrNull{!it.complete}
+    fun suggested() {
+        val step=next ?: return
+        val target=step.issues.first().target
+        if(target in listOf("competition","season"))advanced=true
+        if(target=="service")serviceDetails=true
+        section=step.index;pendingTarget=target
+    }
+    LaunchedEffect(section,pendingTarget) {
+        val key=pendingTarget ?: return@LaunchedEffect
+        val entry=snapshotFlow{targets.entries[key]}.filterNotNull().first()
+        snapshotFlow{entry.placed}.first{it}
+        entry.bring.bringIntoView();entry.focus?.requestFocus()
+        pendingTarget=null
+    }
+    fun save() {try{val final=StaffReview.confirm(config);MatchEngine.validate(final);onSave(final)}catch(t:IllegalArgumentException){validationError=t.message}}
     if(validationError!=null)AlertDialog(onDismissRequest={validationError=null},title={Text("Controlla la distinta")},text={Text(validationError!!)},confirmButton={TextButton(onClick={validationError=null}){Text("Correggi")}})
     val scroll=rememberScrollState()
     LaunchedEffect(section){scroll.scrollTo(0)}
     Column(Modifier.fillMaxSize()) {
-        ScrollableTabRow(selectedTabIndex=section,edgePadding=12.dp) {
-            listOf("Gara","Squadra di casa","Squadra ospite","Ufficiali").forEachIndexed { i,label ->Tab(selected=section==i,onClick={section=i},text={Text(label)})}
+        Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),horizontalArrangement=Arrangement.SpaceBetween) {
+            Text("Preparazione",style=MaterialTheme.typography.labelLarge)
+            Text("${steps.count{it.complete}}/4 complete",style=MaterialTheme.typography.labelMedium,modifier=Modifier.testTag("setup-progress"))
+        }
+        LinearProgressIndicator(progress={steps.count{it.complete}/4f},modifier=Modifier.fillMaxWidth().height(3.dp))
+        TabRow(selectedTabIndex=section) {
+            steps.forEach { step->Tab(selected=section==step.index,onClick={section=step.index;pendingTarget=null},
+                modifier=Modifier.testTag("setup-step-${step.index}").semantics{stateDescription=if(step.complete)"Completato"else"Da completare"},
+                text={Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically) {
+                    Text(if(step.complete)"✓"else"${step.index+1}",style=MaterialTheme.typography.labelMedium,color=if(step.complete)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(step.title,style=MaterialTheme.typography.labelMedium,maxLines=2)
+                }})}
+        }
+        Surface(color=MaterialTheme.colorScheme.primaryContainer.copy(alpha=.5f)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(if(next==null)(if(rosterLocked)"Dati gara completi"else"Pronto per le formazioni")else"Prossimo passo · ${next.title}",style=MaterialTheme.typography.labelMedium)
+                    Text(next?.issues?.firstOrNull()?.label ?: if(rosterLocked)"Salva le modifiche e torna alla gara"else"Salva i dati e prepara il primo set",style=MaterialTheme.typography.bodySmall,modifier=Modifier.testTag("setup-suggestion"))
+                }
+                if(next!=null)TextButton(onClick=::suggested,modifier=Modifier.testTag("setup-suggested-action")){Text("Completa")}
+            }
         }
         Column(Modifier.weight(1f).verticalScroll(scroll).padding(14.dp),verticalArrangement=Arrangement.spacedBy(if(section in 1..2)6.dp else 12.dp)) {
             when(section) {
                 0 -> {
-                    Notice("U14 femminile Como 2026/27: al meglio di 5 set, rete 2,15 m, libero e secondo libero ammessi. Otto sostituzioni e due timeout per set.")
-                    Field("Campionato",config.competition,{config=config.copy(competition=it)})
+                    Field("Numero gara",config.matchNumber,{config=config.copy(matchNumber=it)},Modifier.preparationTarget(targets,"match-number",true).tourTarget("match-data"))
                     Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                        Field("Stagione",config.season,{config=config.copy(season=it)},Modifier.weight(1f))
-                        Field("Numero gara",config.matchNumber,{config=config.copy(matchNumber=it)},Modifier.weight(1f).tourTarget("match-data"))
+                        Field("Data (gg/mm/aaaa)",config.date,{config=config.copy(date=it)},Modifier.weight(1f).preparationTarget(targets,"date",true))
+                        Field("Ora prevista (hh:mm)",config.scheduledTime,{config=config.copy(scheduledTime=it)},Modifier.weight(1f).preparationTarget(targets,"time",true))
                     }
-                    Field("Girone / fase",config.phase,{config=config.copy(phase=it)})
-                    Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                        Field("Data (gg/mm/aaaa)",config.date,{config=config.copy(date=it)},Modifier.weight(1f))
-                        Field("Ora prevista (hh:mm)",config.scheduledTime,{config=config.copy(scheduledTime=it)},Modifier.weight(1f))
+                    Field("Località",config.location,{config=config.copy(location=it)},Modifier.preparationTarget(targets,"location",true))
+                    Field("Palestra / campo",config.venue,{config=config.copy(venue=it)},Modifier.preparationTarget(targets,"venue",true))
+                    TextButton(onClick={advanced=!advanced},modifier=Modifier.testTag("setup-advanced")){Text(if(advanced)"Nascondi campionato e regolamento"else"Campionato e regolamento · ${config.season}")}
+                    if(advanced) {
+                        Field("Campionato",config.competition,{config=config.copy(competition=it)},Modifier.preparationTarget(targets,"competition",true))
+                        Field("Stagione",config.season,{config=config.copy(season=it)},Modifier.preparationTarget(targets,"season",true))
+                        Field("Girone / fase",config.phase,{config=config.copy(phase=it)})
+                        if(!rosterLocked) {
+                            Picker("Formula",config.format,Format.entries.toList(),{it.label},{config=config.copy(format=it)})
+                            Picker("Limite sostituzioni",config.maxSubstitutions,listOf(8,6),{if(it==8)"8 · stagione 2026/27"else"6 · regolamento precedente"},{config=config.copy(maxSubstitutions=it)})
+                        }
+                        Text("U14F Como · rete 2,15 m · 2 timeout per set · libero e secondo libero ammessi.",style=MaterialTheme.typography.bodySmall)
                     }
-                    Field("Località",config.location,{config=config.copy(location=it)})
-                    Field("Palestra / campo",config.venue,{config=config.copy(venue=it)})
-                    if(!rosterLocked) {
-                        Picker("Formula",config.format,Format.entries.toList(),{it.label},{config=config.copy(format=it)})
-                        Picker("Limite sostituzioni",config.maxSubstitutions,listOf(8,6),{if(it==8)"8 · stagione 2026/27" else "6 · regolamento precedente"},{config=config.copy(maxSubstitutions=it)})
+                    TextButton(onClick={notes=!notes},modifier=Modifier.testTag("setup-notes")){Text(if(notes)"Nascondi note"else"Note e motivo del cartaceo")}
+                    if(notes) {
+                        Field("Motivo dell'uso del cartaceo",config.fallbackReason,{config=config.copy(fallbackReason=it)})
+                        OutlinedTextField(value=config.initialObservations,onValueChange={config=config.copy(initialObservations=it)},label={Text("Osservazioni prima della gara")},minLines=2,modifier=Modifier.fillMaxWidth())
                     }
-                    Field("Motivo dell'uso del cartaceo",config.fallbackReason,{config=config.copy(fallbackReason=it)})
-                    OutlinedTextField(value=config.initialObservations,onValueChange={config=config.copy(initialObservations=it)},label={Text("Osservazioni prima della gara")},minLines=3,modifier=Modifier.fillMaxWidth())
                 }
                 1,2 -> {
                     val t=section-1;val team=config.teams[t]
-                    TeamEditor(team,index=t,season=config.season,locked=rosterLocked,onChange={config=config.copy(teams=config.teams.with(t,it))})
-                    StaffCandidatesEditor(config,teamIndex=t,onChange={i,items->config=config.copy(teams=config.teams.with(i,config.teams[i].copy(staffRoster=items)))})
+                    TeamEditor(team,index=t,season=config.season,locked=rosterLocked,onChange={config=config.copy(teams=config.teams.with(t,it))},nameModifier=Modifier.preparationTarget(targets,"team-name-$t",true),rosterModifier=Modifier.preparationTarget(targets,"roster-$t"))
+                    Column(Modifier.preparationTarget(targets,"staff-$t")){StaffCandidatesEditor(config,teamIndex=t,onChange={i,items->config=config.copy(teams=config.teams.with(i,config.teams[i].copy(staffRoster=items)))})}
                 }
                 3 -> {
-                    StaffCandidatesEditor(config,serviceOnly=true,onChange={i,items->config=config.copy(teams=config.teams.with(i,config.teams[i].copy(staffRoster=items)))})
                     val service=config.teams.flatMap{it.staffRoster.orEmpty()}.filter{it.selected && it.scope=="SERVICE"}
                     val attendant=service.firstOrNull{it.assignment=="ATTENDANT"}
-                    Text("Assistenza della società",style=MaterialTheme.typography.titleSmall)
-                    Field("Addetto di società all’arbitro",attendant?.name ?: config.refereeAttendant.orEmpty(),{config=config.copy(refereeAttendant=it)},enabled=attendant==null)
-                    Text("L’addetto assiste l’arbitro. Il direttore di gara va indicato nel campo 1° arbitro qui sotto.",style=MaterialTheme.typography.bodySmall)
-                    if(attendant!=null)Text("Nome ripreso dall’incarico selezionato sopra: per cambiarlo, modifica quella selezione.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                    HorizontalDivider()
-                    Text("Arbitri e segnapunti",style=MaterialTheme.typography.titleLarge)
-                    Text("Le firme finali usano i nominativi di segnapunti, 2° arbitro se presente e 1° arbitro.",style=MaterialTheme.typography.bodySmall)
-                    listOf("1° arbitro","2° arbitro","Segnapunti","Giudice di linea 1","Giudice di linea 2","Giudice di linea 3","Giudice di linea 4").forEachIndexed { i,label ->
+                    Text("Arbitro e segnapunti",style=MaterialTheme.typography.titleMedium)
+                    Text("Questi nominativi sono usati per le firme finali.",style=MaterialTheme.typography.bodySmall)
+                    listOf(0,2).forEach { i->
                         val proposal=if(i==2)service.firstOrNull{it.assignment=="SCORER"}else null
-                        if(i==3)Text("Giudici di linea",style=MaterialTheme.typography.titleSmall)
-                        Field(label,proposal?.name ?: config.officials.getOrElse(i){""},{config=config.copy(officials=config.officials.with(i,it))},enabled=proposal==null)
-                        if(proposal!=null)Text("Segnapunti ripreso dall’incarico selezionato sopra.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                        if(i<3)Field("Città · $label",config.officialCities.getOrElse(i){""},{config=config.copy(officialCities=config.officialCities.with(i,it))})
+                        Field(if(i==0)"1° arbitro"else"Segnapunti",proposal?.name ?: config.officials.getOrElse(i){""},
+                            {config=config.copy(officials=config.officials.with(i,it))},Modifier.preparationTarget(targets,"official-$i",proposal==null),enabled=proposal==null)
+                        if(proposal!=null)TextButton(onClick={serviceDetails=true}){Text("Da incarico selezionato · modifica")}
+                    }
+                    if(config.officials.getOrElse(1){""}.isNotBlank())Field("2° arbitro",config.officials[1],{config=config.copy(officials=config.officials.with(1,it))})
+                    TextButton(onClick={serviceDetails=!serviceDetails},modifier=Modifier.testTag("setup-service-details")){Text(if(serviceDetails)"Nascondi incarichi ricevuti"else"Incarichi ricevuti · segnapunti e assistenza")}
+                    if(serviceDetails)Column(Modifier.preparationTarget(targets,"service")) {
+                        StaffCandidatesEditor(config,serviceOnly=true,onChange={i,items->config=config.copy(teams=config.teams.with(i,config.teams[i].copy(staffRoster=items)))})
+                    }
+                    TextButton(onClick={officialDetails=!officialDetails},modifier=Modifier.testTag("setup-official-details")){Text(if(officialDetails)"Nascondi altri dati degli ufficiali"else"Altri ufficiali, città e assistenza")}
+                    if(officialDetails) {
+                        if(config.officials.getOrElse(1){""}.isBlank())Field("2° arbitro",config.officials.getOrElse(1){""},{config=config.copy(officials=config.officials.with(1,it))})
+                        listOf("1° arbitro","2° arbitro","Segnapunti").forEachIndexed{i,label->
+                            Field("Città · $label",config.officialCities.getOrElse(i){""},{config=config.copy(officialCities=config.officialCities.with(i,it))})
+                        }
+                        Text("Assistenza della società",style=MaterialTheme.typography.titleSmall)
+                        Field("Addetto di società all’arbitro",attendant?.name ?: config.refereeAttendant.orEmpty(),{config=config.copy(refereeAttendant=it)},enabled=attendant==null)
+                        Text("L’addetto assiste l’arbitro. Il direttore di gara è indicato nel campo 1° arbitro.",style=MaterialTheme.typography.bodySmall)
+                        if(attendant!=null)TextButton(onClick={serviceDetails=true}){Text("Nome da incarico selezionato · modifica sopra")}
+                        Text("Giudici di linea",style=MaterialTheme.typography.titleSmall)
+                        (3..6).forEach { i->Field("Giudice di linea ${i-2}",config.officials.getOrElse(i){""},{config=config.copy(officials=config.officials.with(i,it))}) }
                     }
                 }
             }
         }
         Row(Modifier.padding(16.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-            if(section<3)OutlinedButton(onClick={section++},modifier=Modifier.weight(1f)){Text("Avanti")}
-            Button(onClick={try{val final=StaffReview.confirm(config);MatchEngine.validate(final);onSave(final)}catch(t:IllegalArgumentException){validationError=t.message}},modifier=Modifier.weight(1f).tourTarget("save-setup")){Text(if(original==null)"Salva gara" else "Salva modifiche")}
+            if(next!=null)Button(onClick=::suggested,modifier=Modifier.weight(1f).testTag("setup-next")){Text("Avanti")}
+            if(next==null)Button(onClick=::save,modifier=Modifier.weight(1f).tourTarget("save-setup")){Text(if(original==null)"Salva gara"else"Salva modifiche")}
+            else OutlinedButton(onClick=::save,modifier=Modifier.weight(1f).tourTarget("save-setup")){Text(if(original==null)"Salva gara"else"Salva modifiche")}
         }
     }
 }

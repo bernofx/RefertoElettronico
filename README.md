@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.7.2](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.7.2.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.8.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.8.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -12,7 +12,7 @@ App Android offline per assistere il segnapunti e produrre il **referto cartaceo
 4. Usa **+1 punto**. Il campo mostra la formazione, ruota la squadra che conquista il servizio ed evidenzia il battitore. Il campo è visto dal tavolo del segnapunti, con rete verticale e formazioni opposte. Il pallone identifica la battitrice e le rotazioni sono animate; Annulla anima lo spostamento inverso.
 5. Registra timeout, sostituzioni e ingressi/uscite del libero. I rimpiazzi del libero non consumano sostituzioni. Un messaggio segnala quando il libero deve uscire prima della prossima azione.
 6. **Annulla** ripristina immediatamente l'ultima operazione. Dal **Registro**, “Annulla da qui” permette di tornare indietro di più eventi, anche oltre la fine di un set. **Ripristina** recupera gli eventi; registrare un nuovo evento scarta il ramo annullato.
-7. Dopo il sorteggio raccogli le firme preliminari di capitane e allenatori presenti con **Raccogli / controlla firme**. In alternativa scegli esplicitamente di completarle sulla stampa. A gara terminata raccogli segnapunti, secondo arbitro se presente e primo arbitro nell’ordine proposto. Le firme aggiornate vengono inserite nel PDF; modifiche ai dati approvati richiedono di rifirmare. [Regole e funzionamento delle firme](docs/FIRME-REFERTO.md).
+7. Dopo il sorteggio raccogli le firme preliminari di capitane e allenatori presenti con **Raccogli / controlla firme**. In alternativa scegli esplicitamente di completarle sulla stampa. A gara terminata raccogli segnapunti, secondo arbitro se presente e primo arbitro nell’ordine proposto. Le firme raccolte vengono inserite nel PDF. Completare dati descrittivi conserva i tratti; variazioni a distinta o risultato sono segnalate senza cancellarli. [Regole e funzionamento delle firme](docs/FIRME-REFERTO.md).
 8. Conferma le formazioni a ogni set. Il primo servizio e i lati si alternano; nel quinto è previsto un nuovo sorteggio e il cambio campo a 8.
 9. In **Referto**, genera e salva/condividi il PDF. La prima pagina riproduce il foglio FIPAV; seguono registro e osservazioni completi. Le firme raccolte nell’app compaiono nei campi previsti; gli spazi mancanti restano da completare sulla stampa. Una gara non conclusa produce un PDF esplicitamente provvisorio.
 
@@ -90,6 +90,6 @@ La versione **0.6.7** aggiunge **Correggi dati e rose** nella preparazione del p
 Nella **0.6.7** la preparazione delle formazioni mantiene leggibili rete, zone e numeri anche per squadre bianche o con colori chiari: i colori restano quelli scelti, mentre testo e tratti usano un contrasto adeguato e i numeri trascinabili hanno un bordo. La pagina iniziale mostra le gare come schede con fascia colorata, raggruppate per data e ordinate per ora: campo, squadre su righe separate, categoria, numero gara e stato. In corso vengono mostrati punti e numero del set, a gara terminata i set vinti. Il cestino mantiene la conferma. La categoria è un’etichetta descrittiva e non modifica il regolamento.
 
 
-La versione **0.7.2** permette di completare i nominativi degli ufficiali senza invalidare le firme preliminari delle squadre. Il nome mancante di arbitro o segnapunti si può inserire direttamente nel pannello di approvazione. Per le firme raccolte con le versioni precedenti è disponibile un recupero verificato, quando il vecchio riferimento conferma che sono stati soltanto completati campi degli ufficiali originariamente vuoti. Vengono conservati tratti e data della firma. Restano la firma in orizzontale e il pallino che segue il contatto. [Regole, correzioni e recupero delle firme](docs/FIRME-REFERTO.md).
+La versione **0.8.0** guida la preparazione in quattro sezioni con stato di completamento e prossimo dato suggerito. I campi secondari sono raccolti in pannelli espandibili. Completare luogo o palestra conserva le firme; modifiche sportive vengono segnalate mantenendo il tratto. Le firme nel PDF usano più spazio, mentre i nomi della panchina destra rimangono fuori dalla colonna dei ruoli. [Firme e correzioni](docs/FIRME-REFERTO.md) · [Guida aggiornata](docs/GUIDA-E-TUTORIAL.md).
 
 Per chi modifica l’app: aggiornare `AppGuide.steps` e `updatedFor` quando cambiano sostanzialmente i flussi; incrementare `AppGuide.revision` per riproporre una volta i contenuti aggiornati. Le patch estetiche non devono riattivare il tutorial.

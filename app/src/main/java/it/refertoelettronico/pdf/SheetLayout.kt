@@ -170,7 +170,7 @@ object SheetLayout {
             config.teams[team].players.filter { it.libero }.forEachIndexed { i,p ->
                 cell(x+2,568f+i*13f,18,11,p.number,6f,true);cell(x+25,568f+i*13f,101,11,p.name,6f)
             }
-            config.teams[team].staff.take(5).forEachIndexed { i,name ->cell(x+7,608f+i*13.15f,if(side==0)107 else 112,10,name,6f) }
+            config.teams[team].staff.take(5).forEachIndexed { i,name ->cell(if(side==0)x+7 else 1070f,608f+i*13.15f,if(side==0)107 else 114,10,name,6f) }
         }
         // The summary stays in A:B order; printed parentheses and h/min labels remain visible.
         cell(685,530,88,14,config.teams[teamA].name,6f);cell(820,530,96,14,config.teams[teamB].name,6f)
@@ -231,7 +231,7 @@ object SheetLayout {
         }
         SignatureRole.entries.forEach { role ->
             Signatures.current(journal,role)?.let { signature->
-                val box=SignatureGeometry.cell(role)
+                val box=SignatureGeometry.cell(role,signature)
                 marks+=Mark("signature",box.left,box.top,cell=box,signature=signature)
             }
         }
@@ -258,8 +258,8 @@ object SheetLayout {
         appendix += "FIRME DEL REFERTO"
         Signatures.required(config,true).plus(Signatures.required(config,false)).forEach { role->
             val signature=Signatures.current(journal,role)
-            appendix+=if(signature!=null)"${role.label}: ${signature.signer} - raccolta il ${java.time.Instant.ofEpochMilli(signature.signedAt).atZone(java.time.ZoneId.of("Europe/Rome")).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))} - riferimento dati ${signature.contentHash}"
-                else "${role.label}: ${if(journal.signatures.orEmpty().any{it.role==role.name})"DA RIFIRMARE - dati modificati" else "NON RACCOLTA IN APP - spazio da completare sulla stampa"}"
+            appendix+=if(signature!=null)"${role.label}: ${signature.signer} - raccolta il ${java.time.Instant.ofEpochMilli(signature.signedAt).atZone(java.time.ZoneId.of("Europe/Rome")).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))} - riferimento originale ${signature.contentHash}${if(Signatures.needsReview(journal,role))" - CONTENUTO AGGIORNATO DOPO LA FIRMA, TRATTO CONSERVATO"else""}"
+                else "${role.label}: ${if(journal.signatures.orEmpty().any{it.role==role.name})"FIRMA CONSERVATA IN ARCHIVIO - verificare firmatario e fase" else "NON RACCOLTA IN APP - spazio da completare sulla stampa"}"
         }
         appendix += "Firme tracciate sul dispositivo e riprodotte nel modello; non firme digitali qualificate. Consegna secondo le indicazioni dell'arbitro e del Comitato."
         appendix += "FIPAV: firme preliminari dopo il sorteggio; a fine gara segnapunti, 2° arbitro se presente, 1° arbitro. I capitani non firmano a fine gara."

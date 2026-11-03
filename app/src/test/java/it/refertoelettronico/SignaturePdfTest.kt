@@ -21,7 +21,7 @@ import java.io.File
 @Config(sdk=[35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SignaturePdfTest {
-    @Test fun actualPdfContainsVectorInkOnlyInsideSignatureFieldsAndOmitsStaleApprovals() {
+    @Test fun actualPdfFitsLargerInkAndPreservesSignaturesAfterCorrections() {
         val context=ApplicationProvider.getApplicationContext<android.content.Context>();PDFBoxResourceLoader.init(context)
         val signed=GuideExample.journal(11)
         val roles=Signatures.required(signed.config,true)+Signatures.required(signed.config,false)
@@ -51,13 +51,17 @@ class SignaturePdfTest {
         }
         // Printed role and signature-column headings remain unchanged.
         for(x in 514..660)for(y in 632+48..646+48)assertEquals(blankImage.getPixel(x,y),image.getPixel(x,y))
+        for((left,right) in listOf(928 to 952,1058 to 1083)) {
+            for(x in left..right)for(y in 687+48..691+48)assertEquals(blankImage.getPixel(x,y),image.getPixel(x,y))
+            for(x in left..right)for(y in 707+48..711+48)assertEquals(blankImage.getPixel(x,y),image.getPixel(x,y))
+        }
         val stale=MatchEngine.add(signed,Event(Kind.NOTE,text="Risultato ricontrollato"))
         val staleMarks=SheetLayout.build(stale).first().marks.filter{it.type=="signature"}
-        assertEquals(4,staleMarks.size)
-        assertTrue(staleMarks.all{SignatureRole.valueOf(it.signature!!.role).preliminary})
+        assertEquals(marks.size,staleMarks.size)
+        assertTrue(Signatures.needsReview(stale,SignatureRole.FIRST_REFEREE))
         val dir=File("build/outputs/verification").apply{mkdirs()}
-        signedPdf.copyTo(File(dir,"referto-firme-0.7.0.pdf"),overwrite=true)
-        File(dir,"referto-firme-0.7.0.png").outputStream().use{image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
+        signedPdf.copyTo(File(dir,"referto-firme-0.8.0.pdf"),overwrite=true)
+        File(dir,"referto-firme-0.8.0.png").outputStream().use{image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}
         image.recycle();blankImage.recycle()
     }
 }

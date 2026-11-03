@@ -3,23 +3,32 @@ package it.refertoelettronico.pdf
 import it.refertoelettronico.model.*
 import kotlin.math.min
 
-/** Only writable spaces in the unchanged FIPAV template. Team columns are home/away, with A/B filled after the toss. */
+/** Use the writable row, preserving its printed caption and the autograph's proportions. */
 object SignatureGeometry {
-    fun cell(role:SignatureRole):TextCell = when(role) {
-        SignatureRole.CAPTAIN_HOME->TextCell(932f,693f,1052f,704f)
-        SignatureRole.COACH_HOME->TextCell(932f,713f,1052f,724f)
-        SignatureRole.CAPTAIN_AWAY->TextCell(1062f,693f,1182f,704f)
-        SignatureRole.COACH_AWAY->TextCell(1062f,713f,1182f,724f)
-        SignatureRole.FIRST_REFEREE->TextCell(517f,649f,659f,658f)
-        SignatureRole.SECOND_REFEREE->TextCell(517f,662.15f,659f,671.15f)
-        SignatureRole.SCORER->TextCell(517f,675.3f,659f,684.3f)
+    private const val padding=.35f
+    fun cell(role:SignatureRole,signature:MatchSignature?=null):TextCell {
+        val areas=when(role) {
+            SignatureRole.CAPTAIN_HOME->listOf(TextCell(931f,692f,1053f,704f),TextCell(954f,687.5f,1053f,704f))
+            SignatureRole.COACH_HOME->listOf(TextCell(931f,712f,1053f,723.5f),TextCell(954f,707f,1053f,723.5f))
+            SignatureRole.CAPTAIN_AWAY->listOf(TextCell(1061f,692f,1184f,704f),TextCell(1085f,687.5f,1184f,704f))
+            SignatureRole.COACH_AWAY->listOf(TextCell(1061f,712f,1184f,723.5f),TextCell(1085f,707f,1184f,723.5f))
+            SignatureRole.FIRST_REFEREE->listOf(TextCell(516f,647f,660f,658f))
+            SignatureRole.SECOND_REFEREE->listOf(TextCell(516f,660f,660f,671.5f))
+            SignatureRole.SCORER->listOf(TextCell(516f,673.5f,660f,684f))
+        }
+        if(signature==null)return areas.first()
+        val bounds=bounds(signature)
+        return areas.maxBy{min((it.width-2*padding)/bounds[2],(it.height-2*padding)/bounds[3])}
+    }
+    private fun bounds(record:MatchSignature):FloatArray {
+        val points=record.strokes.flatten()
+        val left=points.minOf{it.x}*record.aspectRatio;val top=points.minOf{it.y}
+        return floatArrayOf(left,top,((points.maxOf{it.x}-points.minOf{it.x})*record.aspectRatio).coerceAtLeast(.0001f),
+            (points.maxOf{it.y}-top).coerceAtLeast(.0001f))
     }
     fun fit(record:MatchSignature,cell:TextCell):List<List<SignaturePoint>> {
-        val all=record.strokes.flatten()
-        val left=all.minOf{it.x}*record.aspectRatio;val top=all.minOf{it.y}
-        val width=((all.maxOf{it.x}-all.minOf{it.x})*record.aspectRatio).coerceAtLeast(.0001f)
-        val height=(all.maxOf{it.y}-top).coerceAtLeast(.0001f)
-        val scale=min((cell.width-2f)/width,(cell.height-2f)/height)
+        val (left,top,width,height)=bounds(record)
+        val scale=min((cell.width-2*padding)/width,(cell.height-2*padding)/height)
         val x=cell.left+(cell.width-width*scale)/2;val y=cell.top+(cell.height-height*scale)/2
         return record.strokes.map{stroke->stroke.map{p->SignaturePoint(x+(p.x*record.aspectRatio-left)*scale,y+(p.y-top)*scale)}}
     }

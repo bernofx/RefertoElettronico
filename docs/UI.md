@@ -80,3 +80,14 @@ Il primo contatto disegna subito; il tratto non dipende dalla soglia di trascina
 ## Completamento nominativi e recupero · 0.7.2
 
 Il pannello di approvazione offre Nome e cognome e Salva nominativo per primo arbitro e segnapunti mancanti. Le firme preliminari delle squadre restano valide dopo il completamento degli ufficiali. Per vecchie firme non aggiornate compare Recupera firme preliminari: la verifica lavora in background e indica quante firme originali sono state recuperate; se mancano riscontri non viene ricreata alcuna firma.
+
+
+## Preparazione e correzioni · 0.8.0
+
+La preparazione mostra quattro passi sempre visibili, con numero o spunta di completamento e conteggio complessivo. Il prossimo dato mancante è evidenziato; Completa e Avanti raggiungono la relativa sezione, scorrono al campo e gli danno il focus. Tornando dagli ufficiali a un luogo dimenticato si conserva il lavoro già svolto. Il salvataggio di una bozza giocabile rimane disponibile anche con dati descrittivi incompleti.
+
+All’inizio sono mostrati numero, data/ora, località e palestra. Campionato/regolamento e note sono espandibili. Negli ufficiali sono in primo piano arbitro e segnapunti; città, assistenza e giudici di linea rimangono negli altri dati. I nominativi del segnapunti provenienti da incarichi confermati sono riconosciuti nel completamento.
+
+Le firme sono raccolte storiche: correzioni descrittive non le cancellano, modifiche a distinta o risultato mostrano una segnalazione lasciando il tratto. Le firme della 0.7.x rimaste in archivio tornano visibili per lo stesso firmatario senza recupero manuale.
+
+[Preparazione con prossimo passo suggerito](ui/preparazione-prossimo-passo-0.8.0.png) · [Dati completati](ui/preparazione-0.8.0.png) · [Referto con firme ingrandite](ui/referto-firme-0.8.0.png). Anteprime ottenute dalle schermate e dal generatore PDF reali con dati fittizi.

@@ -66,16 +66,13 @@ class SignatureUiTest {
         assertTrue(Signatures.missing(journal,true).isEmpty())
         compose.onNodeWithTag("sign-SCORER").performScrollTo().assertIsEnabled()
     }
-    @Test fun legacyRecoveryIsAvailableAfterTheMatchAndPreservesOriginalInk() {
+    @Test fun legacyInkIsAvailableAfterTheMatchWithoutAnyRecoveryAction() {
         val original=LegacySignatureFixtures.preliminary()
-        var journal by mutableStateOf(original.copy(events=GuideExample.journal(10).events,
-            config=original.config.copy(officials=original.config.officials.with(0,"Arbitra di prova"))))
-        compose.setContent{VolleyTheme{SignatureWorkflow(journal,false,onUpdate={journal=it;true},onClose={})}}
-        compose.onNodeWithTag("recover-preliminary-signatures").performScrollTo().performClick()
-        compose.waitUntil(10_000){Signatures.missing(journal,true).isEmpty()}
-        compose.onNodeWithTag("signature-recovery-result").assertTextEquals("Recuperate 4 firme preliminari, conservando tratti e data originali.")
+        val journal=original.copy(events=GuideExample.journal(10).events,config=original.config.copy(location="Luogo completato"))
+        compose.setContent{VolleyTheme{SignatureWorkflow(journal,false,onUpdate={true},onClose={})}}
+        compose.onNodeWithTag("recover-preliminary-signatures").assertDoesNotExist()
+        assertTrue(Signatures.missing(journal,true).isEmpty())
         assertEquals(original.signatures!!.map{it.strokes},journal.signatures!!.map{it.strokes})
-        assertEquals(original.signatures!!.map{it.signedAt},journal.signatures!!.map{it.signedAt})
     }
     @Test fun finalOrderIsEnforcedAndPreliminarySignaturesRemainUntouched() {
         var journal by mutableStateOf(GuideExample.journal(10))

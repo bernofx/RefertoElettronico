@@ -17,7 +17,7 @@ import it.refertoelettronico.ocr.Camp3Section
 import java.util.UUID
 
 @Composable
-fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)->Unit) {
+fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)->Unit,nameModifier:Modifier=Modifier,rosterModifier:Modifier=Modifier) {
     val members=remember(team){Rosters.members(team)}
     var query by remember(index){mutableStateOf("")}
     val issues=RosterReview.issues(team)
@@ -35,7 +35,7 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
     if(importSection!=null)Camp3ImportDialog(team.name,onDismiss={importSection=null},
         onApply={onChange(Rosters.importedPlayers(team,it));importSection=null;saved=false},section=importSection!!,
         onStaff={changes->onChange(team.copy(staff=List(5){changes[it] ?: team.staff.getOrElse(it){""}}));importSection=null;details=true})
-    Field("Denominazione squadra",team.name,{onChange(team.copy(name=it))})
+    Field("Denominazione squadra",team.name,{onChange(team.copy(name=it))},nameModifier)
     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
         FilledTonalButton(enabled=!locked,onClick={load=true},modifier=Modifier.weight(1f)){ActionLabel("Carica rosa",UiSymbol.PEOPLE)}
         TextButton(onClick={save=true},modifier=Modifier.weight(1f)){ActionLabel("Salva rosa",UiSymbol.SAVE)}
@@ -43,7 +43,7 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
     }
     if(colors)TeamColorPicker(team,index,onChange)
     if(saved)Text("Rosa salvata sul dispositivo",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary)
-    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+    Row(rosterModifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
         Text("Presenti ${team.players.size}/${RosterReview.MATCH_LIMIT} · Rosa ${members.size}",Modifier.weight(1f).padding(top=12.dp).testTag("attendance-count"),fontWeight=FontWeight.Bold)
         Box {
             TextButton(onClick={photos=true}){ActionLabel("Foto",UiSymbol.CAMERA)}

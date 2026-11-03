@@ -1,6 +1,6 @@
 # Tutorial e guida nell’app
 
-Dalla **0.6.9** il tutorial usa le schermate reali; la **0.7.0** aggiunge i passaggi delle firme: un velo scuro lascia scoperto il controllo spiegato e il riquadro in sovraimpressione descrive l’operazione. Il bersaglio segue il layout effettivo e viene portato in vista scorrendo la pagina, senza coordinate fisse.
+Dalla **0.6.9** il tutorial usa le schermate reali; la **0.8.0** introduce preparazione guidata e conservazione delle firme: un velo scuro lascia scoperto il controllo spiegato e il riquadro in sovraimpressione descrive l’operazione. Il bersaglio segue il layout effettivo e viene portato in vista scorrendo la pagina, senza coordinate fisse.
 
 Il percorso comprende preparazione e presenti, sorteggio, tagliando 4–3–2 / 5–6–1, punti e rotazioni, timeout, cambi, ingressi e uscite del libero, Annulla/Ripristina, Registro, osservazioni, sanzioni e altre decisioni arbitrali, firme preliminari e approvazione finale. Avanti mostra gli effetti su una gara dimostrativa. Alla fine il generatore reale produce il PDF cartaceo classico FIPAV di una gara completata 3–0 con dati e firme fittizi e ne mostra l’anteprima effettiva.
 
@@ -26,7 +26,9 @@ Le immagini in `docs/ui` sono rendering Android con Robolectric native graphics,
 
 ## Anteprime verificate
 
-- [Campo e rotazione](ui/tutorial-0.7.0-campo.png)
-- [Modulo del libero](ui/tutorial-0.7.0-libero.png)
-- [Anteprima PDF nel tutorial](ui/tutorial-0.7.0-pdf.png)
-- [PDF completo dell’esercitazione](../downloads/RefertoVolley-tutorial-0.7.0.pdf)
+- [Campo e rotazione](ui/tutorial-0.8.0-campo.png)
+- [Modulo del libero](ui/tutorial-0.8.0-libero.png)
+- [Anteprima PDF nel tutorial](ui/tutorial-0.8.0-pdf.png)
+- [PDF completo dell’esercitazione](../downloads/RefertoVolley-tutorial-0.8.0.pdf)
+
+La revisione 4 spiega i quattro passi di preparazione, il prossimo dato da completare e la conservazione delle firme dopo le correzioni. Le variazioni sportive vengono segnalate senza cancellare i tratti; le correzioni descrittive non richiedono nuove firme.

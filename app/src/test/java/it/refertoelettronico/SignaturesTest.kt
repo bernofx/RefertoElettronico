@@ -8,7 +8,7 @@ import org.junit.Test
 import java.nio.file.Files
 
 class SignaturesTest {
-    private val ink=listOf(listOf(SignaturePoint(.1f,.5f),SignaturePoint(.3f,.1f),SignaturePoint(.45f,.8f),SignaturePoint(.9f,.3f)))
+    private val ink=LegacySignatureFixtures.ink
     private val toss=Demo.start(1_000_000).copy(server=1,left=1)
     private fun pre():Journal {
         var j=Journal(config=Demo.config().copy(officials=Demo.config().officials.with(1,"Secondo arbitro di prova")))
@@ -27,106 +27,88 @@ class SignaturesTest {
         assertEquals(listOf(SignatureRole.SCORER,SignatureRole.FIRST_REFEREE),Signatures.required(config,false))
         assertFalse(Signatures.required(config,false).any{it.team>=0})
     }
-    @Test fun preliminarySignaturesSurviveRalliesButNotRosterOrTossChanges() {
-        val j=pre();assertTrue(Signatures.missing(j,true).isEmpty())
+    @Test fun descriptiveMatchEditsPreserveEverySignatureWithoutReviewWarnings() {
+        val j=signed()
+        val updated=Signatures.withConfig(j,j.config.copy(location="Località completata",venue="Palestra corretta",date="03/11/2026",scheduledTime="20:30",
+            competition="U14F",phase="Girone A",matchNumber="00042",season="2026/2027",initialObservations="Nota amministrativa",fallbackReason="Portale indisponibile",
+            officialCities=List(7){"Como"},refereeAttendant="Addetto di prova"))
+        assertEquals(j.signatures,updated.signatures)
+        SignatureRole.entries.forEach { role->assertNotNull(Signatures.current(updated,role));assertFalse(Signatures.needsReview(updated,role))}
+    }
+    @Test fun rosterOrTossEditsKeepInkAndFlagOnlyRelevantContent() {
+        val j=pre()
         val started=MatchEngine.add(j,toss)
-        val point=MatchEngine.add(started,Event(Kind.POINT,team=1))
-        assertTrue(Signatures.missing(point,true).isEmpty())
-        assertEquals(4,Signatures.missing(j,true,toss.copy(left=0)).size)
-        val changed=j.copy(config=j.config.copy(teams=j.config.teams.with(0,j.config.teams[0].copy(name="Altra squadra"))))
-        assertEquals(2,Signatures.missing(changed,true).size)
-        assertThrows(IllegalArgumentException::class.java){Signatures.capture(started,SignatureRole.CAPTAIN_HOME,ink,3f,toss)}
-    }
-    @Test fun displayColourAndLibraryCandidatesDoNotInvalidateSignedData() {
-        val j=pre();val changed=j.copy(config=j.config.copy(teams=j.config.teams.map{it.copy(colorKey="white",historicalRoster=true,roster=listOf(RosterMember("candidate",Player(99,"Assente"),false)))}))
+        assertFalse(Signatures.needsReview(MatchEngine.add(started,Event(Kind.POINT,team=1)),SignatureRole.CAPTAIN_HOME))
+        val team=j.config.teams[0].copy(players=j.config.teams[0].players.map{if(it.number==2)it.copy(name="Nome corretto")else it})
+        val changed=Signatures.withConfig(j,j.config.copy(teams=j.config.teams.with(0,team)))
         assertTrue(Signatures.missing(changed,true).isEmpty())
+        assertEquals(j.signatures,changed.signatures)
+        assertTrue(Signatures.needsReview(changed,SignatureRole.CAPTAIN_HOME));assertTrue(Signatures.needsReview(changed,SignatureRole.COACH_HOME))
+        assertFalse(Signatures.needsReview(changed,SignatureRole.CAPTAIN_AWAY))
+        assertTrue(Signatures.needsReview(j,SignatureRole.CAPTAIN_AWAY,toss.copy(left=0)))
     }
-    @Test fun finalSignaturesRequireFinishedMatchAndScorerSecondFirstOrder() {
+    @Test fun displayColourAndLibraryCandidatesDoNotChangeApprovalContent() {
+        val j=pre();val changed=Signatures.withConfig(j,j.config.copy(teams=j.config.teams.map{it.copy(colorKey="white",historicalRoster=true,roster=listOf(RosterMember("candidate",Player(99,"Assente"),false)))}))
+        assertTrue(Signatures.missing(changed,true).isEmpty());assertFalse(Signatures.needsReview(changed,SignatureRole.CAPTAIN_HOME))
+    }
+    @Test fun finalCaptureRequiresFinishedMatchAndScorerSecondFirstOrder() {
         assertThrows(IllegalArgumentException::class.java){Signatures.capture(pre(),SignatureRole.SCORER,ink,3f)}
         val j=finished()
         assertThrows(IllegalArgumentException::class.java){Signatures.capture(j,SignatureRole.FIRST_REFEREE,ink,3f)}
-        val withScorer=Signatures.capture(j,SignatureRole.SCORER,ink,3f)
-        assertThrows(IllegalArgumentException::class.java){Signatures.capture(withScorer,SignatureRole.FIRST_REFEREE,ink,3f)}
+        val scorer=Signatures.capture(j,SignatureRole.SCORER,ink,3f)
+        assertThrows(IllegalArgumentException::class.java){Signatures.capture(scorer,SignatureRole.FIRST_REFEREE,ink,3f)}
         assertTrue(Signatures.missing(signed(),false).isEmpty())
     }
-    @Test fun resultCorrectionOrPriorSignatureRemovalInvalidatesApproval() {
-        val j=signed()
+    @Test fun correctionsRetainFinalInkAndExposeReviewWithoutClearingIt() {
+        val j=signed();val corrected=MatchEngine.add(j,Event(Kind.NOTE,text="Correzione dell’arbitro"))
+        assertEquals(j.signatures,corrected.signatures);assertTrue(Signatures.missing(corrected,false).isEmpty())
+        Signatures.required(j.config,false).forEach{assertTrue(Signatures.needsReview(corrected,it))}
         assertEquals(3,Signatures.missing(MatchEngine.undo(j),false).size)
-        assertEquals(3,Signatures.missing(MatchEngine.add(j,Event(Kind.NOTE,text="Correzione comunicata dall’arbitro")),false).size)
-        assertEquals(3,Signatures.missing(Signatures.remove(j,SignatureRole.SCORER),false).size)
-        assertEquals(3,Signatures.missing(Signatures.remove(j,SignatureRole.CAPTAIN_HOME),false).size)
-        assertTrue(Signatures.missing(j,true).isEmpty())
+        val restored=MatchEngine.redo(MatchEngine.undo(j))
+        assertTrue(Signatures.missing(restored,false).isEmpty());assertFalse(Signatures.needsReview(restored,SignatureRole.FIRST_REFEREE))
+        assertEquals(1,Signatures.missing(Signatures.remove(j,SignatureRole.SCORER),false).size)
+        assertTrue(Signatures.needsReview(Signatures.remove(j,SignatureRole.SCORER),SignatureRole.FIRST_REFEREE))
     }
-    @Test fun changedPreliminaryTossInvalidatesOtherSignaturesBeforeFirstSet() {
-        val j=pre();val changed=Signatures.capture(j,SignatureRole.CAPTAIN_HOME,ink,3f,toss.copy(left=0))
-        assertNotNull(Signatures.current(changed,SignatureRole.CAPTAIN_HOME))
-        assertEquals(3,Signatures.missing(changed,true).size)
+    @Test fun changingAnActualSignerRequiresOnlyThatActorsNewSignature() {
+        val j=signed();val changed=Signatures.withConfig(j,j.config.copy(officials=j.config.officials.with(0,"Altra arbitra")))
+        assertNull(Signatures.current(changed,SignatureRole.FIRST_REFEREE))
+        assertEquals(j.signatures,changed.signatures)
+        assertNotNull(Signatures.current(changed,SignatureRole.SCORER));assertNotNull(Signatures.current(changed,SignatureRole.SECOND_REFEREE))
+        assertFalse(Signatures.needsReview(changed,SignatureRole.SCORER))
     }
-    @Test fun archivesPreserveInkAndLegacyArchivesWithoutSignaturesStillLoad() {
+    @Test fun archivesPreserveInkAndOlderUnsignedArchivesStillLoad() {
         val store=MatchStore(Files.createTempDirectory("signed-match").toFile());val j=signed()
-        val id=store.create(j);assertEquals(j,store.load(id));assertEquals(j,store.decode(store.encode(j)))
-        val old=store.decode(store.encode(Journal(config=Demo.config())))
-        assertTrue(old.signatures.isNullOrEmpty());assertEquals(4,Signatures.missing(old,true).size)
+        assertEquals(j,store.load(store.create(j)));assertEquals(j,store.decode(store.encode(j)))
+        assertTrue(store.decode(store.encode(Journal(config=Demo.config()))).signatures.isNullOrEmpty())
     }
-    @Test fun addingRefereeAfterTheMatchPreservesPreliminarySignaturesAndAllowsApproval() {
-        var j=Journal(config=Demo.config().copy(officials=Demo.config().officials.with(0,"")))
-        Signatures.required(j.config,true).forEach{j=Signatures.capture(j,it,ink,3f,Demo.start())}
-        j=j.copy(events=GuideExample.journal(10).events)
-        val original=j.signatures
-        j=Signatures.withConfig(j,j.config.copy(officials=j.config.officials.with(0,"Arbitra di prova"),officialCities=j.config.officialCities.with(0,"Como")))
-        assertEquals(original,j.signatures);assertTrue(Signatures.missing(j,true).isEmpty())
-        Signatures.required(j.config,false).forEach{j=Signatures.capture(j,it,ink,3f)}
-        assertTrue(Signatures.missing(j,false).isEmpty())
-    }
-    @Test fun officialAndAdministrativeNotesDoNotAffectPreliminaryTeamApproval() {
-        val j=pre()
-        val changed=j.copy(config=j.config.copy(officials=j.config.officials.with(0,"Nuovo arbitro"),
-            officialCities=List(7){"Città aggiornata"},refereeAttendant="Addetto di prova",
-            initialObservations="Nota amministrativa",fallbackReason="Portale indisponibile"))
-        assertTrue(Signatures.missing(changed,true).isEmpty())
-        val roster=changed.config.teams[0].copy(players=changed.config.teams[0].players.map{if(it.number==2)it.copy(name="Nome corretto")else it})
-        assertEquals(listOf(SignatureRole.CAPTAIN_HOME,SignatureRole.COACH_HOME),
-            Signatures.missing(changed.copy(config=changed.config.copy(teams=changed.config.teams.with(0,roster))),true))
-    }
-    @Test fun validLegacySignaturesUpgradeBeforeUnrelatedOfficialEdit() {
-        val j=LegacySignatureFixtures.preliminary().copy(events=GuideExample.journal(10).events)
-        assertTrue(Signatures.missing(j,true).isEmpty())
-        val next=Signatures.withConfig(j,j.config.copy(officials=j.config.officials.with(0,"Arbitra di prova")))
-        assertTrue(Signatures.missing(next,true).isEmpty())
-        assertTrue(next.signatures!!.all{it.bindingVersion==2})
-        assertEquals(j.signatures!!.map{it.signedAt to it.strokes},next.signatures!!.map{it.signedAt to it.strokes})
-    }
-    @Test fun existingInvalidLegacySignaturesRecoverOnlyAfterOriginalHashVerification() {
+    @Test fun existingLegacyInkReturnsWithoutRecoveryEvenIfLocationWasAlreadyCompleted() {
         val original=LegacySignatureFixtures.preliminary()
-        val broken=original.copy(events=GuideExample.journal(10).events,config=original.config.copy(
-            officials=original.config.officials.with(0,"Arbitra di prova"),officialCities=original.config.officialCities.with(0,"Como")))
-        assertEquals(4,Signatures.missing(broken,true).size)
-        assertTrue(Signatures.hasLegacyPreliminariesToRecover(broken))
-        val recovered=Signatures.recoverLegacyPreliminaries(broken)
-        assertTrue(Signatures.missing(recovered,true).isEmpty())
-        assertEquals(original.signatures!!.map{it.signer to it.signedAt},recovered.signatures!!.map{it.signer to it.signedAt})
-        assertEquals(original.signatures!!.map{it.strokes},recovered.signatures!!.map{it.strokes})
-        val store=MatchStore(Files.createTempDirectory("recovered-signatures").toFile())
-        assertEquals(recovered,store.decode(store.encode(recovered)))
-        assertEquals(4,it.refertoelettronico.pdf.SheetLayout.build(recovered).first().marks.count{it.type=="signature"})
+        val edited=original.copy(events=GuideExample.journal(10).events,config=original.config.copy(location="Località nuova"))
+        assertTrue(Signatures.missing(edited,true).isEmpty());assertEquals(original.signatures,edited.signatures)
+        assertTrue(Signatures.needsReview(edited,SignatureRole.CAPTAIN_HOME))
+        assertEquals(4,it.refertoelettronico.pdf.SheetLayout.build(edited).first().marks.count{it.type=="signature"})
     }
-    @Test fun legacyRecoveryDoesNotRevalidateChangedTeamsOrToss() {
-        val j=LegacySignatureFixtures.preliminary()
-        val changed=j.copy(config=j.config.copy(officials=j.config.officials.with(0,"Arbitra di prova"),
-            teams=j.config.teams.with(0,j.config.teams[0].copy(name="Squadra modificata"))))
-        assertEquals(changed,Signatures.recoverLegacyPreliminaries(changed))
-        val toss=changed.copy(config=j.config.copy(officials=j.config.officials.with(0,"Arbitra di prova")),events=listOf(Demo.start().copy(left=1)))
-        assertEquals(toss,Signatures.recoverLegacyPreliminaries(toss))
+    @Test fun verifiedLegacySignaturesAcquireReviewBaselineBeforeDescriptiveEdit() {
+        val j=LegacySignatureFixtures.preliminary().copy(events=GuideExample.journal(10).events)
+        val next=Signatures.withConfig(j,j.config.copy(location="Luogo completato",venue="Campo aggiornato",officials=j.config.officials.with(0,"Arbitra di prova")))
+        assertTrue(Signatures.missing(next,true).isEmpty());assertFalse(Signatures.needsReview(next,SignatureRole.CAPTAIN_HOME))
+        assertEquals(j.signatures!!.map{it.contentHash to it.signedAt},next.signatures!!.map{it.contentHash to it.signedAt})
+        assertEquals(j.signatures!!.map{it.strokes},next.signatures!!.map{it.strokes})
     }
-    @Test fun unchangedLegacyApprovalsAndColourOnlyEditsRemainValidWithoutMigration() {
-        var j=LegacySignatureFixtures.preliminary(Demo.config()).copy(events=GuideExample.journal(10).events)
-        Signatures.required(j.config,false).forEach{j=Signatures.capture(j,it,ink,3f)}
-        val store=MatchStore(Files.createTempDirectory("legacy-approvals").toFile())
-        val decoded=store.decode(store.encode(j))
-        assertTrue(Signatures.missing(decoded,false).isEmpty())
-        val next=Signatures.withConfig(decoded,decoded.config.copy(teams=decoded.config.teams.map{it.copy(colorKey="white")}))
-        assertEquals(j.signatures,next.signatures)
-        assertTrue(Signatures.missing(next,false).isEmpty())
+    @Test fun legacyFinalSignaturesRemainUsableAcrossAdministrativeCorrections() {
+        val j=LegacySignatureFixtures.fullySigned(GuideExample.journal(10).events)
+        assertFalse(Signatures.needsReview(j,SignatureRole.FIRST_REFEREE))
+        val next=Signatures.withConfig(j,j.config.copy(location="Luogo completato",venue="Palestra aggiornata"))
+        assertTrue(Signatures.missing(next,false).isEmpty());assertFalse(Signatures.needsReview(next,SignatureRole.FIRST_REFEREE))
+        assertEquals(j.signatures!!.map{it.signedAt to it.contentHash},next.signatures!!.map{it.signedAt to it.contentHash})
+    }
+    @Test fun version072FinalApprovalsSurviveCompletingAnOriginallyBlankPlace() {
+        val j=LegacySignatureFixtures.fullySigned(GuideExample.journal(10).events,Demo.config().copy(location=""),2)
+        assertFalse(Signatures.needsReview(j,SignatureRole.FIRST_REFEREE))
+        val updated=Signatures.withConfig(j,j.config.copy(location="Como"))
+        assertTrue(Signatures.missing(updated,true).isEmpty());assertTrue(Signatures.missing(updated,false).isEmpty())
+        assertEquals(j.signatures!!.map{it.strokes to it.signedAt},updated.signatures!!.map{it.strokes to it.signedAt})
+        assertFalse(Signatures.needsReview(updated,SignatureRole.FIRST_REFEREE))
     }
     @Test fun rejectEmptyDotsOversizedAndNonFiniteInk() {
         val j=Journal(config=Demo.config())
