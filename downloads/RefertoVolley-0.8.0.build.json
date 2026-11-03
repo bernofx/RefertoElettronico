@@ -1,0 +1,28 @@
+{
+  "source_commit": "3887ed0035b16366c7530e7cb41df7e1017e264b",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.8.0",
+  "version_code": 19,
+  "variant": "debug",
+  "apk_sha256": "b3c0ba8115db9b6387012ef39329e8d8189a191597dcc599a9b3cb23216238a3",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "guide_revision": 4,
+  "validation": {
+    "tests_passed": 192,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "final_ui_tests_repeated": 3,
+    "assembleDebug": "passed",
+    "testDebugUnitTest": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested"
+  },
+  "changes": [
+    "Four-step preparation with completion status, suggested next field and collapsible secondary details",
+    "Descriptive corrections retain preliminary and final signatures, including legacy archives; sporting changes display a review notice while preserving ink",
+    "Larger proportionate signatures in PDF with printed captions protected",
+    "Right bench staff names contained within their own column"
+  ]
+}
