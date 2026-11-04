@@ -1,0 +1,31 @@
+{
+  "source_commit": "53932eda66df928287345831acd5c63301951e93",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.9.2",
+  "version_code": 23,
+  "variant": "debug",
+  "apk_sha256": "f81b4c102852fd9f2e71e7102767067f1ceace3ed7bcc2161404181478bea9b9",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "guide_revision": 6,
+  "validation": {
+    "tests_passed": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "testDebugUnitTest": "passed; final targeted *Style*Test run",
+    "lintDebug": "passed",
+    "design_qa": "passed; native Android scope; source and runtime comparison images in docs/ui",
+    "physical_device": "not tested",
+    "earlier_targeted_tests_passed": 20,
+    "full_suite": "212 tests passed on 0.9.1; not repeated for visual-only 0.9.2"
+  },
+  "changes": [
+    "Green 12dp preparation progress independent of palette",
+    "Larger B/C typography and bold headings",
+    "Green completion checks on preparation headings",
+    "Gold captain and cyan libero legend; matching live libero badge",
+    "Stronger mesh net, tapes and colored posts in formation editor"
+  ]
+}
