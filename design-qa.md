@@ -22,3 +22,7 @@ Risultati: `docs/ui/B-{preparazione,modifica-dati,gara,referto}-0.9.1.png`, `doc
 - 212 test completi superati anche nel collaudo conclusivo della versione da pubblicare. Assembled APK e lint finali superati.
 
 I layout riprendono struttura, gerarchia e controlli dei riferimenti, con componenti nativi e contenuti regolamentari. Non sono dichiarati identici pixel per pixel: il concept non ha la viewport del telefono dell'utente e alcuni dati illustrati non sono regolamentari. Nessun P0/P1/P2 aperto nell'ambito verificato; prova sul telefono fisico ancora da effettuare.
+
+## Ritocchi 0.9.2
+
+Controllate le catture native B-preparazione, C-preparazione-set3 e C-preparazione-chiaro: avanzamento verde 12 dp, tipografia e grassetti aumentati, check verdi sulle intestazioni, legenda C oro/L azzurro, rete con maglie e bande più marcate e pali colorati. Sei slot e conferma visibili nei casi esistenti. Build/lint e 15 test stili finali superati; confronti aggiornati in docs/ui/confronto-B-0.9.2.png e confronto-C-0.9.2.png. Limite: rendering Android Robolectric, nessun telefono fisico.

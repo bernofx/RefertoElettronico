@@ -99,3 +99,14 @@ internal fun CompactTeamTabs(config:MatchConfig,selected:Int,tag:String,order:Li
         }
     }
 }
+
+/** State uses a coloured mark as well as an accessible description. */
+@Composable
+internal fun StyleStepMark(complete:Boolean,modifier:Modifier=Modifier.size(20.dp)) {
+    val green=styleSuccess()
+    Surface(shape=CircleShape,color=if(complete)green else Color.Transparent,
+        contentColor=teamInk(green),border=if(complete)null else BorderStroke(1.dp,MaterialTheme.colorScheme.outline),
+        modifier=modifier.semantics{stateDescription=if(complete)"Completato"else"Da completare"}) {
+        Box(contentAlignment=Alignment.Center){if(complete)UiGlyph(UiSymbol.CHECK,Modifier.size(13.dp))}
+    }
+}

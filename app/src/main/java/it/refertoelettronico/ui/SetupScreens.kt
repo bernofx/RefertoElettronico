@@ -225,7 +225,10 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         PreparationDashboard(config,rosterLocked,onSection={section=it;overview=false},onNext=::suggested,onSave=::save)
         if(!overview)ModalBottomSheet(onDismissRequest={overview=true;pendingTarget=null},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true)) {
             Column(Modifier.fillMaxWidth().heightIn(max=(LocalConfiguration.current.screenHeightDp*.88f).dp).navigationBarsPadding()) {
-                Text(steps[section].title,modifier=Modifier.padding(horizontal=16.dp,vertical=4.dp),style=MaterialTheme.typography.titleLarge)
+                Row(Modifier.padding(horizontal=16.dp,vertical=4.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
+                    StyleStepMark(steps[section].complete,Modifier.size(24.dp))
+                    Text(steps[section].title,style=MaterialTheme.typography.titleLarge)
+                }
                 if(section in 1..2)Box(Modifier.padding(horizontal=14.dp,vertical=5.dp)) {
                     CompactTeamTabs(config,section-1,"editor-team"){section=it+1;pendingTarget=null}
                 }

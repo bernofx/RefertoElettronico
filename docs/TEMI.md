@@ -1,4 +1,4 @@
-# Stile, temi e colori · 0.9.1
+# Stile, temi e colori · 0.9.2
 
 Apri **Stile · temi e colori** dalla pagina iniziale. Nei layout B e C, durante la gara usa **⋮ → Stile**; nel layout Classico resta disponibile anche **Dati → Stile**.
 
@@ -34,11 +34,15 @@ Nella preparazione del set, Dati/Rose/Ufficiali aprono le sezioni corrispondenti
 
 Il referto raggruppa firme prima/dopo la gara, evidenzia quelle mancanti o da verificare e mostra la pagina PDF effettiva. Nei layout B/C l'anteprima viene preparata all'apertura della schermata Referto; la consegna avviene dai comandi espliciti di salvataggio e condivisione.
 
+## Leggibilità nella 0.9.2
+
+La barra Stato di preparazione è verde e alta 12 dp, indipendentemente dalla palette. B e C usano testi più grandi e titoli in grassetto; le sezioni completate hanno check verdi circolari. Il tagliando mostra la legenda **C giallo = Capitano**, **L azzurro = Libero**. La rete ha maglie, bande e pali più evidenti nei temi chiaro e scuro.
+
 ## Confronti e schermate native
 
-- [Proposta B e implementazione](ui/confronto-B-0.9.1.png)
-- [Proposta C e implementazione](ui/confronto-C-0.9.1.png)
-- B: [preparazione](ui/B-preparazione-0.9.1.png), [dettagli nel pannello](ui/B-modifica-dati-0.9.1.png), [gara](ui/B-gara-0.9.1.png), [firme/referto](ui/B-referto-0.9.1.png).
-- C: [terzo set con nomi lunghi](ui/C-preparazione-set3-0.9.1.png), [primo set chiaro](ui/C-preparazione-chiaro-0.9.1.png), [gara](ui/C-gara-0.9.1.png), [firme/referto](ui/C-referto-0.9.1.png).
+- [Proposta B e implementazione](ui/confronto-B-0.9.2.png)
+- [Proposta C e implementazione](ui/confronto-C-0.9.2.png)
+- B: [preparazione](ui/B-preparazione-0.9.2.png), [dettagli nel pannello](ui/B-modifica-dati-0.9.2.png), [gara](ui/B-gara-0.9.2.png), [firme/referto](ui/B-referto-0.9.2.png).
+- C: [terzo set con nomi lunghi](ui/C-preparazione-set3-0.9.2.png), [primo set chiaro](ui/C-preparazione-chiaro-0.9.2.png), [gara](ui/C-gara-0.9.2.png), [firme/referto](ui/C-referto-0.9.2.png).
 
 Catture delle schermate Android effettive con dati fittizi e grafica nativa Robolectric. Dove è aperto un pannello, il compositore di test unisce la finestra Android del pannello a quella dell'Activity, con la sua trasparenza. I confronti ridimensionano le immagini alla stessa larghezza: il concept e il dispositivo di prova hanno proporzioni differenti. Le [proposte originali](design/PROPOSTE-UI.md) restano come riferimento; numeri e miniature PDF illustrativi non sostituiscono regolamento e modello FIPAV reali.

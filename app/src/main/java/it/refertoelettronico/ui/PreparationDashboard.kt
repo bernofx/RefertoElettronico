@@ -25,7 +25,7 @@ internal fun PreparationDashboard(config:MatchConfig,locked:Boolean,onSection:(I
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             CompactMatchSummary(config,overview=true)
             Text("Stato di preparazione · $ready di 4 completi",style=MaterialTheme.typography.titleSmall)
-            LinearProgressIndicator(progress={ready/4f},modifier=Modifier.fillMaxWidth())
+            LinearProgressIndicator(progress={ready/4f},modifier=Modifier.fillMaxWidth().height(12.dp).testTag("preparation-progress-bar"),color=styleSuccess(),trackColor=lerp(MaterialTheme.colorScheme.surface,styleSuccess(),.15f))
             DashboardRow("Dati gara",steps[0].summary,steps[0].complete,"dashboard-game"){onSection(0)}
             DashboardRow("Rose · ${config.teams[0].players.size} + ${config.teams[1].players.size} presenti",
                 if(steps[1].complete&&steps[2].complete)"${shortTeamName(config.teams[0].name)}: ${config.teams[0].players.size} · ${shortTeamName(config.teams[1].name)}: ${config.teams[1].players.size}"else"Controlla presenze, numeri e capitane",

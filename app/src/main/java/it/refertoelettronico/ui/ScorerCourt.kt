@@ -91,8 +91,8 @@ fun ScorerCourt(config: MatchConfig, state: MatchState, modifier: Modifier = Mod
                                             color=if(unavailable || libero)Color(0xFF183E48) else teamInk(config.teams[team].displayColor(team)))
                                     }
                                 }
-                                if(libero) Text("L",fontSize=9.sp,fontWeight=FontWeight.Bold,color=Color(0xFF743A78),
-                                    modifier=Modifier.align(Alignment.TopStart).background(Color.White,CircleShape).padding(horizontal=3.dp))
+                                if(libero) Text("L",fontSize=9.sp,fontWeight=FontWeight.Bold,color=if(compact)Color.Black else Color(0xFF743A78),
+                                    modifier=Modifier.align(Alignment.TopStart).background(if(compact)Color(0xFF55CFF2)else Color.White,CircleShape).padding(horizontal=3.dp))
                                 if(serves) VolleyballIcon(Modifier.align(Alignment.TopEnd).size(19.dp).testTag("service-ball")
                                     .semantics{contentDescription="Pallone da pallavolo: al servizio"})
                             }
