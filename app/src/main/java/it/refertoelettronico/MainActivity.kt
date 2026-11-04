@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
             }
             VolleyTheme(appearance) {
                 VolleyApp(incoming,onIncomingHandled={incoming=null},onAppearance={showAppearance=true})
-                if(showAppearance)AppearanceDialog(appearance,onChange={appearanceStore.save(it);appearance=it},onClose={showAppearance=false})
+                if(showAppearance)AppearanceDialog(appearance,onChange={val next=if(it.layout!=appearance.layout)appearanceStore.forLayout(it.layout)else it;appearanceStore.save(next);appearance=next},onClose={showAppearance=false})
             }
         }
     }
@@ -218,7 +218,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
                     4 -> GuideScreen(onStart={showGuide=true})
                     3 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                         Text("Dati e regolamento",style=MaterialTheme.typography.headlineSmall)
-                        OutlinedButton(onClick=onAppearance,modifier=Modifier.testTag("appearance-open")){ActionLabel("Aspetto e temi",UiSymbol.COLOR)}
+                        OutlinedButton(onClick=onAppearance,modifier=Modifier.testTag("appearance-open")){ActionLabel("Stile · temi e colori",UiSymbol.COLOR)}
                         Text("${j.config.teams[0].name} / ${j.config.teams[1].name}\n${j.config.date} · ${j.config.location}\n${j.config.format.label}")
                         Button(onClick=::editCurrentMatch){Text("Modifica i dati della gara")}
                         Text(if(j.events.isEmpty())"Distinte e formula sono modificabili prima dell'inizio." else "Distinte e formula sono bloccate dopo l'inizio. Per correggerle, annulla fino all'inizio dal Registro.")

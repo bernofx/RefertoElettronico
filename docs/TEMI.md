@@ -1,20 +1,31 @@
-# Aspetto e temi · 0.8.1
+# Stile, temi e colori · 0.9.0
 
-Apri **Aspetto e temi** dalla pagina iniziale oppure dalla scheda **Dati** della gara. La scelta si applica immediatamente e viene conservata sul dispositivo.
+Apri **Stile · temi e colori** dalla pagina iniziale oppure dalla scheda **Dati** della gara.
 
-| Proposta | Palette | Modalità |
-| --- | --- | --- |
-| [A](ui/tema-A-0.8.1.png) | Salvia | Chiaro |
-| [B](ui/tema-B-0.8.1.png) | Blu sport | Chiaro |
-| [C](ui/tema-C-0.8.1.png) | Lavanda | Chiaro |
-| [D](ui/tema-D-0.8.1.png) | Salvia | Scuro |
-| [E](ui/tema-E-0.8.1.png) | Blu sport | Scuro |
-| [F](ui/tema-F-0.8.1.png) | Lavanda | Scuro |
+## Disposizione
 
-![Sei proposte sulle schermate Android effettive](ui/temi-0.8.1.png)
+- **B · Cruscotto gara**: panoramica della preparazione con stato dei dati, rose, ufficiali e passaggio alle formazioni. Tocca una scheda per modificarla; Riepilogo preparazione riporta alla panoramica senza perdere le modifiche. In gara rimangono visibili punteggi, campo e contatori per squadra.
+- **C · Campo al centro**: campo più ampio e barra comandi fissa sotto la zona scorrevole. Seleziona la squadra, poi Timeout, Cambio o Libero. I moduli si aprono dal basso; i vincoli e la conferma Registra restano gli stessi.
+- **Classico**: disposizione precedente, conservata inizialmente per gli aggiornamenti.
 
-Puoi scegliere **Chiaro**, **Scuro** oppure **Come il telefono** per ciascuna palette. L'ultima opzione segue l'impostazione di Android, anche quando cambia mentre l'app è aperta. Per gli aggiornamenti rimane inizialmente selezionato Salvia chiaro, il tema precedente: nessun cambio imposto.
+Il tagliando continua a mostrare 4–3–2 sopra e 5–6–1 sotto, con numeri trascinabili. La formazione iniziale esclude il libero. Il campo della gara è visto dal tavolo del segnapunti; punti e selettori seguono il lato effettivo delle squadre.
 
-I colori delle squadre restano quelli selezionati per la gara. PDF e area di raccolta della firma mantengono il fondo bianco. Il cambio del tema non modifica gara, cronologia o firme.
+## Tema e colori separati per stile
 
-Nella preparazione la barra superiore usa i pulsanti Indietro, Guida e Gare; il controllo audio rimane disponibile nelle altre schermate. Le schede Gara, Casa, Ospiti, Ufficiali mostrano separatamente numero o spunta di completamento. I nomi completi delle sezioni sono disponibili al lettore di schermo e nel riepilogo del prossimo passo.
+Ogni disposizione conserva **le proprie preferenze**. Per esempio puoi scegliere B scuro verde/arancio e C chiaro blu/oro: tornando a B ritrovi la prima combinazione.
+
+1. Scegli la disposizione.
+2. Seleziona **Chiaro**, **Scuro** o **Come il telefono**.
+3. Scegli una palette di partenza: Salvia, Blu sport o Lavanda.
+4. Apri **Personalizza i colori principali** per scegliere separatamente colore principale e accento: blu, verde, viola, petrolio, rosa, arancio, oro o grafite.
+5. **Fatto** chiude il pannello; le scelte sono già salvate.
+
+Scegliere una nuova palette ripristina i suoi colori; puoi personalizzarli nuovamente. Sono disponibili anche il ripristino dei soli colori e la modalità automatica che segue Android. Il testo sui colori personalizzati adotta un contrasto leggibile.
+
+Le preferenze sono del dispositivo. Il cambio di stile non modifica gare, cronologia, formazioni, colori delle squadre, firme o PDF.
+
+## Anteprime native
+
+[Preparazione B chiara](ui/stile-B-preparazione-chiaro.png) · [B scuro nella gara reale](ui/stile-B-gara-scuro.png) · [C chiaro nella gara reale](ui/stile-C-gara-chiaro.png) · [Pannello operazioni C](ui/stile-C-pannello.png).
+
+Le schermate derivano dal codice Android con dati fittizi e grafica nativa Robolectric. Non sono le immagini concettuali. Le [proposte originali](design/PROPOSTE-UI.md) restano consultabili come riferimento.

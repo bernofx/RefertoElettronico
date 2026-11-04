@@ -18,9 +18,10 @@ import it.refertoelettronico.model.MatchConfig
 
 /** Home/away identity is stable even before the toss assigns A/B and after ends change. */
 @Composable
-fun TeamChoiceRow(config:MatchConfig,selected:Int,tag:String,details:List<String>?=null,onSelect:(Int)->Unit) {
+fun TeamChoiceRow(config:MatchConfig,selected:Int,tag:String,details:List<String>?=null,order:List<Int> = config.teams.indices.toList(),onSelect:(Int)->Unit) {
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).selectableGroup(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-        config.teams.forEachIndexed{t,team->
+        order.forEach{t->
+            val team=config.teams[t]
             val chosen=selected==t
             val accent=team.displayColor(t)
             val ink=if(chosen)teamInk(accent) else MaterialTheme.colorScheme.onSurface

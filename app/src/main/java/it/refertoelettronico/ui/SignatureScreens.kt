@@ -54,6 +54,26 @@ internal fun FinalSignatures(journal:Journal,onOpen:()->Unit) {
     val state=remember(journal){MatchEngine.replay(journal.config,journal.events)}
     val required=Signatures.required(journal.config,false)
     val missing=Signatures.missing(journal,false)
+    if(LocalAppearance.current.layout!=InterfaceStyle.CLASSIC) {
+        OutlinedCard(Modifier.fillMaxWidth().testTag("styled-signature-summary")) {
+            Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                Text("Firme e referto",style=MaterialTheme.typography.titleMedium)
+                val pre=Signatures.required(journal.config,true)
+                Text("Prima della gara · ${pre.size-Signatures.missing(journal,true).size}/${pre.size} raccolte",style=MaterialTheme.typography.bodyMedium)
+                HorizontalDivider()
+                Text("Fine gara",style=MaterialTheme.typography.titleSmall)
+                required.forEach{role->
+                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+                        Text(role.label,modifier=Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium)
+                        Text(if(Signatures.current(journal,role)!=null)"Raccolta"else"Da raccogliere",style=MaterialTheme.typography.labelMedium)
+                    }
+                }
+                if(!state.finished(journal.config))Text("Le firme finali si raccolgono dopo la conclusione.",style=MaterialTheme.typography.bodySmall)
+                Button(onClick=onOpen,modifier=Modifier.fillMaxWidth().tourTarget("final-signatures").testTag("final-signatures")){Text("Controlla e raccogli firme")}
+            }
+        }
+        return
+    }
     Card(Modifier.fillMaxWidth().tourTarget("final-signatures")) {
         Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
             Text("Firme del referto",style=MaterialTheme.typography.titleMedium)

@@ -74,11 +74,11 @@ fun GuideOverlay(onClose:()->Unit) {
                                 when(item.screen) {
                                     AppGuide.Screen.HOME->HomeScreen(emptyList(),{},{},{},{},{})
                                     AppGuide.Screen.DATA,AppGuide.Screen.ROSTER->MatchEditor(GuideExample.config,{},false,
-                                        initialSection=if(item.screen==AppGuide.Screen.ROSTER)1 else 0)
+                                        initialSection=if(item.screen==AppGuide.Screen.ROSTER)1 else 0,showDashboard=false)
                                     AppGuide.Screen.LINEUP->Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp)) {
                                         StartSetPanel(GuideExample.config,MatchEngine.initial(GuideExample.config),{},tutorialDefaults=Demo.start(),signatureJournal=journal,onCollectSignatures={})
                                     }
-                                    AppGuide.Screen.LIVE->LiveScreen(journal.config,state,journal.events.lastOrNull(),{},{},{},journal.events.isNotEmpty(),journal.redo.isNotEmpty(),{})
+                                    AppGuide.Screen.LIVE->LiveScreen(journal.config,state,journal.events.lastOrNull(),{},{},{},journal.events.isNotEmpty(),journal.redo.isNotEmpty(),{},actionTeam=1)
                                     AppGuide.Screen.HISTORY->HistoryScreen(journal,{},{})
                                     AppGuide.Screen.TIMEOUT,AppGuide.Screen.SUB,AppGuide.Screen.LIBERO,AppGuide.Screen.NOTE,AppGuide.Screen.SANCTION->
                                         OperationDialog(when(item.screen){AppGuide.Screen.TIMEOUT->"timeout";AppGuide.Screen.SUB->"sub";AppGuide.Screen.LIBERO->"libero";AppGuide.Screen.NOTE->"note";else->"sanction"},

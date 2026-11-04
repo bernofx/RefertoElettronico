@@ -47,7 +47,7 @@ fun ScorerCourt(config: MatchConfig, state: MatchState, modifier: Modifier = Mod
         }
         // Switching ends is a protocol change; never animate athletes through the net.
         key(set.number, left) {
-            BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1.9f).background(Color(0xFFDCE9E5), RoundedCornerShape(14.dp)).testTag("scorer-court")) {
+            BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(if(LocalAppearance.current.layout==InterfaceStyle.COURT)1.55f else 1.9f).background(Color(0xFFDCE9E5), RoundedCornerShape(14.dp)).testTag("scorer-court")) {
                 val density = LocalDensity.current
                 val w = constraints.maxWidth.toFloat()
                 val h = constraints.maxHeight.toFloat()

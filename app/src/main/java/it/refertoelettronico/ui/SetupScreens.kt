@@ -99,7 +99,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
             FilledTonalButton(onClick=onResume,modifier=Modifier.weight(1f)){Text("Riprendi preparazione")}
             if(onDiscardDraft!=null)TextButton(onClick=onDiscardDraft){Text("Scarta bozza")}
         }
-        OutlinedButton(onClick=onAppearance,modifier=Modifier.fillMaxWidth().testTag("appearance-open")){ActionLabel("Aspetto e temi",UiSymbol.COLOR)}
+        OutlinedButton(onClick=onAppearance,modifier=Modifier.fillMaxWidth().testTag("appearance-open")){ActionLabel("Stile · temi e colori",UiSymbol.COLOR)}
         FilledTonalButton(onClick=onDemo,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)) {ActionLabel("Prova con una gara dimostrativa",UiSymbol.COURT)}
         if(archives.isNotEmpty())Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             Text("Le tue gare",style=MaterialTheme.typography.titleLarge)
@@ -112,7 +112,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
 }
 
 @Composable
-fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Boolean,onDraftChange:(MatchConfig)->Unit={},initialSection:Int=0) {
+fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Boolean,onDraftChange:(MatchConfig)->Unit={},initialSection:Int=0,showDashboard:Boolean=true) {
     val initial=remember { original?.let{StaffReview.prepare(it)} ?: MatchConfig(teams=List(2){Team("",(1..6).map { Player(it,"",captain=it==1) })},
         date=LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))) }
     val configState=remember{mutableStateOf(initial)}
@@ -123,6 +123,8 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         override fun setValue(thisRef:Any?,property:kotlin.reflect.KProperty<*>,value:MatchConfig){configState.value=value;saveDraft(value)}
     }
     LaunchedEffect(Unit){saveDraft(config)}
+    val style=LocalAppearance.current.layout
+    var overview by remember(style){mutableStateOf(style==InterfaceStyle.DASHBOARD && initialSection==0 && showDashboard)}
     var section by remember { mutableIntStateOf(initialSection) }
     var validationError by remember{mutableStateOf<String?>(null)}
     var advanced by remember{mutableStateOf(false)}
@@ -138,7 +140,7 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
         val target=step.issues.first().target
         if(target in listOf("competition","season"))advanced=true
         if(target=="service")serviceDetails=true
-        section=step.index;pendingTarget=target
+        overview=false;section=step.index;pendingTarget=target
     }
     LaunchedEffect(section,pendingTarget) {
         val key=pendingTarget ?: return@LaunchedEffect
@@ -151,7 +153,13 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
     if(validationError!=null)AlertDialog(onDismissRequest={validationError=null},title={Text("Controlla la distinta")},text={Text(validationError!!)},confirmButton={TextButton(onClick={validationError=null}){Text("Correggi")}})
     val scroll=rememberScrollState()
     LaunchedEffect(section){scroll.scrollTo(0)}
+    if(overview) {
+        PreparationDashboard(config,rosterLocked,onSection={section=it;overview=false},onNext=::suggested,onSave=::save)
+        return
+    }
     Column(Modifier.fillMaxSize()) {
+        if(style==InterfaceStyle.DASHBOARD)TextButton(onClick={overview=true;pendingTarget=null},modifier=Modifier.testTag("setup-overview")){Text("Riepilogo preparazione")}
+
         Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),horizontalArrangement=Arrangement.SpaceBetween) {
             Text("Preparazione",style=MaterialTheme.typography.labelLarge)
             Text("${steps.count{it.complete}}/4 complete",style=MaterialTheme.typography.labelMedium,modifier=Modifier.testTag("setup-progress"))

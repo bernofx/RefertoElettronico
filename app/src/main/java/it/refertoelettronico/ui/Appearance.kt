@@ -3,6 +3,10 @@ package it.refertoelettronico.ui
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -17,7 +21,21 @@ enum class ThemeMode(val label:String) { LIGHT("Chiaro"), DARK("Scuro"), SYSTEM(
 enum class ThemePalette(val label:String,val description:String) {
     GREEN("Salvia", "Verde e superfici neutre"), BLUE("Blu sport", "Blu e accenti gialli"), VIOLET("Lavanda", "Viola e superfici morbide")
 }
-data class Appearance(val palette:ThemePalette=ThemePalette.GREEN,val mode:ThemeMode=ThemeMode.LIGHT) {
+enum class InterfaceStyle(val label:String,val description:String) {
+    CLASSIC("Classico", "La disposizione precedente"),
+    DASHBOARD("B · Cruscotto gara", "Riepilogo della preparazione, stati e contatori"),
+    COURT("C · Campo al centro", "Campo ampio e operazioni in pannelli dal basso")
+}
+enum class StyleColor(val label:String,val light:Long,val night:Long) {
+    BLUE("Blu",0xFF215CA4,0xFFA9C7FF),GREEN("Verde",0xFF126657,0xFF8AD6BC),
+    VIOLET("Viola",0xFF70479C,0xFFD2BCFF),TEAL("Petrolio",0xFF006777,0xFF76D5E8),
+    ROSE("Rosa",0xFF9C345D,0xFFFFB1CC),ORANGE("Arancio",0xFF944900,0xFFFFBA7A),
+    GOLD("Oro",0xFF735600,0xFFECC76B),GRAPHITE("Grafite",0xFF465465,0xFFB6C9E1);
+    fun color(dark:Boolean)=Color(if(dark)night else light)
+}
+val LocalAppearance=staticCompositionLocalOf{Appearance()}
+data class Appearance(val palette:ThemePalette=ThemePalette.GREEN,val mode:ThemeMode=ThemeMode.LIGHT,
+    val layout:InterfaceStyle=InterfaceStyle.CLASSIC,val primary:StyleColor?=null,val accent:StyleColor?=null) {
     fun dark(systemDark:Boolean)=mode==ThemeMode.DARK || (mode==ThemeMode.SYSTEM && systemDark)
     fun scheme(systemDark:Boolean):ColorScheme {
         val base=if(dark(systemDark)) darkColorScheme(
@@ -39,7 +57,7 @@ data class Appearance(val palette:ThemePalette=ThemePalette.GREEN,val mode:Theme
             surfaceContainer=Color(0xFFEEF3EF),surfaceContainerLow=Color(0xFFF6F9F6),
             surfaceContainerHigh=Color(0xFFE6EEE8),surfaceContainerHighest=Color(0xFFE0E9E2),
             outline=Color(0xFF75857B),outlineVariant=Color(0xFFD4DFD6))
-        return when(palette) {
+        val scheme=when(palette) {
             ThemePalette.GREEN->base
             ThemePalette.BLUE->if(dark(systemDark))base.copy(
                 primary=Color(0xFFA9C7FF),onPrimary=Color(0xFF002E65),primaryContainer=Color(0xFF204677),onPrimaryContainer=Color(0xFFD5E3FF),
@@ -64,21 +82,54 @@ data class Appearance(val palette:ThemePalette=ThemePalette.GREEN,val mode:Theme
                 surfaceContainerHigh=Color(0xFFEEE1F4),surfaceContainerHighest=Color(0xFFE7D8EE),outline=Color(0xFF8B7597),outlineVariant=Color(0xFFE0D0E8),
                 secondary=Color(0xFF924968),onSecondary=Color.White,secondaryContainer=Color(0xFFFFD9E6),onSecondaryContainer=Color(0xFF4F2236))
         }
+        val p=primary?.color(dark(systemDark))?:scheme.primary
+        val a=accent?.color(dark(systemDark))?:scheme.secondary
+        val pc=if(primary==null)scheme.primaryContainer else lerp(scheme.surface,p,if(dark(systemDark)).24f else .12f)
+        val ac=if(accent==null)scheme.secondaryContainer else lerp(scheme.surface,a,if(dark(systemDark)).24f else .14f)
+        return scheme.copy(primary=p,onPrimary=teamInk(p),primaryContainer=pc,onPrimaryContainer=teamInk(pc),
+            secondary=a,onSecondary=teamInk(a),secondaryContainer=ac,onSecondaryContainer=teamInk(ac),surfaceTint=p)
     }
 }
 class AppearanceStore(context:Context) {
     private val prefs=context.applicationContext.getSharedPreferences("appearance",Context.MODE_PRIVATE)
-    fun load()=Appearance(
-        ThemePalette.entries.firstOrNull{it.name==prefs.getString("palette",null)}?:ThemePalette.GREEN,
-        ThemeMode.entries.firstOrNull{it.name==prefs.getString("mode",null)}?:ThemeMode.LIGHT)
+    fun load():Appearance=forLayout(InterfaceStyle.entries.firstOrNull{it.name==prefs.getString("layout",null)}?:InterfaceStyle.CLASSIC)
+    fun forLayout(layout:InterfaceStyle):Appearance {
+        val prefix=if(layout==InterfaceStyle.CLASSIC)""else "${layout.name}."
+        val defaults=when(layout) {
+            InterfaceStyle.CLASSIC->Appearance()
+            InterfaceStyle.DASHBOARD->Appearance(ThemePalette.BLUE,ThemeMode.LIGHT,layout)
+            InterfaceStyle.COURT->Appearance(ThemePalette.BLUE,ThemeMode.DARK,layout)
+        }
+        return defaults.copy(
+            palette=ThemePalette.entries.firstOrNull{it.name==prefs.getString(prefix+"palette",null)}?:defaults.palette,
+            mode=ThemeMode.entries.firstOrNull{it.name==prefs.getString(prefix+"mode",null)}?:defaults.mode,
+            primary=StyleColor.entries.firstOrNull{it.name==prefs.getString(prefix+"primary",null)},
+            accent=StyleColor.entries.firstOrNull{it.name==prefs.getString(prefix+"accent",null)})
+    }
     fun save(value:Appearance) {
-        check(prefs.edit().putString("palette",value.palette.name).putString("mode",value.mode.name).commit()) {"Impossibile salvare il tema."}
+        val prefix=if(value.layout==InterfaceStyle.CLASSIC)""else "${value.layout.name}."
+        check(prefs.edit().putString("layout",value.layout.name).putString(prefix+"palette",value.palette.name)
+            .putString(prefix+"mode",value.mode.name).putString(prefix+"primary",value.primary?.name)
+            .putString(prefix+"accent",value.accent?.name).commit()) {"Impossibile salvare lo stile."}
     }
 }
+
 @Composable
 fun AppearanceDialog(value:Appearance,onChange:(Appearance)->Unit,onClose:()->Unit) {
-    AlertDialog(onDismissRequest=onClose,title={Text("Aspetto e temi")},
+    AlertDialog(onDismissRequest=onClose,title={Text("Stile")},
         text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            Text("Disposizione",style=MaterialTheme.typography.titleSmall)
+            listOf(InterfaceStyle.DASHBOARD,InterfaceStyle.COURT,InterfaceStyle.CLASSIC).forEach{layout->
+                OutlinedCard(onClick={onChange(value.copy(layout=layout))},modifier=Modifier.fillMaxWidth().testTag("style-layout-${layout.name}"),
+                    colors=CardDefaults.outlinedCardColors(containerColor=if(value.layout==layout)MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) {
+                    Row(Modifier.padding(10.dp),verticalAlignment=Alignment.CenterVertically) {
+                        RadioButton(selected=value.layout==layout,onClick=null)
+                        Column(Modifier.weight(1f)){Text(layout.label,style=MaterialTheme.typography.titleSmall);Text(layout.description,style=MaterialTheme.typography.bodySmall)}
+                    }
+                }
+            }
+            Text("Ogni stile conserva il proprio tema e i propri colori.",style=MaterialTheme.typography.bodySmall)
+            HorizontalDivider()
             Text("Luminosità",style=MaterialTheme.typography.titleSmall)
             ThemeMode.entries.forEach{mode->
                 TextButton(onClick={onChange(value.copy(mode=mode))},modifier=Modifier.fillMaxWidth().testTag("theme-mode-${mode.name}")) {
@@ -89,7 +140,7 @@ fun AppearanceDialog(value:Appearance,onChange:(Appearance)->Unit,onClose:()->Un
             Text("Palette",style=MaterialTheme.typography.titleSmall)
             ThemePalette.entries.forEach{palette->
                 val colors=Appearance(palette,value.mode).scheme(isSystemInDarkTheme())
-                OutlinedButton(onClick={onChange(value.copy(palette=palette))},modifier=Modifier.fillMaxWidth().testTag("theme-palette-${palette.name}"),
+                OutlinedButton(onClick={onChange(value.copy(palette=palette,primary=null,accent=null))},modifier=Modifier.fillMaxWidth().testTag("theme-palette-${palette.name}"),
                     colors=ButtonDefaults.outlinedButtonColors(containerColor=colors.surface,contentColor=colors.onSurface)) {
                     RadioButton(selected=value.palette==palette,onClick=null)
                     Spacer(Modifier.width(8.dp))
@@ -97,6 +148,26 @@ fun AppearanceDialog(value:Appearance,onChange:(Appearance)->Unit,onClose:()->Un
                     Surface(color=colors.primary,shape=MaterialTheme.shapes.small,modifier=Modifier.size(20.dp)){}
                 }
             }
+            var customize by remember{mutableStateOf(false)}
+            TextButton(onClick={customize=!customize},modifier=Modifier.testTag("style-customize")){Text("Personalizza i colori principali")}
+            if(customize) {
+                StyleColorPicker("Colore principale","primary",value.primary){onChange(value.copy(primary=it))}
+                StyleColorPicker("Colore di accento","accent",value.accent){onChange(value.copy(accent=it))}
+                TextButton(onClick={onChange(value.copy(primary=null,accent=null))}){Text("Ripristina colori della palette")}
+            }
             Text("Il tema non cambia i colori delle squadre o il PDF.",style=MaterialTheme.typography.bodySmall)
         }},confirmButton={TextButton(onClick=onClose){Text("Fatto")}})
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StyleColorPicker(label:String,tag:String,selected:StyleColor?,onSelect:(StyleColor)->Unit) {
+    Text(label,style=MaterialTheme.typography.titleSmall)
+    FlowRow(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+        StyleColor.entries.forEach{color->
+            FilterChip(selected=selected==color,onClick={onSelect(color)},label={Text(color.label)},
+                leadingIcon={Surface(color=color.color(false),shape=CircleShape,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outline),modifier=Modifier.size(14.dp)){}},
+                modifier=Modifier.heightIn(min=48.dp).testTag("style-$tag-${color.name}"))
+        }
+    }
 }

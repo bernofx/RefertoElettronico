@@ -22,11 +22,12 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Event)->Unit,onUndo:()->Unit,onRedo:()->Unit,
-               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit,onEditSetup:(()->Unit)?=null,journal:Journal?=null,onSignatures:((Journal)->Boolean)?=null,onFinalSignatures:(()->Unit)?=null) {
+               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit,onEditSetup:(()->Unit)?=null,journal:Journal?=null,onSignatures:((Journal)->Boolean)?=null,onFinalSignatures:(()->Unit)?=null,actionTeam:Int?=null) {
     var signatureStart by remember{mutableStateOf<Event?>(null)}
     var startAfterSigning by remember{mutableStateOf(false)}
     var operation by remember { mutableStateOf<String?>(null) }
-    var team by remember { mutableIntStateOf(0) }
+    var team by remember { mutableIntStateOf(actionTeam?:0) }
+    val style=LocalAppearance.current.layout
     val set=state.current
     val leftTeam=set?.let{CourtGeometry.leftTeam(it)} ?: 0
     val playing=set!=null && set.endedAt==null && !state.finished(config)
@@ -41,7 +42,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
                 val accent=config.teams[t].displayColor(t)
                 Surface(modifier=Modifier.weight(1f).testTag("point-card-$t"),shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surface) {
                     Column(Modifier.padding(horizontal=8.dp,vertical=6.dp),verticalArrangement=Arrangement.spacedBy(2.dp)) {
-                        Text("${if(t==0)"Casa"else"Ospiti"} · ${config.teams[t].name}",style=MaterialTheme.typography.labelMedium,maxLines=1,overflow=TextOverflow.Ellipsis)
+                        Text("${if(t==0)"Casa"else"Ospiti"} · ${config.teams[t].name}",style=MaterialTheme.typography.labelMedium,maxLines=if(style==InterfaceStyle.CLASSIC)1 else 2,overflow=TextOverflow.Ellipsis)
                         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                             Text(set.score[t].toString(),modifier=Modifier.testTag("score-$t"),fontSize=32.sp,lineHeight=36.sp,fontWeight=FontWeight.Bold)
                             Button(onClick={onEvent(Event(Kind.POINT,team=t))},enabled=problem==null,
@@ -77,7 +78,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
             if(set.changedEndsAt!=null)Text("Quinto set · cambio campo effettuato a ${scoreLabel(set.changedEndsAt)}",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall)
             val left=CourtGeometry.leftTeam(set)
             ScorerCourt(config,state,Modifier.tourTarget("court"))
-            BoxWithConstraints {
+            if(style!=InterfaceStyle.COURT)BoxWithConstraints {
                 val compact=maxWidth<650.dp
                 Row(horizontalArrangement=Arrangement.spacedBy(if(compact)8.dp else 14.dp)) {
                     listOf(left,1-left).forEach { t ->TeamActions(config,state,t,{action ->team=t;operation=action},Modifier.weight(1f),compact)}
@@ -91,6 +92,18 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
             OutlinedButton(onClick={operation="other"},modifier=Modifier.weight(1f).tourTarget("other")){Text("Altre operazioni")}
         }
         TextButton(onClick=onHistory,modifier=Modifier.fillMaxWidth()){Text("Apri registro · correggi più operazioni")}
+        }
+        if(style==InterfaceStyle.COURT && playing && set!=null) {
+            Surface(shape=MaterialTheme.shapes.large,color=MaterialTheme.colorScheme.surfaceContainerHigh,modifier=Modifier.testTag("court-command-dock")) {
+                Column(Modifier.padding(8.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+                    TeamChoiceRow(config,team,"dock-team",config.teams.indices.map{t->"TO ${set.timeouts.count{it.team==t}}/2 · Cambi ${set.countSubs(t)}/${config.maxSubstitutions}"},order=listOf(leftTeam,1-leftTeam)){team=it}
+                    Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                        listOf("timeout" to "Timeout","sub" to "Cambio","libero" to "Libero").forEach{(action,label)->
+                            FilledTonalButton(onClick={operation=action},modifier=Modifier.weight(1f).heightIn(min=48.dp).tourTarget("$action-$team").testTag("dock-$action"),contentPadding=PaddingValues(4.dp)){Text(label,style=MaterialTheme.typography.labelMedium)}
+                        }
+                    }
+                }
+            }
         }
     }
     val pending=signatureStart
@@ -260,10 +273,19 @@ fun HistoryScreen(journal:Journal,onUndoTo:(Int)->Unit,onRedo:()->Unit) {
 }
 
 /** The tour embeds the very same operation form in its own window, so spotlight bounds share a root. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OperationFrame(embedded:Boolean,onDismiss:()->Unit,title:@Composable ()->Unit,text:@Composable ()->Unit,
                            confirmButton:@Composable ()->Unit,dismissButton:@Composable ()->Unit) {
-    if(!embedded)AlertDialog(onDismissRequest=onDismiss,title=title,text=text,confirmButton=confirmButton,dismissButton=dismissButton)
+    if(!embedded && LocalAppearance.current.layout==InterfaceStyle.COURT) {
+        ModalBottomSheet(onDismissRequest=onDismiss,sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true)) {
+            Column(Modifier.fillMaxWidth().heightIn(max=(androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp*.82f).dp).padding(horizontal=20.dp).navigationBarsPadding(),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                title();Box(Modifier.weight(1f,fill=false)){text()}
+                Row(Modifier.align(Alignment.End).padding(bottom=12.dp)){dismissButton();confirmButton()}
+            }
+        }
+    }
+    else if(!embedded)AlertDialog(onDismissRequest=onDismiss,title=title,text=text,confirmButton=confirmButton,dismissButton=dismissButton)
     else Box(Modifier.fillMaxSize().padding(16.dp),contentAlignment=Alignment.Center) {
         Surface(shape=MaterialTheme.shapes.large,tonalElevation=6.dp) {
             Column(Modifier.widthIn(max=480.dp).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {

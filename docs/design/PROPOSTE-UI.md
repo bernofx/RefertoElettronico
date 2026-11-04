@@ -76,3 +76,7 @@ Vantaggio: ideale per concentrarsi sullo svolgimento della partita. Compromesso:
 Per le esigenze emerse, la combinazione più promettente è **B per la preparazione e C per la gara**. Lo stato complessivo riduce i dati dimenticati; durante il gioco il campo torna protagonista. A resta la scelta più semplice per un refertista occasionale.
 
 Prima di implementare: scegliere una direzione o una combinazione; poi rifinire in dettaglio rose/presenti, sorteggio, formazione e flusso delle firme. In questa fase il codice dell'app e l'APK non vengono modificati.
+
+## Implementazione 0.9.0
+
+B e C sono stati scelti come alternative selezionabili. Sono adattati ai controlli nativi Android e al regolamento effettivo dell’app; ogni disposizione conserva luminosità, palette e colori indipendenti. La skill Product Design è divenuta disponibile dopo la creazione dei concept ed è stata consultata per l’adattamento dei riferimenti selezionati. [Implementazione e uso](../TEMI.md).
