@@ -1,0 +1,31 @@
+{
+  "source_commit": "7a759348efcb3284c5d36c0325fdc9d9143b7f46",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.9.1",
+  "version_code": 22,
+  "variant": "debug",
+  "apk_sha256": "506e7417e825b5e15d6dd6cc8929b6aa2884d2ca599b3ff35ddb2eac41da5b52",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "guide_revision": 6,
+  "validation": {
+    "tests_passed": 212,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "assembleDebug": "passed",
+    "testDebugUnitTest": "passed",
+    "lintDebug": "passed",
+    "design_qa": "passed; native Android scope; source and runtime comparison images in docs/ui",
+    "physical_device": "not tested"
+  },
+  "changes": [
+    "Dedicated B and C match screens and compact app bar; navigation in overflow menu",
+    "B readiness dashboard with four states and focused editing sheets",
+    "C coach view with scalable jersey graphics, mesh net, 4-3-2 / 5-6-1 slots, available numbers and pinned confirmation",
+    "Per-team formation confirmation, previous-set copying, third-set long-name fixture and drag interactions verified",
+    "Distinct B scoreboard/counters/history and C central court/point controls",
+    "Real generated PDF preview and grouped signature states with missing/review indicators",
+    "Preserve separate style preferences, existing match data and signing certificate; restore timeout, side-change and early-end notices"
+  ]
+}
