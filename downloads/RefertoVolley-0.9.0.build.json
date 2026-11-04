@@ -1,0 +1,29 @@
+{
+  "source_commit": "70c1ceff55bb3ff1db818edebb840a26515be4ae",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.9.0",
+  "version_code": 21,
+  "variant": "debug",
+  "apk_sha256": "ebb6211f0066e22e59acd1de747cae3c7aa067389da158058077ce007b4edfd2",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "guide_revision": 5,
+  "validation": {
+    "regression_suite_tests_passed": 205,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "final_targeted_tests_passed": 9,
+    "assembleDebug": "passed",
+    "lintDebug": "passed",
+    "native_design_qa": "passed; design-qa.md",
+    "physical_device": "not tested"
+  },
+  "changes": [
+    "B dashboard preparation and C larger court with fixed command dock and bottom-sheet operations",
+    "Independent remembered light/dark/system mode, palette, primary and accent colors for each layout",
+    "Preserve existing classic layout preferences on upgrade",
+    "Real Activity integration verifies layout switching preserves entire match and all style profiles",
+    "Native signatures summary and tutorial revision 5 compatible with both layouts"
+  ]
+}
