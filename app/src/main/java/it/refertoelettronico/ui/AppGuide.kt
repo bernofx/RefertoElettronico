@@ -12,8 +12,8 @@ import androidx.compose.ui.unit.dp
 
 /** Update the shared walkthrough and increment revision when a substantial user flow changes. */
 object AppGuide {
-    const val revision=5
-    const val updatedFor="0.9.0"
+    const val revision=6
+    const val updatedFor="0.9.1"
     enum class Screen { HOME, DATA, ROSTER, LINEUP, LIVE, TIMEOUT, SUB, LIBERO, HISTORY, NOTE, SANCTION, PDF }
     data class Step(val title:String,val body:String,val tip:String,val screen:Screen,val target:String,val phase:Int=0)
     val steps=listOf(
@@ -21,14 +21,14 @@ object AppGuide {
         Step("Controlla i dati gara","La barra mostra le quattro sezioni e quelle già complete. Completa porta al prossimo dato mancante: numero, data, ora, località o palestra. Puoi importare i dati da VolleyAlerts.","In B il riepilogo mostra cosa manca: tocca una sezione per modificarla e torna al riepilogo. Nelle schede trovi squadre e ufficiali.",Screen.DATA,"match-data",0),
         Step("Spunta le presenti","Per ogni squadra seleziona chi partecipa oggi. Controlla numeri, capitana K e liberi L; la matita apre le correzioni.","Puoi riutilizzare una rosa salvata e cambiare solo le differenze, oppure importare i CAMP3. Verifica sempre il risultato OCR.",Screen.ROSTER,"presence",0),
         Step("Conferma dati e rose","Salva dopo aver controllato entrambe le squadre e lo staff. Passerai alla preparazione del primo set.","Prima di iniziare il primo set puoi tornare a Correggi dati e rose. La preparazione viene salvata come bozza.",Screen.ROSTER,"save-setup",0),
-        Step("Chi serve per primo?","Riporta la scelta comunicata dall’arbitro. Il colore, il nome completo e Casa/Ospiti distinguono le squadre.","Per il nostro esempio serve per prima Lago Volley.",Screen.LINEUP,"toss-serve",0),
+        Step("Chi serve per primo?","Apri Sorteggio e riporta la scelta comunicata dall’arbitro. Il colore e il nome distinguono le squadre.","Per il nostro esempio serve per prima Lago Volley.",Screen.LINEUP,"toss-serve",0),
         Step("Chi è a sinistra?","Guarda dal tavolo del segnapunti e indica la squadra inizialmente alla tua sinistra.","Nel primo set sarà A; l’altra sarà B. Non confondere questa vista con il tagliando delle formazioni.",Screen.LINEUP,"toss-left",0),
         Step("Riporta il tagliando","Le zone seguono il foglietto dell’allenatore: 4–3–2 davanti, 5–6–1 dietro, con la rete in alto.","Trascina i numeri della rosa negli slot, oppure tocca prima il numero e poi la zona. Un numero già in campo scambia posto. Ripeti per entrambe le squadre.",Screen.LINEUP,"lineup-grid",0),
         Step("Firme dopo il sorteggio","Prima del primo set raccogli sul dispositivo le firme di capitane e allenatori presenti. Il riquadro si apre in orizzontale: il pallino segue il dito o la penna mentre firmi. Conferma per tornare all’elenco.","Sono le firme preliminari richieste dal referto. Se verranno apposte sulla stampa, usa il comando esplicito per proseguire con gli spazi da completare.",Screen.LINEUP,"pre-signatures",0),
-        Step("Inizia il set","Dopo aver completato sorteggio e sei posizioni per squadra, conferma l’inizio.","Nel tutorial le formazioni sono già compilate: ora entriamo in una gara di esempio.",Screen.LINEUP,"start-set",0),
+        Step("Inizia il set","Conferma formazione passa all’altra squadra. Dopo sei posizioni per entrambe e il sorteggio completo, conferma e inizia il set.","Nel tutorial le formazioni sono già compilate: ora entriamo in una gara di esempio.",Screen.LINEUP,"start-set",0),
         Step("Assegna un punto","Premi +1 punto dalla parte di chi ha vinto l’azione. I pulsanti e i colori seguono il lato delle squadre in campo.","Con Avanti assegniamo un punto a Stella Como, che finora era in ricezione.",Screen.LIVE,"point-1",1),
         Step("Servizio e rotazione","Stella Como ora serve: osserva la rotazione e il pallone sulla battitrice. Il campo è visto dal tavolo del segnapunti.","Le rotazioni sono automatiche a ogni cambio di servizio. Non ruotare manualmente dopo un punto della squadra già al servizio.",Screen.LIVE,"court",2),
-        Step("Registra un timeout","Usa il Timeout della squadra che lo richiede. Il contatore mostra quelli già utilizzati nel set.","In C seleziona prima la squadra nella barra sotto il campo, poi Timeout: il modulo si apre dal basso. Per l’esempio scegli Stella Como.",Screen.LIVE,"timeout-1",2),
+        Step("Registra un timeout","Usa il Timeout della squadra che lo richiede. Il contatore mostra quelli già utilizzati nel set.","In C tocca il nome della squadra sopra il punteggio, poi Timeout: il modulo si apre dal basso. Per l’esempio scegli Stella Como.",Screen.LIVE,"timeout-1",2),
         Step("Conferma il timeout","Controlla squadra e punteggio, poi premi Registra. L’app conserva il punteggio della richiesta e mostra il conto alla rovescia.","Il timeout non cambia servizio né posizioni. Sono disponibili due timeout per set.",Screen.TIMEOUT,"operation-form",2),
         Step("Esegui una sostituzione","Apri Cambi per la squadra interessata. Il contatore indica le sostituzioni già registrate.","Distingui le sostituzioni ordinarie dai rimpiazzi del libero.",Screen.LIVE,"sub-1",3),
         Step("Scegli chi esce e chi entra","Nel modulo seleziona il numero che esce dal campo e quello che entra dalla panchina; controlla e registra.","L’app verifica i vincoli e memorizza il punteggio del cambio. Nell’esempio entra il numero 7.",Screen.SUB,"operation-form",3),

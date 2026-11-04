@@ -36,3 +36,5 @@ La revisione 4 spiega i quattro passi di preparazione, il prossimo dato da compl
 Nella **0.8.1** la voce **Aspetto e temi** si trova nella pagina iniziale e nella scheda Dati: tre palette con modalità chiara, scura o automatica. [Anteprime e istruzioni](TEMI.md). Le quattro schede di preparazione ora riportano Gara, Casa, Ospiti e Ufficiali.
 
 La **0.9.0**, revisione guida **5**, introduce B Cruscotto e C Campo al centro: la guida spiega accesso agli stili, riepilogo di preparazione e selezione della squadra nella barra di C. I bersagli del tutorial seguono i moduli effettivi nei due layout. [Scelta e personalizzazione](TEMI.md).
+
+La **0.9.1**, revisione **6**, aggiorna la preparazione con maglie, conferma per squadra, sorteggio compatto, menu ⋮ e scelta della squadra sopra il punteggio. La guida completa è verificata con B e C oltre al percorso Classico; il PDF mostrato è realmente generato.

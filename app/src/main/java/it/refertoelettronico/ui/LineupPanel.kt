@@ -37,7 +37,7 @@ fun assignLineup(lineup:List<Int>,zone:Int,number:Int):List<Int> {
 }
 
 @Composable
-fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tutorialDefaults:Event?=null,signatureJournal:Journal?=null,onCollectSignatures:((Event)->Unit)?=null,onBeforeStart:((Event)->Unit)?=null) {
+fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tutorialDefaults:Event?=null,signatureJournal:Journal?=null,onCollectSignatures:((Event)->Unit)?=null,onBeforeStart:((Event)->Unit)?=null,fillViewport:Boolean=false,onEditSection:((Int)->Unit)?=null) {
     val n=state.sets.size+1
     val deciding=MatchEngine.isDeciding(config,n)
     val eligible=config.teams.mapIndexed { t,team->team.players.filter {
@@ -51,6 +51,17 @@ fun StartSetPanel(config:MatchConfig,state:MatchState,onEvent:(Event)->Unit,tuto
     var left by rememberSaveable(n){mutableIntStateOf(tutorialDefaults?.left ?: signatureJournal?.openingToss?.left?.takeIf{n==1} ?: if(n>1 && !deciding)1-state.current!!.initialLeft else -1)}
     var team by rememberSaveable(n){mutableIntStateOf(0)}
     val complete=lineups.all{it.all{number->number>0} && it.distinct().size==6}
+    if(LocalAppearance.current.layout!=InterfaceStyle.CLASSIC) {
+        val previous=state.current?.initial?.get(team)
+        StyledSetPreparation(config,state,lineups,eligible,team,{team=it},
+            onAssign={zone,number->lineups=lineups.with(team,assignLineup(lineups[team],zone,number))},
+            onClear={lineups=lineups.with(team,List(6){0})},server,left,{server=it},{left=it},
+            onStart={(onBeforeStart?:onEvent)(Event(Kind.START_SET,lineups=lineups,server=server,left=left))},fillViewport=fillViewport,inlineToss=tutorialDefaults!=null,
+            onCopyPrevious=if(previous!=null&&previous.all{it in eligible[team]})({lineups=lineups.with(team,previous)})else null,
+            onEditSection=onEditSection,journal=signatureJournal,
+            onSignatures=onCollectSignatures?.let{collect->{collect(Event(Kind.START_SET,lineups=lineups,server=server,left=left))}})
+        return
+    }
     Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text("Formazioni · set $n",style=MaterialTheme.typography.titleLarge)
         if(n==1 || deciding)Surface(shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surface) {

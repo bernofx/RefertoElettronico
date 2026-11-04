@@ -49,9 +49,9 @@ class StyleUiTest {
         compose.onNodeWithTag("dock-timeout").performClick()
         compose.onNodeWithText("Registra",substring=false).performClick()
         assertEquals(Kind.TIMEOUT,journal.events.last().kind);assertEquals(1,journal.events.last().team)
-        compose.onNodeWithText("↶ Annulla",substring=false).performClick()
+        compose.onNodeWithTag("styled-undo").performClick()
         compose.runOnIdle{appearance=appearance.copy(layout=InterfaceStyle.DASHBOARD)}
-        compose.onNodeWithText("↶ Annulla",substring=false).performClick()
+        compose.onNodeWithTag("styled-undo").performClick()
         assertEquals(initial.events,journal.events)
         assertEquals(MatchEngine.replay(initial.config,initial.events).current!!.court,MatchEngine.replay(journal.config,journal.events).current!!.court)
     }
@@ -59,7 +59,7 @@ class StyleUiTest {
     @Test fun guideCanReachRosterAndOperationsInCourtStyle()=walkGuide(InterfaceStyle.COURT)
     private fun walkGuide(layout:InterfaceStyle) {
         compose.setContent{VolleyTheme(Appearance(layout=layout)){GuideOverlay({})}}
-        repeat(20){index->
+        repeat(AppGuide.steps.size){index->
             compose.onNodeWithTag("guide-step-title").assertTextEquals(AppGuide.steps[index].title)
             compose.waitUntil(15000){compose.onAllNodesWithTag("guide-next").fetchSemanticsNodes().any{!it.config.contains(androidx.compose.ui.semantics.SemanticsProperties.Disabled)}}
             compose.onNodeWithTag("guide-next").performClick()

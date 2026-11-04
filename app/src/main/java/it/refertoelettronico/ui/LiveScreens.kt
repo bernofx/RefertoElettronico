@@ -22,7 +22,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Event)->Unit,onUndo:()->Unit,onRedo:()->Unit,
-               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit,onEditSetup:(()->Unit)?=null,journal:Journal?=null,onSignatures:((Journal)->Boolean)?=null,onFinalSignatures:(()->Unit)?=null,actionTeam:Int?=null) {
+               canUndo:Boolean,canRedo:Boolean,onHistory:()->Unit,onEditSetup:(()->Unit)?=null,journal:Journal?=null,onSignatures:((Journal)->Boolean)?=null,onFinalSignatures:(()->Unit)?=null,actionTeam:Int?=null,onEditSection:((Int)->Unit)?=null) {
     var signatureStart by remember{mutableStateOf<Event?>(null)}
     var startAfterSigning by remember{mutableStateOf(false)}
     var operation by remember { mutableStateOf<String?>(null) }
@@ -32,6 +32,17 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
     val leftTeam=set?.let{CourtGeometry.leftTeam(it)} ?: 0
     val playing=set!=null && set.endedAt==null && !state.finished(config)
     val problem=if(playing)MatchEngine.rallyProblem(state) else null
+    if(style!=InterfaceStyle.CLASSIC) {
+        StyledMatchBody(config,state,lastEvent,journal,team,{team=it},onEvent,onUndo,onRedo,canUndo,canRedo,
+            onAction={action,t->team=t;operation=action},onHistory,onFinalSignatures) {
+            StartSetPanel(config,state,onEvent,signatureJournal=journal,fillViewport=true,onEditSection=onEditSection,
+                onCollectSignatures=if(onSignatures!=null)({event->startAfterSigning=false;signatureStart=event})else null,
+                onBeforeStart=if(onSignatures!=null&&state.sets.isEmpty())({event->
+                    if(journal!=null&&Signatures.missing(journal,true,event).isEmpty())onEvent(event)
+                    else{startAfterSigning=true;signatureStart=event}
+                })else null)
+        }
+    } else {
     Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=4.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             Text("Set ${set?.number ?: 1} · ${state.wins(leftTeam)}–${state.wins(1-leftTeam)} set",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
@@ -106,6 +117,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
             }
         }
     }
+    }
     val pending=signatureStart
     if(pending!=null && journal!=null && onSignatures!=null)SignatureWorkflow(journal,true,pending,onSignatures,
         onClose={signatureStart=null},onStart=if(startAfterSigning)({signatureStart=null;onEvent(pending.copy(at=System.currentTimeMillis()))})else null)
@@ -124,7 +136,7 @@ fun LiveScreen(config:MatchConfig,state:MatchState,lastEvent:Event?,onEvent:(Eve
 }
 
 @Composable
-private fun TimeoutClock(event:Event?,config:MatchConfig) {
+internal fun TimeoutClock(event:Event?,config:MatchConfig) {
     if(event?.kind!=Kind.TIMEOUT)return
     var remaining by remember(event) { mutableIntStateOf(((event.at+30_000-System.currentTimeMillis())/1000).toInt().coerceIn(0,30)) }
     LaunchedEffect(event) { while(remaining>0){delay(1000);remaining=((event.at+30_000-System.currentTimeMillis()+999)/1000).toInt().coerceIn(0,30)} }

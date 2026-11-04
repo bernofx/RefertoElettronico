@@ -29,12 +29,17 @@ class StyleActivityTest {
             path.outputStream().use{bitmap.compress(Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
         }
     }
+    private fun go(label:String) {
+        if(compose.onAllNodesWithTag("style-menu").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithTag("style-menu").performClick();compose.onNodeWithTag("style-menu-$label").performClick()
+        } else compose.onNodeWithText(label,substring=false).performClick()
+    }
     @Test fun realSettingsSwitchStylesAndRestoreEachProfileWithoutChangingTheOpenMatch() {
         compose.onNodeWithTag("guide-close").performClick()
         compose.onNodeWithText("Prova con una gara dimostrativa").performScrollTo().performClick()
         compose.onNodeWithTag("point-button-1").performClick()
         val store=MatchStore(File(compose.activity.filesDir,"matches"));val id=store.list().single().first;val match=store.load(id)
-        compose.onNodeWithText("Dati",substring=false).performClick()
+        go("Dati")
         compose.onNodeWithTag("appearance-open").performScrollTo().performClick()
         compose.onNodeWithTag("style-layout-DASHBOARD").performScrollTo().performClick()
         compose.onNodeWithTag("theme-mode-DARK").performScrollTo().performClick()
@@ -44,14 +49,14 @@ class StyleActivityTest {
         compose.onNodeWithTag("style-layout-COURT").performScrollTo().performClick()
         compose.onNodeWithTag("theme-mode-LIGHT").performScrollTo().performClick()
         compose.onNodeWithText("Fatto",substring=false).performClick()
-        compose.onNodeWithText("Gara",substring=false).performClick()
+        go("Gara")
         compose.onNodeWithTag("court-command-dock").assertIsDisplayed()
         capture("stile-C-activity-chiaro")
         assertEquals(match,store.load(id))
         compose.onNodeWithTag("dock-timeout").performClick()
         capture("stile-C-activity-pannello")
         compose.onNodeWithText("Chiudi",substring=false).performClick()
-        compose.onNodeWithText("Dati",substring=false).performClick()
+        go("Dati")
         compose.onNodeWithTag("appearance-open").performScrollTo().performClick()
         compose.onNodeWithTag("style-layout-DASHBOARD").performScrollTo().performClick()
         compose.onNodeWithText("Fatto",substring=false).performClick()
@@ -59,7 +64,7 @@ class StyleActivityTest {
         assertEquals(InterfaceStyle.DASHBOARD,prefs.layout);assertEquals(ThemeMode.DARK,prefs.mode)
         assertEquals(StyleColor.GREEN,prefs.primary);assertEquals(StyleColor.ORANGE,prefs.accent)
         assertEquals(ThemeMode.LIGHT,AppearanceStore(compose.activity).forLayout(InterfaceStyle.COURT).mode)
-        compose.onNodeWithText("Gara",substring=false).performClick()
+        go("Gara")
         capture("stile-B-activity-scuro")
         assertEquals(match,store.load(id))
         compose.activityRule.scenario.recreate()

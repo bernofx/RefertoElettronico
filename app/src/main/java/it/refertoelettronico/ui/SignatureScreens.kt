@@ -88,11 +88,14 @@ internal fun FinalSignatures(journal:Journal,onOpen:()->Unit) {
 /** Saved signatures always belong to a named actor and a specific match snapshot. */
 @Composable
 internal fun SignatureWorkflow(journal:Journal,preliminary:Boolean,toss:Event?=Signatures.toss(journal),
-    onUpdate:(Journal)->Boolean,onClose:()->Unit,onStart:(()->Unit)?=null) {
+    onUpdate:(Journal)->Boolean,onClose:()->Unit,onStart:(()->Unit)?=null,initialRole:SignatureRole?=null) {
     val roles=Signatures.required(journal.config,preliminary)
     val missing=Signatures.missing(journal,preliminary,toss)
     val finished=remember(journal){MatchEngine.replay(journal.config,journal.events).finished(journal.config)}
-    var capturing by remember { mutableStateOf<SignatureRole?>(null) }
+    var capturing by remember {
+        mutableStateOf(initialRole?.takeIf{role->role in roles && Signatures.current(journal,role,toss)==null && Signatures.signer(journal.config,role).isNotBlank() &&
+            (if(preliminary)Signatures.start(journal)==null else finished && roles.take(roles.indexOf(role)).all{Signatures.current(journal,it,toss)!=null})})
+    }
     var error by remember { mutableStateOf<String?>(null) }
     Dialog(onDismissRequest=onClose,properties=DialogProperties(usePlatformDefaultWidth=false)) {
         Surface(Modifier.fillMaxWidth(.96f).widthIn(max=600.dp).fillMaxHeight(.94f),shape=MaterialTheme.shapes.large) {

@@ -1,11 +1,11 @@
-# Stile, temi e colori · 0.9.0
+# Stile, temi e colori · 0.9.1
 
-Apri **Stile · temi e colori** dalla pagina iniziale oppure dalla scheda **Dati** della gara.
+Apri **Stile · temi e colori** dalla pagina iniziale. Nei layout B e C, durante la gara usa **⋮ → Stile**; nel layout Classico resta disponibile anche **Dati → Stile**.
 
 ## Disposizione
 
-- **B · Cruscotto gara**: panoramica della preparazione con stato dei dati, rose, ufficiali e passaggio alle formazioni. Tocca una scheda per modificarla; Riepilogo preparazione riporta alla panoramica senza perdere le modifiche. In gara rimangono visibili punteggi, campo e contatori per squadra.
-- **C · Campo al centro**: campo più ampio e barra comandi fissa sotto la zona scorrevole. Seleziona la squadra, poi Timeout, Cambio o Libero. I moduli si aprono dal basso; i vincoli e la conferma Registra restano gli stessi.
+- **B · Cruscotto gara**: panoramica della preparazione con stato dei dati, rose, ufficiali e passaggio alle formazioni. Tocca una scheda: i dettagli si aprono in un pannello dal basso. **Fatto · riepilogo** conserva la bozza e torna alla panoramica; il pulsante principale applica i dati alla gara. In gara rimangono visibili punteggi, campo e contatori per squadra.
+- **C · Campo al centro**: campo più ampio e barra comandi fissa sotto la zona scorrevole. Tocca il nome della squadra sopra il punteggio, poi Timeout, Sostituzione o Libero. I moduli si aprono dal basso; i vincoli e la conferma Registra restano gli stessi.
 - **Classico**: disposizione precedente, conservata inizialmente per gli aggiornamenti.
 
 Il tagliando continua a mostrare 4–3–2 sopra e 5–6–1 sotto, con numeri trascinabili. La formazione iniziale esclude il libero. Il campo della gara è visto dal tavolo del segnapunti; punti e selettori seguono il lato effettivo delle squadre.
@@ -24,8 +24,21 @@ Scegliere una nuova palette ripristina i suoi colori; puoi personalizzarli nuova
 
 Le preferenze sono del dispositivo. Il cambio di stile non modifica gare, cronologia, formazioni, colori delle squadre, firme o PDF.
 
-## Anteprime native
+## Preparazione e navigazione
 
-[Preparazione B chiara](ui/stile-B-preparazione-chiaro.png) · [B scuro nella gara reale](ui/stile-B-gara-scuro.png) · [C chiaro nella gara reale](ui/stile-C-gara-chiaro.png) · [Pannello operazioni C](ui/stile-C-pannello.png).
+In B e C la barra superiore è compatta. **⋮** apre Gara, Dati, Registro, Referto, Stile, Guida, comandi di annullamento/ripristino e ritorno alle gare. La precedente barra inferiore non occupa lo spazio del campo.
 
-Le schermate derivano dal codice Android con dati fittizi e grafica nativa Robolectric. Non sono le immagini concettuali. Le [proposte originali](design/PROPOSTE-UI.md) restano consultabili come riferimento.
+Nella preparazione del set, Dati/Rose/Ufficiali aprono le sezioni corrispondenti. La riga di servizio e lato apre il sorteggio o il riepilogo delle scelte alternate. Le sei maglie seguono il foglietto dell'allenatore: **4–3–2 sopra, 5–6–1 sotto**. I numeri disponibili escludono quelli già sul campo; si possono trascinare anche le maglie fra le posizioni. C indica la capitana. Il libero resta fuori dalla formazione iniziale.
+
+**Conferma formazione** passa all'altra squadra se manca ancora la sua formazione. Con entrambe complete il comando permette di iniziare il set, dopo il sorteggio e il controllo delle firme preliminari. **Copia precedente** riprende il tagliando del set prima. Fra i set il risultato precedente è una riga compatta, non un lungo avviso.
+
+Il referto raggruppa firme prima/dopo la gara, evidenzia quelle mancanti o da verificare e mostra la pagina PDF effettiva. Nei layout B/C l'anteprima viene preparata all'apertura della schermata Referto; la consegna avviene dai comandi espliciti di salvataggio e condivisione.
+
+## Confronti e schermate native
+
+- [Proposta B e implementazione](ui/confronto-B-0.9.1.png)
+- [Proposta C e implementazione](ui/confronto-C-0.9.1.png)
+- B: [preparazione](ui/B-preparazione-0.9.1.png), [dettagli nel pannello](ui/B-modifica-dati-0.9.1.png), [gara](ui/B-gara-0.9.1.png), [firme/referto](ui/B-referto-0.9.1.png).
+- C: [terzo set con nomi lunghi](ui/C-preparazione-set3-0.9.1.png), [primo set chiaro](ui/C-preparazione-chiaro-0.9.1.png), [gara](ui/C-gara-0.9.1.png), [firme/referto](ui/C-referto-0.9.1.png).
+
+Catture delle schermate Android effettive con dati fittizi e grafica nativa Robolectric. Dove è aperto un pannello, il compositore di test unisce la finestra Android del pannello a quella dell'Activity, con la sua trasparenza. I confronti ridimensionano le immagini alla stessa larghezza: il concept e il dispositivo di prova hanno proporzioni differenti. Le [proposte originali](design/PROPOSTE-UI.md) restano come riferimento; numeri e miniature PDF illustrativi non sostituiscono regolamento e modello FIPAV reali.

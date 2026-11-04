@@ -35,14 +35,14 @@ import kotlin.math.roundToInt
 
 /** A single court seen from the scorer's table, with two opposing, upright formations. */
 @Composable
-fun ScorerCourt(config: MatchConfig, state: MatchState, modifier: Modifier = Modifier) {
+fun ScorerCourt(config: MatchConfig, state: MatchState, modifier: Modifier = Modifier,compact:Boolean=false) {
     val set = state.current ?: return
     val left = CourtGeometry.leftTeam(set)
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("${state.letter(left)} · ${config.teams[left].name}", Modifier.weight(1f), fontSize=12.sp, fontWeight=FontWeight.Bold)
+            Text("${state.letter(left)} · ${if(compact)shortTeamName(config.teams[left].name)else config.teams[left].name}", Modifier.weight(1f), fontSize=12.sp, fontWeight=FontWeight.Bold)
             Text("RETE", fontSize=9.sp, color=MaterialTheme.colorScheme.primary)
-            Text("${state.letter(1-left)} · ${config.teams[1-left].name}", Modifier.weight(1f), fontSize=12.sp,
+            Text("${state.letter(1-left)} · ${if(compact)shortTeamName(config.teams[1-left].name)else config.teams[1-left].name}", Modifier.weight(1f), fontSize=12.sp,
                 fontWeight=FontWeight.Bold, textAlign=androidx.compose.ui.text.style.TextAlign.End)
         }
         // Switching ends is a protocol change; never animate athletes through the net.
@@ -57,7 +57,7 @@ fun ScorerCourt(config: MatchConfig, state: MatchState, modifier: Modifier = Mod
                 val courtWidth = w-2*inset
                 val courtHeight = h-2*inset
                 Canvas(Modifier.fillMaxSize()) { drawCourt(inset) }
-                for (end in CourtEnd.entries) for (zone in 1..6) {
+                if(!compact)for (end in CourtEnd.entries) for (zone in 1..6) {
                     val p = CourtGeometry.position(end, zone)
                     Text("Z$zone", fontSize=8.sp, color=Color(0xFF775337), modifier=Modifier
                         .offset { IntOffset((inset+p.x*courtWidth-with(density){9.dp.toPx()}).roundToInt(),
@@ -101,7 +101,7 @@ fun ScorerCourt(config: MatchConfig, state: MatchState, modifier: Modifier = Mod
                 }
             }
         }
-        Row(Modifier.align(Alignment.CenterHorizontally), verticalAlignment=Alignment.CenterVertically,
+        if(!compact)Row(Modifier.align(Alignment.CenterHorizontally), verticalAlignment=Alignment.CenterVertically,
             horizontalArrangement=Arrangement.spacedBy(6.dp)) {
             Canvas(Modifier.size(25.dp,15.dp)) {
                 drawRoundRect(Color(0xFF315F67),topLeft=Offset(0f,0f),size=Size(size.width,size.height*.45f),cornerRadius=CornerRadius(2.dp.toPx()))

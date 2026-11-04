@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalConfiguration
 import it.refertoelettronico.model.*
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -111,6 +112,7 @@ fun HomeScreen(archives:List<Pair<String,Result<Journal>>>,onNew:()->Unit,onDemo
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Boolean,onDraftChange:(MatchConfig)->Unit={},initialSection:Int=0,showDashboard:Boolean=true) {
     val initial=remember { original?.let{StaffReview.prepare(it)} ?: MatchConfig(teams=List(2){Team("",(1..6).map { Player(it,"",captain=it==1) })},
@@ -153,45 +155,8 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
     if(validationError!=null)AlertDialog(onDismissRequest={validationError=null},title={Text("Controlla la distinta")},text={Text(validationError!!)},confirmButton={TextButton(onClick={validationError=null}){Text("Correggi")}})
     val scroll=rememberScrollState()
     LaunchedEffect(section){scroll.scrollTo(0)}
-    if(overview) {
-        PreparationDashboard(config,rosterLocked,onSection={section=it;overview=false},onNext=::suggested,onSave=::save)
-        return
-    }
-    Column(Modifier.fillMaxSize()) {
-        if(style==InterfaceStyle.DASHBOARD)TextButton(onClick={overview=true;pendingTarget=null},modifier=Modifier.testTag("setup-overview")){Text("Riepilogo preparazione")}
-
-        Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),horizontalArrangement=Arrangement.SpaceBetween) {
-            Text("Preparazione",style=MaterialTheme.typography.labelLarge)
-            Text("${steps.count{it.complete}}/4 complete",style=MaterialTheme.typography.labelMedium,modifier=Modifier.testTag("setup-progress"))
-        }
-        LinearProgressIndicator(progress={steps.count{it.complete}/4f},modifier=Modifier.fillMaxWidth().height(3.dp))
-        TabRow(selectedTabIndex=section) {
-            steps.forEach { step->
-                Box(Modifier.height(52.dp).selectable(selected=section==step.index,role=Role.Tab,
-                    onClick={section=step.index;pendingTarget=null})
-                    .testTag("setup-step-${step.index}").semantics{
-                        contentDescription=step.title
-                        stateDescription=if(step.complete)"Completato"else"Da completare"
-                    },contentAlignment=Alignment.Center) {
-                    Column(Modifier.fillMaxWidth().padding(horizontal=2.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-                        Text(if(step.complete)"✓"else"${step.index+1}",style=MaterialTheme.typography.labelSmall,color=if(step.complete)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(listOf("Gara","Casa","Ospiti","Ufficiali")[step.index],style=MaterialTheme.typography.labelMedium,
-                            color=if(section==step.index)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines=1,softWrap=false,textAlign=TextAlign.Center,overflow=TextOverflow.Ellipsis,modifier=Modifier.fillMaxWidth().heightIn(min=24.dp).testTag("setup-step-label-${step.index}"))
-                    }
-                }
-            }
-        }
-        Surface(color=MaterialTheme.colorScheme.primaryContainer.copy(alpha=.5f)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(if(next==null)(if(rosterLocked)"Dati gara completi"else"Pronto per le formazioni")else"Prossimo passo · ${next.title}",style=MaterialTheme.typography.labelMedium)
-                    Text(next?.issues?.firstOrNull()?.label ?: if(rosterLocked)"Salva le modifiche e torna alla gara"else"Salva i dati e prepara il primo set",style=MaterialTheme.typography.bodySmall,modifier=Modifier.testTag("setup-suggestion"))
-                }
-                if(next!=null)TextButton(onClick=::suggested,modifier=Modifier.testTag("setup-suggested-action")){Text("Completa")}
-            }
-        }
-        Column(Modifier.weight(1f).verticalScroll(scroll).padding(14.dp),verticalArrangement=Arrangement.spacedBy(if(section in 1..2)6.dp else 12.dp)) {
+    val sectionContent:@Composable (Modifier)->Unit={modifier->
+        Column(modifier.verticalScroll(scroll).padding(14.dp),verticalArrangement=Arrangement.spacedBy(if(section in 1..2)6.dp else 12.dp)) {
             when(section) {
                 0 -> {
                     Field("Numero gara",config.matchNumber,{config=config.copy(matchNumber=it)},Modifier.preparationTarget(targets,"match-number",true).tourTarget("match-data"))
@@ -255,6 +220,56 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
                 }
             }
         }
+    }
+    if(style==InterfaceStyle.DASHBOARD&&showDashboard) {
+        PreparationDashboard(config,rosterLocked,onSection={section=it;overview=false},onNext=::suggested,onSave=::save)
+        if(!overview)ModalBottomSheet(onDismissRequest={overview=true;pendingTarget=null},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true)) {
+            Column(Modifier.fillMaxWidth().heightIn(max=(LocalConfiguration.current.screenHeightDp*.88f).dp).navigationBarsPadding()) {
+                Text(steps[section].title,modifier=Modifier.padding(horizontal=16.dp,vertical=4.dp),style=MaterialTheme.typography.titleLarge)
+                if(section in 1..2)Box(Modifier.padding(horizontal=14.dp,vertical=5.dp)) {
+                    CompactTeamTabs(config,section-1,"editor-team"){section=it+1;pendingTarget=null}
+                }
+                sectionContent(Modifier.weight(1f,fill=false))
+                Button(onClick={overview=true;pendingTarget=null},modifier=Modifier.fillMaxWidth().padding(14.dp).testTag("setup-overview"),colors=styleButtonColors()){Text("Fatto · riepilogo")}
+            }
+        }
+        return
+    }
+    Column(Modifier.fillMaxSize()) {
+        if(style==InterfaceStyle.DASHBOARD)TextButton(onClick={overview=true;pendingTarget=null},modifier=Modifier.testTag("setup-overview")){Text("Riepilogo preparazione")}
+
+        Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),horizontalArrangement=Arrangement.SpaceBetween) {
+            Text("Preparazione",style=MaterialTheme.typography.labelLarge)
+            Text("${steps.count{it.complete}}/4 complete",style=MaterialTheme.typography.labelMedium,modifier=Modifier.testTag("setup-progress"))
+        }
+        LinearProgressIndicator(progress={steps.count{it.complete}/4f},modifier=Modifier.fillMaxWidth().height(3.dp))
+        TabRow(selectedTabIndex=section) {
+            steps.forEach { step->
+                Box(Modifier.height(52.dp).selectable(selected=section==step.index,role=Role.Tab,
+                    onClick={section=step.index;pendingTarget=null})
+                    .testTag("setup-step-${step.index}").semantics{
+                        contentDescription=step.title
+                        stateDescription=if(step.complete)"Completato"else"Da completare"
+                    },contentAlignment=Alignment.Center) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal=2.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+                        Text(if(step.complete)"✓"else"${step.index+1}",style=MaterialTheme.typography.labelSmall,color=if(step.complete)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(listOf("Gara","Casa","Ospiti","Ufficiali")[step.index],style=MaterialTheme.typography.labelMedium,
+                            color=if(section==step.index)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines=1,softWrap=false,textAlign=TextAlign.Center,overflow=TextOverflow.Ellipsis,modifier=Modifier.fillMaxWidth().heightIn(min=24.dp).testTag("setup-step-label-${step.index}"))
+                    }
+                }
+            }
+        }
+        Surface(color=MaterialTheme.colorScheme.primaryContainer.copy(alpha=.5f)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(if(next==null)(if(rosterLocked)"Dati gara completi"else"Pronto per le formazioni")else"Prossimo passo · ${next.title}",style=MaterialTheme.typography.labelMedium)
+                    Text(next?.issues?.firstOrNull()?.label ?: if(rosterLocked)"Salva le modifiche e torna alla gara"else"Salva i dati e prepara il primo set",style=MaterialTheme.typography.bodySmall,modifier=Modifier.testTag("setup-suggestion"))
+                }
+                if(next!=null)TextButton(onClick=::suggested,modifier=Modifier.testTag("setup-suggested-action")){Text("Completa")}
+            }
+        }
+        sectionContent(Modifier.weight(1f))
         Row(Modifier.padding(16.dp).fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             if(next!=null)Button(onClick=::suggested,modifier=Modifier.weight(1f).testTag("setup-next")){Text("Avanti")}
             if(next==null)Button(onClick=::save,modifier=Modifier.weight(1f).tourTarget("save-setup")){Text(if(original==null)"Salva gara"else"Salva modifiche")}

@@ -95,6 +95,8 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
     var importedDraft by remember { mutableStateOf(savedDraft?.config) }
     var incomingReview by remember { mutableStateOf(runCatching{pendingStore.load()?.config}.getOrNull()) }
     var tab by remember { mutableIntStateOf(0) }
+    var editorSection by remember{mutableIntStateOf(0)}
+    val styled=LocalAppearance.current.layout!=InterfaceStyle.CLASSIC
     var archiveRevision by remember { mutableIntStateOf(0) }
     val liveScreens=rememberSaveableStateHolder()
     var confirmLeaveEdit by remember{mutableStateOf(false)}
@@ -111,7 +113,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
     fun clearDraft(){draftStore.clear();savedDraft=null}
     fun resumeDraft(){val draft=savedDraft ?: return;val previous=draft.matchId?.let{runCatching{store.load(it)}.getOrNull()};journal=previous;id=if(previous!=null)draft.matchId else null;importedDraft=draft.config;editing=true}
     fun beginNew(){journal=null;id=null;importedDraft=null;editing=true}
-    fun editCurrentMatch(){snackbar.currentSnackbarData?.dismiss();importedDraft=savedDraft?.takeIf{it.matchId==id}?.config;editing=true}
+    fun editCurrentMatch(){editorSection=0;snackbar.currentSnackbarData?.dismiss();importedDraft=savedDraft?.takeIf{it.matchId==id}?.config;editing=true}
     fun leaveEditor(){editing=false;importedDraft=null}
     fun navigateBack(){
         val current=journal
@@ -159,7 +161,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
     BackHandler(enabled=editing || journal!=null,onBack=::navigateBack)
     val state=remember(journal) { journal?.let { MatchEngine.replay(it.config,it.events) } }
     Scaffold(snackbarHost={SnackbarHost(snackbar)},bottomBar={
-        if(journal!=null && !editing) NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp) {
+        if(journal!=null && !editing && !styled) NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp) {
             listOf("Gara","Registro","Referto","Dati","Guida").forEachIndexed { index,label ->
                 NavigationBarItem(selected=tab==index,onClick={tab=index},icon={UiGlyph(listOf(UiSymbol.COURT,UiSymbol.HISTORY,UiSymbol.DOCUMENT,UiSymbol.SETTINGS,UiSymbol.GUIDE)[index])},label={Text(label)})
             }
@@ -167,7 +169,24 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             val compactHeader=journal!=null && !editing && tab==0
-            if(editing) PreparationHeader(onBack=::navigateBack,onGuide={showGuide=true},onMatches={editing=false;importedDraft=null;journal=null;id=null})
+            if(styled&&journal!=null&&!editing) {
+                val current=journal!!;val matchState=state!!
+                val waiting=matchState.current?.endedAt!=null&&!matchState.finished(current.config) || matchState.sets.isEmpty()
+                val title=when(tab){
+                    0->if(waiting)"Formazione · Set ${matchState.sets.size+1}"else if(matchState.finished(current.config))"Gara conclusa"else"Gara in corso"
+                    1->"Registro della gara";2->"Firme e referto";3->"Dati della gara";else->"Guida"
+                }
+                StyleAppBar(title,::navigateBack,buildList {
+                    add("Gara" to {tab=0});add("Dati" to {tab=3});add("Stile" to onAppearance)
+                    add("Registro" to {tab=1});add("Referto" to {tab=2});add("Guida" to {showGuide=true})
+                    if(current.events.isNotEmpty())add("Annulla ultima operazione" to {persist(MatchEngine.undo(current),Cue.UNDO);Unit})
+                    if(current.redo.isNotEmpty())add("Ripristina operazione" to {persist(MatchEngine.redo(current));Unit})
+                    add((if(soundEnabled)"Disattiva suoni"else"Attiva suoni") to {try{feedback.setEnabled(!soundEnabled);soundEnabled=feedback.enabled}catch(t:Exception){failure(t)}})
+                    add("Gare" to {editing=false;importedDraft=null;journal=null;id=null})
+                })
+            }
+            else if(styled&&editing)StyleAppBar("Prepara la gara",::navigateBack,listOf("Guida" to {showGuide=true},"Stile" to onAppearance,"Gare" to {editing=false;importedDraft=null;journal=null;id=null}))
+            else if(editing) PreparationHeader(onBack=::navigateBack,onGuide={showGuide=true},onMatches={editing=false;importedDraft=null;journal=null;id=null})
             else Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=if(compactHeader)0.dp else 10.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 if(editing)TextButton(onClick=::navigateBack,contentPadding=PaddingValues(horizontal=8.dp)){Text("Indietro")}
                 else Surface(shape=MaterialTheme.shapes.small,color=Color(0xFFFFD23F)) {
@@ -197,7 +216,7 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
                     MatchEngine.replay(config,next.events);persist(next)
                     if(journal==next){clearDraft();editing=false;importedDraft=null;tab=0}
                 } catch(t:Exception){failure(t)}
-            },rosterLocked=journal?.events?.any{it.kind==Kind.START_SET}==true,onDraftChange={config->
+            },rosterLocked=journal?.events?.any{it.kind==Kind.START_SET}==true,initialSection=editorSection,onDraftChange={config->
                 try{val draft=SetupDraft(config,id);draftStore.save(draft);savedDraft=draft}catch(t:Exception){failure(t)}
             }) }
             else if(journal==null) {
@@ -212,9 +231,9 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
                 when(tab) {
                     0 -> liveScreens.SaveableStateProvider(id ?: "current") { LiveScreen(j.config,s,j.events.lastOrNull(),onEvent=::event,
                         onUndo={try{if(persist(MatchEngine.undo(j),Cue.UNDO))scope.launch{snackbar.showSnackbar("Operazione annullata")}}catch(t:Exception){failure(t)}},onRedo={try{persist(MatchEngine.redo(j))}catch(t:Exception){failure(t)}},
-                        canUndo=j.events.isNotEmpty(),canRedo=j.redo.isNotEmpty(),onHistory={tab=1},onEditSetup=::editCurrentMatch,journal=j,onSignatures={persist(it)},onFinalSignatures={showFinalSignatures=true}) }
+                        canUndo=j.events.isNotEmpty(),canRedo=j.redo.isNotEmpty(),onHistory={tab=1},onEditSetup=::editCurrentMatch,journal=j,onSignatures={persist(it)},onFinalSignatures={showFinalSignatures=true},onEditSection={section->editCurrentMatch();editorSection=section}) }
                     1 -> HistoryScreen(j,onUndoTo={confirmUndo=it},onRedo={try{persist(MatchEngine.redo(j))}catch(t:Exception){failure(t)}})
-                    2 -> ExportScreen(j,onError=::failure,onComplete={feedback.play(Cue.CONFIRM)},onBackup={pendingBackup=store.encode(j);saveBackup.launch("gara-${j.config.matchNumber.ifBlank{"volley"}}.json")},onSignatures={persist(it)})
+                    2 -> ExportScreen(j,onError=::failure,onComplete={feedback.play(Cue.CONFIRM)},onBackup={pendingBackup=store.encode(j);saveBackup.launch("gara-${j.config.matchNumber.ifBlank{"volley"}}.json")},onSignatures={persist(it)},onEditSetup=::editCurrentMatch)
                     4 -> GuideScreen(onStart={showGuide=true})
                     3 -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                         Text("Dati e regolamento",style=MaterialTheme.typography.headlineSmall)
@@ -254,12 +273,14 @@ fun VolleyApp(incoming:Intent?=null,onIncomingHandled:()->Unit={},onAppearance:(
 }
 
 @Composable
-internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:()->Unit,onBackup:()->Unit,tutorialDirectory:File?=null,onSignatures:((Journal)->Boolean)?=null) {
+internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:()->Unit,onBackup:()->Unit,tutorialDirectory:File?=null,onSignatures:((Journal)->Boolean)?=null,onEditSetup:(()->Unit)?=null) {
     val context=LocalContext.current;val scope=rememberCoroutineScope()
     var file by remember(journal) { mutableStateOf<File?>(null) }
     var bitmap by remember(journal) { mutableStateOf<android.graphics.Bitmap?>(null) }
     var busy by remember { mutableStateOf(false) }
     var signing by remember{mutableStateOf(false)}
+    var signingPreliminary by remember{mutableStateOf(false)}
+    var signingRole by remember{mutableStateOf<SignatureRole?>(null)}
     DisposableEffect(Unit){onDispose{bitmap?.recycle()}}
     val saver=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         val source=file
@@ -267,14 +288,6 @@ internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:
             withContext(Dispatchers.IO) { context.contentResolver.openOutputStream(uri)?.use { output ->source.inputStream().use{it.copyTo(output)} } ?: error("Impossibile salvare il PDF.") };onComplete()
         } catch(t:Exception){onError(t)} }
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
-        Text("Il referto, pronto da stampare",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-        Text("Modello cartaceo FIPAV con registrazioni e allegato cronologico. Le firme raccolte nell’app sono riportate nei campi del modello; gli spazi mancanti restano da completare sulla stampa.")
-        val state=remember(journal){MatchEngine.replay(journal.config,journal.events)}
-        if(!state.finished(journal.config))Notice("Gara in corso: il PDF sarà contrassegnato come provvisorio.")
-        if(journal.config.missingMetadata().isNotEmpty())Notice("Dati da completare: ${journal.config.missingMetadata().joinToString()}. Puoi correggerli nella scheda Dati.")
-        if(journal.config.fallbackReason.isBlank())Notice("Completa il motivo dell'uso del cartaceo nei Dati o nelle Osservazioni.")
-        if(onSignatures!=null)FinalSignatures(journal){signing=true}
         val generate:()->Unit={scope.launch {
             busy=true
             try {
@@ -288,6 +301,27 @@ internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:
             } catch(cancelled:CancellationException){throw cancelled}
             catch(t:Exception){onError(t)} finally{busy=false}
         };Unit}
+    if(LocalAppearance.current.layout!=InterfaceStyle.CLASSIC) {
+        LaunchedEffect(journal){if(tutorialDirectory==null)generate()}
+        val share:()->Unit={try {
+            val source=file
+            if(source!=null) {
+                val uri=FileProvider.getUriForFile(context,"${context.packageName}.files",source)
+                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply{type="application/pdf";putExtra(Intent.EXTRA_STREAM,uri);addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)},"Condividi referto"))
+            }
+        }catch(t:Exception){onError(t)}}
+        StyledReport(journal,bitmap,busy,file!=null,generate,
+            onSave={saver.launch("referto-${journal.config.matchNumber.ifBlank{"volley"}}.pdf")},onShare=share,onBackup=onBackup,
+            onSign=onSignatures?.let{ {pre,role->signingPreliminary=pre;signingRole=role;signing=true} },onEdit=onEditSetup)
+    } else {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+        Text("Il referto, pronto da stampare",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
+        Text("Modello cartaceo FIPAV con registrazioni e allegato cronologico. Le firme raccolte nell’app sono riportate nei campi del modello; gli spazi mancanti restano da completare sulla stampa.")
+        val state=remember(journal){MatchEngine.replay(journal.config,journal.events)}
+        if(!state.finished(journal.config))Notice("Gara in corso: il PDF sarà contrassegnato come provvisorio.")
+        if(journal.config.missingMetadata().isNotEmpty())Notice("Dati da completare: ${journal.config.missingMetadata().joinToString()}. Puoi correggerli nella scheda Dati.")
+        if(journal.config.fallbackReason.isBlank())Notice("Completa il motivo dell'uso del cartaceo nei Dati o nelle Osservazioni.")
+        if(onSignatures!=null)FinalSignatures(journal){signing=true}
         Button(enabled=!busy,onClick=generate,modifier=Modifier.tourTarget("pdf-generate",generate)){ActionLabel(if(busy)"Preparazione PDF…" else "Genera referto PDF",UiSymbol.DOCUMENT)}
         if(bitmap!=null) {
             Image(bitmap!!.asImageBitmap(),contentDescription="Anteprima prima pagina del referto compilato",modifier=Modifier.fillMaxWidth().tourTarget("pdf-preview").border(1.dp,Color.LightGray))
@@ -303,5 +337,6 @@ internal fun ExportScreen(journal: Journal,onError:(Throwable)->Unit,onComplete:
         }
         OutlinedButton(onClick=onBackup){Text("Salva anche la gara modificabile")}
     }
-    if(signing && onSignatures!=null)SignatureWorkflow(journal,false,onUpdate=onSignatures,onClose={signing=false})
+    }
+    if(signing && onSignatures!=null)SignatureWorkflow(journal,signingPreliminary,onUpdate=onSignatures,onClose={signing=false},initialRole=signingRole)
 }

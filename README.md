@@ -2,7 +2,7 @@
 
 App Android offline per assistere il segnapunti e produrre il **referto cartaceo classico FIPAV** quando eScoreVolley non è utilizzabile. Profilo iniziale: **Under 14 femminile, FIPAV Como, stagione 2026/27**.
 
-[Scarica l'APK Android 0.9.0](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.9.0.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
+[Scarica l'APK Android 0.9.1](https://raw.githubusercontent.com/bernofx/RefertoElettronico/main/downloads/RefertoVolley-0.9.1.apk). È una versione di prova firmata con chiave debug; richiede Android 8.0 o successivo.
 
 ## Utilizzo
 
@@ -97,3 +97,5 @@ Per chi modifica l’app: aggiornare `AppGuide.steps` e `updatedFor` quando camb
 La **0.8.1** compatta la barra della preparazione e mantiene leggibili le quattro schede anche sui telefoni stretti. Include tre palette, ognuna chiara o scura, e la modalità che segue il telefono. [Anteprime e scelta dei temi](docs/TEMI.md).
 
 La **0.9.0** aggiunge i layout selezionabili **B · Cruscotto gara** e **C · Campo al centro**. Ogni layout ricorda il proprio tema chiaro/scuro/automatico, la palette e i colori principale e di accento. [Stili, istruzioni e schermate native](docs/TEMI.md).
+
+La **0.9.1** ricostruisce le schermate B e C sui concept selezionati: dettagli B in pannelli, formazioni C con maglie e conferma fissa, punteggi e contatori dedicati e riepilogo firme/referto. Nei due layout le sezioni si raggiungono dal menu ⋮, con una barra superiore compatta. [Confronto B](docs/ui/confronto-B-0.9.1.png) · [Confronto C](docs/ui/confronto-C-0.9.1.png).
