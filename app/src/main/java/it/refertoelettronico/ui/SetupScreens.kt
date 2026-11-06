@@ -175,7 +175,7 @@ fun MatchEditor(original:MatchConfig?,onSave:(MatchConfig)->Unit,rosterLocked:Bo
                             Picker("Formula",config.format,Format.entries.toList(),{it.label},{config=config.copy(format=it)})
                             Picker("Limite sostituzioni",config.maxSubstitutions,listOf(8,6),{if(it==8)"8 · stagione 2026/27"else"6 · regolamento precedente"},{config=config.copy(maxSubstitutions=it)})
                         }
-                        Text("U14F Como · rete 2,15 m · 2 timeout per set · libero e secondo libero ammessi.",style=MaterialTheme.typography.bodySmall)
+                        Text(if(config.belowUnder14())"Categoria sotto U14: nessun libero obbligatorio, anche con 13–14 presenti. Verifica le norme del campionato." else "U14F Como · rete 2,15 m · 2 timeout per set · libero e secondo libero ammessi.",style=MaterialTheme.typography.bodySmall)
                     }
                     TextButton(onClick={notes=!notes},modifier=Modifier.testTag("setup-notes")){Text(if(notes)"Nascondi note"else"Note e motivo del cartaceo")}
                     if(notes) {

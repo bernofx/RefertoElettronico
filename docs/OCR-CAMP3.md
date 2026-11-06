@@ -58,3 +58,7 @@ Una fixture con dati fittizi e la stessa geometria verifica 14 righe, tutte le m
 ## Prova del ritaglio originale sul telefono
 
 Fotografare il foglio intero, lasciare individuare la tabella oppure selezionarla a mano, poi premere **Ritaglia e rileggi** / **Leggi lista giocatrici**. Confrontare numeri e cognomi con la versione precedente. Ripetere dopo una rotazione di 90° e con la foto dello staff. L'aggiornamento firmato con la stessa chiave conserva le gare già salvate; non occorre disinstallare. Una foto sfocata o mossa non recupera dettagli che non sono stati acquisiti.
+
+## Correzione staff 0.9.3
+
+Le diciture 1°/2° Allenatore determinano l’incarico; 1°/2° GRADO è la qualifica e non fa parte del cognome/nome. Il parser esclude GRADO/GRADI quando seguono l’ordinale della qualifica; conserva invece un eventuale cognome Grado. Coperti anche i token ordinali uniti alle parole. La revisione prima dell’importazione resta necessaria; i test del parser non misurano l’accuratezza del riconoscitore fotografico.

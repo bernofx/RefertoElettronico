@@ -23,6 +23,7 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
     val issues=RosterReview.issues(team)
     var expanded by remember(index){mutableStateOf<String?>(null)}
     var details by remember(index){mutableStateOf(false)}
+    var staffEdit by remember(index){mutableStateOf<Int?>(null)}
     var colors by remember(index){mutableStateOf(false)}
     var load by remember(index){mutableStateOf(false)}
     var save by remember(index){mutableStateOf(false)}
@@ -102,7 +103,22 @@ fun TeamEditor(team:Team,index:Int,season:String,locked:Boolean,onChange:(Team)-
         Field("Codice società",team.clubCode,{onChange(team.copy(clubCode=it))})
         listOf("Allenatore","Vice allenatore","Fisioterapista","Medico","Dirigente").forEachIndexed{i,label->
             val proposal=team.staffRoster.orEmpty().firstOrNull{it.selected && it.scope=="BENCH" && it.assignment==StaffReview.bench[i]}
-            Field(label,proposal?.name ?: team.staff.getOrElse(i){""},{value->onChange(team.copy(staff=List(5){if(it==i)value else team.staff.getOrElse(it){""}}))},enabled=proposal==null)
+            val name=proposal?.name ?: team.staff.getOrElse(i){""}
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(label,style=MaterialTheme.typography.labelMedium)
+                    Text(name.ifBlank{"Non inserito"},style=MaterialTheme.typography.bodyMedium)
+                }
+                if(proposal==null)TextButton(onClick={staffEdit=i}){Text(if(name.isBlank())"Aggiungi" else "Modifica")}
+                else Text("Da incarichi",style=MaterialTheme.typography.labelSmall)
+            }
         }
+    }
+    staffEdit?.let { i->
+        StaffEntryDialog(initialName=team.staff.getOrElse(i){""},initialRole=StaffReview.bench[i],roles=listOf(StaffReview.bench[i]),onClose={staffEdit=null},onRemove=if(team.staff.getOrElse(i){""}.isBlank())null else ({
+            onChange(team.copy(staff=List(5){if(it==i)"" else team.staff.getOrElse(it){""}}));staffEdit=null
+        }),onSave={name,_->
+            onChange(team.copy(staff=List(5){if(it==i)name else team.staff.getOrElse(it){""}}));staffEdit=null
+        })
     }
 }

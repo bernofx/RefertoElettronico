@@ -46,3 +46,7 @@ La barra Stato di preparazione è verde e alta 12 dp, indipendentemente dalla pa
 - C: [terzo set con nomi lunghi](ui/C-preparazione-set3-0.9.2.png), [primo set chiaro](ui/C-preparazione-chiaro-0.9.2.png), [gara](ui/C-gara-0.9.2.png), [firme/referto](ui/C-referto-0.9.2.png).
 
 Catture delle schermate Android effettive con dati fittizi e grafica nativa Robolectric. Dove è aperto un pannello, il compositore di test unisce la finestra Android del pannello a quella dell'Activity, con la sua trasparenza. I confronti ridimensionano le immagini alla stessa larghezza: il concept e il dispositivo di prova hanno proporzioni differenti. Le [proposte originali](design/PROPOSTE-UI.md) restano come riferimento; numeri e miniature PDF illustrativi non sostituiscono regolamento e modello FIPAV reali.
+
+## Staff e incarichi · 0.9.3
+
+Aggiungi persona / incarico apre un modulo con ruolo e nome: Conferma inserisce la persona già selezionata per questa gara. In Ufficiali, gli incarichi di servizio si possono aggiungere anche senza proposte importate. Le proposte ricevute continuano a richiedere la spunta; ambito, descrizione e codice sorgente si trovano in Dettagli importazione. La panchina manuale mostra righe compatte con Aggiungi/Modifica e permette di rimuovere il nominativo. [Modulo effettivo con dati fittizi](ui/staff-entry-0.9.3.png).

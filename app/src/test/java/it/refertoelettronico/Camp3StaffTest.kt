@@ -14,6 +14,22 @@ class Camp3StaffTest {
         assertEquals(listOf(0,1,4),rows.map{it.index})
         assertEquals(listOf("ROSSI LUCA","BIANCHI MARCO","VERDI ANNA"),rows.map{it.name})
     }
+    @Test fun coachOrderIsIndependentOfQualificationGradeAndGradeIsNotAName() {
+        val words=listOf(word("1°",0f,0f),word("Allenatore",28f,0f),word("2°",190f,0f),word("GRADO",220f,0f),word("ROSSI",340f,0f),word("LUCA",400f,0f),
+            word("2°",0f,40f),word("Allenatore",28f,40f),word("1°",190f,40f),word("Grado",220f,40f),word("VERDI",340f,40f),word("ANNA",400f,40f))
+        val result=Camp3Staff.suggest(words)
+        assertEquals(listOf(0,1),result.map{it.index})
+        assertEquals(listOf("ROSSI LUCA","VERDI ANNA"),result.map{it.name})
+    }
+    @Test fun combinedGradeAndOrdinalTokensDoNotLeakIntoCoachName() {
+        val result=Camp3Staff.suggest(listOf(word("2°Allenatore",0f,0f),word("1°GRADO",180f,0f),word("VERDI",340f,0f),word("ANNA",400f,0f)))
+        assertEquals(1,result.single().index)
+        assertEquals("VERDI ANNA",result.single().name)
+    }
+    @Test fun gradoAsASurnameIsPreservedAfterTheQualification() {
+        val result=Camp3Staff.suggest(listOf(word("ALLENATORE",0f,0f),word("2°",190f,0f),word("GRADO",220f,0f),word("GRADO",340f,0f),word("LUCA",400f,0f)))
+        assertEquals("GRADO LUCA",result.single().name)
+    }
     @Test fun namesWithoutRoleLabelsAreLeftForManualReview() {
         assertTrue(Camp3Staff.suggest(listOf(word("ROSSI",100f,0f),word("LUCA",200f,0f))).isEmpty())
     }

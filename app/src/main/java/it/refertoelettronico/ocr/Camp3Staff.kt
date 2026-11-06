@@ -30,9 +30,14 @@ object Camp3Staff {
                 normalized.any{it.startsWith("DIRIGENTE")} ->4
                 else ->return@mapNotNull null
             }
+            // Qualification belongs to the role column. Preserve a surname such as GRADO
+            // when it is not preceded by the qualification ordinal.
+            val qualifications=row.indices.filter { i->
+                normalized[i] in setOf("GRADO","GRADI") && normalized.getOrNull(i-1) in setOf("1","2","3","1O","2O","3O")
+            }.map{row[it]}.toSet()
             val name=row.filter { w->
                 val n=norm(w.text)
-                w.text.matches(Regex("[\\p{L}][\\p{L}'’.-]*")) && n !in setOf("VICE","PRIMO","SECONDO","ACCOMPAGNATORE","ADDETTO","ARBITRO","COGNOME","NOME","E") &&
+                w !in qualifications && w.text.matches(Regex("[\\p{L}][\\p{L}'’.-]*")) && n !in setOf("VICE","PRIMO","SECONDO","ACCOMPAGNATORE","ADDETTO","ARBITRO","COGNOME","NOME","E","UFFICIALE","DELLA","SQUADRA","SOCIALE") &&
                     listOf("ALLENATORE","FISIOTERAP","MASSAGGIAT","MEDICO","DIRIGENTE").none{n.startsWith(it)}
             }.joinToString(" "){it.text}
             if(name.split(' ').count{it.isNotBlank()}<2)null else StaffSuggestion(index,name,row.joinToString(" "){it.text})

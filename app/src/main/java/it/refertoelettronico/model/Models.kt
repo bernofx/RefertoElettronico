@@ -90,3 +90,10 @@ fun MatchConfig.missingMetadata(): List<String> = buildList {
     if(officials.getOrElse(0){""}.isBlank())add("1° arbitro")
     if(officials.getOrElse(2){""}.isBlank())add("segnapunti")
 }
+
+/** Recognize the explicit youth category, not unrelated numbers in the competition name. */
+fun MatchConfig.belowUnder14(): Boolean {
+    val age = Regex("(?i)(?<![\\p{L}\\d])(?:U|UNDER)\\s*[-–]?\\s*(\\d{1,2})(?!\\d)")
+        .find(competition)?.groupValues?.get(1)?.toIntOrNull()
+    return age != null && age in 1..13
+}

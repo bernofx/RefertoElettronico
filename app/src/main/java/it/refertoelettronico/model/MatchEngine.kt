@@ -22,7 +22,7 @@ object MatchEngine {
             rule(team.players.count { it.libero } <= 2, "Sono consentiti al massimo due liberi.")
             rule(team.players.count { !it.libero } >= 6, "${team.name}: servono almeno sei giocatrici non libero.")
             rule(team.players.count { it.captain } == 1, "${team.name}: indica una sola capitana.")
-            rule(team.players.size <= 12 || team.players.any { it.libero }, "Con più di 12 giocatrici è richiesto almeno un libero.")
+            rule(config.belowUnder14() || team.players.size <= 12 || team.players.any { it.libero }, "Con più di 12 giocatrici è richiesto almeno un libero.")
         }
         rule(config.maxSubstitutions in listOf(6, 8), "Limite sostituzioni non valido.")
         if(config.date.isNotBlank())rule(runCatching {
