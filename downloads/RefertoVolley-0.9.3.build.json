@@ -1,0 +1,31 @@
+{
+  "source_commit": "6e4de01e52a3e8a849576d15fa9ef0697c93f049",
+  "application_id": "it.refertoelettronico",
+  "version_name": "0.9.3",
+  "version_code": 24,
+  "variant": "debug",
+  "apk_sha256": "e420268fa80bb79253b14c7da65cd2a63409656347a3d01435ad3a377a13a53e",
+  "signing_certificate_sha256": "6cfd99c9ea08cd62f89dc16541984acfb007916f90a86918aa89179f82ebe15f",
+  "signing_matches_previous_apks": true,
+  "guide_revision": 6,
+  "validation": {
+    "tests_passed": 81,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "test_scope": "Camp3*, Staff*, YouthRoster, MatchEngine, Preparation*; targeted suite only",
+    "assembleDebug": "passed",
+    "testDebugUnitTest": "passed",
+    "lintDebug": "passed",
+    "physical_device": "not tested",
+    "ocr_accuracy_on_real_photos": "not measured",
+    "ui_capture": "docs/ui/staff-entry-0.9.3.png"
+  },
+  "changes": [
+    "Allow 13\u201314 present players without liberos for explicit categories below U14; retain existing constraint otherwise",
+    "Separate coach order from qualification grade in OCR without removing the surname Grado",
+    "Add staff and service assignments through name/role/confirmation; preserve imported proposal review",
+    "Compact bench editing with removal and collapsed import details",
+    "Update in-app guide tips"
+  ]
+}
